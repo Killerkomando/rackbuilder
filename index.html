@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rack Builder</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+</head>
+<body>
+
+<header class="app-header">
+  <h1>
+    <span class="rack-icon">&#9638;</span>
+    Rack Builder
+  </h1>
+  <div class="header-actions">
+    <button class="btn btn-secondary btn-sm" id="settings-btn">Settings</button>
+    <button class="btn btn-secondary btn-sm" id="clear-btn">Clear All</button>
+  </div>
+</header>
+
+<main class="app-layout">
+  <!-- Left Sidebar: Device Form -->
+  <aside class="sidebar">
+    <h2>Add Device</h2>
+    <div id="form-message"></div>
+    <form id="device-form" autocomplete="off">
+      <div class="form-group">
+        <label for="dev-name">Name</label>
+        <input type="text" id="dev-name" required placeholder="e.g. Switch-01">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dev-type">Device Type</label>
+          <input type="text" id="dev-type" placeholder="e.g. catalyst-9300">
+        </div>
+        <div class="form-group">
+          <label for="dev-role">Role</label>
+          <input type="text" id="dev-role" placeholder="e.g. access-switch">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dev-height">Height (U)</label>
+          <input type="number" id="dev-height" min="1" max="20" value="1">
+        </div>
+        <div class="form-group">
+          <label for="dev-position">Position (U)</label>
+          <input type="text" id="dev-position" placeholder="auto" value="auto">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Face</label>
+        <div class="form-radio-group">
+          <label><input type="radio" name="dev-face" value="front" checked> Front</label>
+          <label><input type="radio" name="dev-face" value="rear"> Rear</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="dev-status">Status</label>
+        <select id="dev-status">
+          <option value="planned">Planned</option>
+          <option value="active">Active</option>
+          <option value="staged">Staged</option>
+          <option value="failed">Failed</option>
+          <option value="decommissioning">Decommissioning</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dev-serial">Serial</label>
+          <input type="text" id="dev-serial" placeholder="Optional">
+        </div>
+        <div class="form-group">
+          <label for="dev-asset">Asset Tag</label>
+          <input type="text" id="dev-asset" placeholder="Optional">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="dev-color">Color</label>
+        <input type="color" id="dev-color" value="#3b82f6">
+      </div>
+
+      <div class="form-group">
+        <label for="dev-comments">Comments</label>
+        <textarea id="dev-comments" placeholder="Optional"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="form-submit-btn">Add Device</button>
+      <button type="button" class="btn btn-danger btn-block" id="form-delete-btn" style="display:none; margin-top:6px;">Delete Device</button>
+      <button type="button" class="btn btn-secondary btn-block" id="form-cancel-btn" style="display:none; margin-top:6px;">Cancel Edit</button>
+
+      <!-- Bulk Section -->
+      <div class="bulk-section">
+        <div class="bulk-toggle" id="bulk-toggle">
+          <span class="arrow" id="bulk-arrow">&#9654;</span>
+          Bulk Creation
+        </div>
+        <div class="bulk-content" id="bulk-content">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="bulk-qty">Quantity</label>
+              <input type="number" id="bulk-qty" min="2" max="100" value="2">
+            </div>
+            <div class="form-group">
+              <label for="bulk-numbering">Numbering</label>
+              <select id="bulk-numbering">
+                <option value="numeric">Numeric (1, 2, 3…)</option>
+                <option value="alpha">Alpha (A, B, C…)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="bulk-start">Start Number/Letter</label>
+            <input type="text" id="bulk-start" value="1" placeholder="1 or A">
+          </div>
+          <div class="form-group">
+            <label for="bulk-positions">Specific Positions (optional)</label>
+            <input type="text" id="bulk-positions" placeholder="e.g. 10, 20, 24">
+          </div>
+          <div class="message message-info" style="margin-top:8px;">
+            Leave "Specific Positions" empty for sequential stacking from the start position.
+          </div>
+        </div>
+      </div>
+    </form>
+  </aside>
+
+  <!-- Center: Rack Visualization -->
+  <section class="rack-container">
+    <div class="rack-controls">
+      <span class="rack-name" id="rack-name-display">Rack-01</span>
+      <span class="rack-info" id="rack-info"></span>
+    </div>
+    <div class="rack" id="rack-view">
+      <!-- Rendered by rack-view.js -->
+    </div>
+  </section>
+
+  <!-- Right Sidebar: Export + Device List -->
+  <aside class="sidebar-right">
+    <h2>Export</h2>
+    <div class="export-section">
+      <button class="btn btn-success btn-block" id="export-btn">Download JSON</button>
+      <button class="btn btn-secondary btn-block" id="copy-btn">Copy to Clipboard</button>
+    </div>
+
+    <div class="export-section">
+      <h2>Import</h2>
+      <button class="btn btn-secondary btn-block" id="import-btn">Import JSON</button>
+      <input type="file" id="import-file" accept=".json" style="display:none">
+    </div>
+
+    <h2>Devices (<span id="device-count">0</span>)</h2>
+    <div class="device-list" id="device-list">
+      <!-- Rendered by app.js -->
+    </div>
+  </aside>
+</main>
+
+<!-- Settings Modal -->
+<dialog id="settings-modal">
+  <h2>Rack Settings</h2>
+  <form id="settings-form">
+    <div class="form-group">
+      <label for="setting-name">Rack Name</label>
+      <input type="text" id="setting-name" required>
+    </div>
+    <div class="form-group">
+      <label for="setting-units">Total Units (U)</label>
+      <input type="number" id="setting-units" min="1" max="60" required>
+    </div>
+    <div class="form-group">
+      <label for="setting-direction">Numbering Direction</label>
+      <select id="setting-direction">
+        <option value="bottom-to-top">U1 at Bottom</option>
+        <option value="top-to-bottom">U1 at Top</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="setting-site">Site (for export)</label>
+      <input type="text" id="setting-site" placeholder="e.g. dc1">
+    </div>
+    <div class="form-group">
+      <label for="setting-location">Location (for export)</label>
+      <input type="text" id="setting-location" placeholder="e.g. hall-a">
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-secondary" id="settings-cancel">Cancel</button>
+      <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
