@@ -33,9 +33,13 @@ export const DEFAULT_RACK_CONFIG = {
   numberingDirection: 'bottom-to-top',
   site: '',
   location: '',
+  frontColor: '#3b82f6',
+  rearColor: '#f97316',
 };
 
-export function createDevice(overrides = {}) {
+export function createDevice(overrides = {}, rackConfig = null) {
+  const frontColor = rackConfig?.frontColor || '#3b82f6';
+  const rearColor = rackConfig?.rearColor || '#f97316';
   return {
     id: generateId(),
     name: '',
@@ -48,7 +52,7 @@ export function createDevice(overrides = {}) {
     serial: '',
     assetTag: '',
     comments: '',
-    _color: overrides.face === 'rear' ? '#f97316' : '#3b82f6',
+    _color: overrides.face === 'rear' ? rearColor : frontColor,
     ...overrides,
   };
 }

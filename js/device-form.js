@@ -21,8 +21,11 @@ export function initDeviceForm() {
   faceRadios.forEach(radio => {
     radio.addEventListener('change', () => {
       if (!editingDeviceId) {
+        const cfg = getState().rackConfig;
         const colorInput = document.getElementById('dev-color');
-        colorInput.value = radio.value === 'rear' ? '#f97316' : '#3b82f6';
+        colorInput.value = radio.value === 'rear'
+          ? (cfg.rearColor || '#f97316')
+          : (cfg.frontColor || '#3b82f6');
       }
     });
   });
@@ -243,7 +246,7 @@ function resetForm() {
   editingDeviceId = null;
   document.getElementById('device-form').reset();
   document.getElementById('dev-position').value = 'auto';
-  document.getElementById('dev-color').value = '#3b82f6';
+  document.getElementById('dev-color').value = getState().rackConfig.frontColor || '#3b82f6';
   document.getElementById('form-title').textContent = t('add_device');
   document.getElementById('form-submit-btn').textContent = t('btn_add');
   document.getElementById('form-delete-btn').style.display = 'none';

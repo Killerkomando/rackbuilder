@@ -61,7 +61,7 @@ export function subscribe(listener) {
 export function dispatch(action, payload) {
   switch (action) {
     case 'ADD_DEVICE': {
-      const device = createDevice(payload);
+      const device = createDevice(payload, state.rackConfig);
       const result = canPlace(
         state.devices, device.position, device.height,
         device.face, state.rackConfig.totalUnits
@@ -117,10 +117,25 @@ export function dispatch(action, payload) {
       );
       if (!result.ok) return result;
 
+      // Auto-swap color when moving to opposite face (only if using default color)
+      let newColor = existing._color;
+      if (newFace !== existing.face) {
+        const cfg = state.rackConfig;
+        const oldDefault = existing.face === 'front'
+          ? (cfg.frontColor || '#3b82f6')
+          : (cfg.rearColor || '#f97316');
+        const newDefault = newFace === 'front'
+          ? (cfg.frontColor || '#3b82f6')
+          : (cfg.rearColor || '#f97316');
+        if (existing._color === oldDefault) {
+          newColor = newDefault;
+        }
+      }
+
       state = {
         ...state,
         devices: state.devices.map(d =>
-          d.id === id ? { ...d, position, face: newFace } : d
+          d.id === id ? { ...d, position, face: newFace, _color: newColor } : d
         ),
       };
       notify();
@@ -133,7 +148,7 @@ export function dispatch(action, payload) {
       let currentDevices = [...state.devices];
 
       for (const deviceData of newDevices) {
-        const device = createDevice(deviceData);
+        const device = createDevice(deviceData, state.rackConfig);
         const result = canPlace(
           currentDevices, device.position, device.height,
           device.face, state.rackConfig.totalUnits

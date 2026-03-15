@@ -140,6 +140,8 @@ function initSettings() {
     document.getElementById('setting-direction').value = rackConfig.numberingDirection;
     document.getElementById('setting-site').value = rackConfig.site;
     document.getElementById('setting-location').value = rackConfig.location;
+    document.getElementById('setting-front-color').value = rackConfig.frontColor || '#3b82f6';
+    document.getElementById('setting-rear-color').value = rackConfig.rearColor || '#f97316';
     modal.showModal();
   });
 
@@ -155,6 +157,8 @@ function initSettings() {
       numberingDirection: document.getElementById('setting-direction').value,
       site: document.getElementById('setting-site').value.trim(),
       location: document.getElementById('setting-location').value.trim(),
+      frontColor: document.getElementById('setting-front-color').value,
+      rearColor: document.getElementById('setting-rear-color').value,
     });
     modal.close();
   });
