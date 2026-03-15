@@ -40,9 +40,6 @@ function handleDragStart(e) {
   block.classList.add('dragging');
   e.dataTransfer.effectAllowed = 'move';
   e.dataTransfer.setData('text/plain', deviceId);
-
-  // Select the device being dragged
-  dispatch('SELECT_DEVICE', deviceId);
 }
 
 function handleDragOver(e) {

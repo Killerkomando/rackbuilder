@@ -1,0 +1,218 @@
+// Internationalization (EN / DE)
+
+const translations = {
+  en: {
+    app_title: 'Rack Builder',
+    version: 'v0.2.0',
+    btn_settings: 'Settings',
+    btn_clear: 'Clear All',
+    btn_theme_dark: '☀ Light',
+    btn_theme_light: '🌙 Dark',
+    add_device: 'Add Device',
+    edit_device: 'Edit Device',
+    label_name: 'Name',
+    label_device_type: 'Device Type',
+    label_role: 'Role',
+    label_height: 'Height (U)',
+    label_position: 'Position (U)',
+    label_face: 'Face',
+    face_front: 'Front',
+    face_rear: 'Rear',
+    label_status: 'Status',
+    status_planned: 'Planned',
+    status_active: 'Active',
+    status_staged: 'Staged',
+    status_failed: 'Failed',
+    status_decommissioning: 'Decommissioning',
+    label_serial: 'Serial',
+    label_asset_tag: 'Asset Tag',
+    label_color: 'Color',
+    label_comments: 'Comments',
+    btn_add: 'Add Device',
+    btn_update: 'Update Device',
+    btn_delete: 'Delete Device',
+    btn_cancel_edit: 'Cancel Edit',
+    bulk_creation: 'Bulk Creation',
+    bulk_quantity: 'Quantity',
+    bulk_numbering: 'Numbering',
+    bulk_numeric: 'Numeric (1, 2, 3…)',
+    bulk_alpha: 'Alpha (A, B, C…)',
+    bulk_start: 'Start Number / Letter',
+    bulk_positions: 'Specific Positions (optional)',
+    bulk_info: 'Leave "Specific Positions" empty for sequential stacking from the start position.',
+    export_title: 'Export',
+    btn_json: 'Download JSON',
+    btn_yaml: 'Download YAML',
+    btn_csv: 'Download CSV',
+    btn_copy: 'Copy JSON',
+    import_title: 'Import',
+    btn_import: 'Import JSON',
+    devices_title: 'Devices',
+    settings_title: 'Rack Settings',
+    setting_name: 'Rack Name',
+    setting_units: 'Total Units (U)',
+    setting_direction: 'Numbering Direction',
+    dir_bottom: 'U1 at Bottom',
+    dir_top: 'U1 at Top',
+    setting_site: 'Site (for export)',
+    setting_location: 'Location (for export)',
+    btn_save: 'Save',
+    btn_dialog_cancel: 'Cancel',
+    no_devices: 'No devices added yet.',
+    confirm_clear: 'Remove all devices and reset the rack?',
+    msg_no_export: 'No devices to export.',
+    msg_copied: 'Copied!',
+    msg_import_invalid: 'Invalid file: expected a JSON array.',
+    msg_import_success: 'Imported {placed} of {total} devices.',
+    msg_added: 'Added "{name}" at U{pos}.',
+    msg_updated: 'Device updated.',
+    msg_no_slot: 'No free slot available for this device.',
+    msg_pos_number: 'Position must be a number when editing.',
+    msg_bulk_added: 'Added {placed} devices.',
+    msg_partial: 'Added {placed}/{total} devices. Failed:',
+    msg_only_fit: 'Only {placed} of {total} devices could fit. Not enough space.',
+    msg_not_enough_pos: 'You specified {specified} positions but need {total}. Add more positions or reduce quantity.',
+    msg_no_start: 'No free starting slot available.',
+    col_front: 'Front',
+    col_rear: 'Rear',
+    col_units: 'U',
+    ph_name: 'e.g. Switch-01',
+    ph_type: 'e.g. catalyst-9300',
+    ph_role: 'e.g. access-switch',
+    ph_position: 'auto',
+    ph_serial: 'Optional',
+    ph_asset: 'Optional',
+    ph_site: 'e.g. dc1',
+    ph_location: 'e.g. hall-a',
+    ph_bulk_positions: 'e.g. 10, 20, 24',
+    ph_comments: '',
+  },
+  de: {
+    app_title: 'Rack Builder',
+    version: 'v0.2.0',
+    btn_settings: 'Einstellungen',
+    btn_clear: 'Alles löschen',
+    btn_theme_dark: '☀ Hell',
+    btn_theme_light: '🌙 Dunkel',
+    add_device: 'Gerät hinzufügen',
+    edit_device: 'Gerät bearbeiten',
+    label_name: 'Name',
+    label_device_type: 'Gerätetyp',
+    label_role: 'Rolle',
+    label_height: 'Höhe (U)',
+    label_position: 'Position (U)',
+    label_face: 'Seite',
+    face_front: 'Vorderseite',
+    face_rear: 'Rückseite',
+    label_status: 'Status',
+    status_planned: 'Geplant',
+    status_active: 'Aktiv',
+    status_staged: 'Bereitgestellt',
+    status_failed: 'Ausgefallen',
+    status_decommissioning: 'Außerbetriebnahme',
+    label_serial: 'Seriennummer',
+    label_asset_tag: 'Asset-Tag',
+    label_color: 'Farbe',
+    label_comments: 'Kommentare',
+    btn_add: 'Gerät hinzufügen',
+    btn_update: 'Gerät aktualisieren',
+    btn_delete: 'Gerät löschen',
+    btn_cancel_edit: 'Bearbeitung abbrechen',
+    bulk_creation: 'Massenerstellung',
+    bulk_quantity: 'Anzahl',
+    bulk_numbering: 'Nummerierung',
+    bulk_numeric: 'Numerisch (1, 2, 3…)',
+    bulk_alpha: 'Alphabetisch (A, B, C…)',
+    bulk_start: 'Startnummer / -buchstabe',
+    bulk_positions: 'Spezifische Positionen (optional)',
+    bulk_info: '„Spezifische Positionen" leer lassen für sequenzielle Stapelung.',
+    export_title: 'Export',
+    btn_json: 'JSON herunterladen',
+    btn_yaml: 'YAML herunterladen',
+    btn_csv: 'CSV herunterladen',
+    btn_copy: 'JSON kopieren',
+    import_title: 'Import',
+    btn_import: 'JSON importieren',
+    devices_title: 'Geräte',
+    settings_title: 'Rack-Einstellungen',
+    setting_name: 'Rack-Name',
+    setting_units: 'Gesamteinheiten (U)',
+    setting_direction: 'Nummerierungsrichtung',
+    dir_bottom: 'U1 unten',
+    dir_top: 'U1 oben',
+    setting_site: 'Standort (für Export)',
+    setting_location: 'Ort (für Export)',
+    btn_save: 'Speichern',
+    btn_dialog_cancel: 'Abbrechen',
+    no_devices: 'Noch keine Geräte hinzugefügt.',
+    confirm_clear: 'Alle Geräte entfernen und das Rack zurücksetzen?',
+    msg_no_export: 'Keine Geräte zum Exportieren.',
+    msg_copied: 'Kopiert!',
+    msg_import_invalid: 'Ungültige Datei: JSON-Array erwartet.',
+    msg_import_success: '{placed} von {total} Geräten importiert.',
+    msg_added: '„{name}" an U{pos} hinzugefügt.',
+    msg_updated: 'Gerät aktualisiert.',
+    msg_no_slot: 'Kein freier Platz für dieses Gerät verfügbar.',
+    msg_pos_number: 'Position muss beim Bearbeiten eine Zahl sein.',
+    msg_bulk_added: '{placed} Geräte hinzugefügt.',
+    msg_partial: '{placed}/{total} Geräte hinzugefügt. Fehlgeschlagen:',
+    msg_only_fit: 'Nur {placed} von {total} Geräten passen. Nicht genug Platz.',
+    msg_not_enough_pos: '{specified} Positionen angegeben, aber {total} benötigt.',
+    msg_no_start: 'Kein freier Startplatz verfügbar.',
+    col_front: 'Vorderseite',
+    col_rear: 'Rückseite',
+    col_units: 'U',
+    ph_name: 'z.B. Switch-01',
+    ph_type: 'z.B. catalyst-9300',
+    ph_role: 'z.B. access-switch',
+    ph_position: 'auto',
+    ph_serial: 'Optional',
+    ph_asset: 'Optional',
+    ph_site: 'z.B. dc1',
+    ph_location: 'z.B. halle-a',
+    ph_bulk_positions: 'z.B. 10, 20, 24',
+    ph_comments: '',
+  },
+};
+
+let currentLang = localStorage.getItem('rackbuilder_lang') || 'en';
+
+/**
+ * Translate a key, optionally interpolating variables.
+ * @param {string} key
+ * @param {Object} vars - e.g. { placed: 5, total: 10 }
+ */
+export function t(key, vars = {}) {
+  let str = translations[currentLang]?.[key] ?? translations.en[key] ?? key;
+  for (const [k, v] of Object.entries(vars)) {
+    str = str.replace(`{${k}}`, v);
+  }
+  return str;
+}
+
+export function getCurrentLang() {
+  return currentLang;
+}
+
+export function setLang(lang) {
+  if (!translations[lang]) return;
+  currentLang = lang;
+  localStorage.setItem('rackbuilder_lang', lang);
+  applyTranslations();
+}
+
+export function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    el.title = t(el.dataset.i18nTitle);
+  });
+  document.documentElement.lang = currentLang;
+  // Update lang button
+  const btn = document.getElementById('lang-btn');
+  if (btn) btn.textContent = currentLang === 'en' ? 'DE' : 'EN';
+}

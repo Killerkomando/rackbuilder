@@ -5,9 +5,13 @@ import { renderRack } from './rack-view.js';
 import { initDeviceForm, populateFormForEdit } from './device-form.js';
 import { initDragDrop } from './drag-drop.js';
 import { initExport } from './export.js';
+import { t, getCurrentLang, setLang, applyTranslations } from './i18n.js';
 
 // Initialize the application
 function init() {
+  initTheme();
+  initLang();
+
   // Render initial state
   const state = getState();
   renderRack(state);
@@ -30,11 +34,47 @@ function init() {
 
   // Register service worker
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(() => {
-      // Service worker registration failed, app still works
-    });
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
 }
+
+// ─── Theme ──────────────────────────────────────────────────────────────────
+
+function initTheme() {
+  const saved = localStorage.getItem('rackbuilder_theme') || 'dark';
+  applyTheme(saved);
+
+  document.getElementById('theme-btn').addEventListener('click', () => {
+    const current = document.documentElement.dataset.theme;
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  });
+}
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  localStorage.setItem('rackbuilder_theme', theme);
+  const btn = document.getElementById('theme-btn');
+  if (btn) {
+    btn.textContent = t(theme === 'dark' ? 'btn_theme_dark' : 'btn_theme_light');
+  }
+}
+
+// ─── Language ───────────────────────────────────────────────────────────────
+
+function initLang() {
+  applyTranslations();
+
+  document.getElementById('lang-btn').addEventListener('click', () => {
+    const next = getCurrentLang() === 'en' ? 'de' : 'en';
+    setLang(next);
+    // Also update theme button text (translated)
+    const theme = document.documentElement.dataset.theme || 'dark';
+    const btn = document.getElementById('theme-btn');
+    if (btn) btn.textContent = t(theme === 'dark' ? 'btn_theme_dark' : 'btn_theme_light');
+  });
+}
+
+// ─── Device list ────────────────────────────────────────────────────────────
 
 function renderDeviceList(state) {
   const container = document.getElementById('device-list');
@@ -44,11 +84,10 @@ function renderDeviceList(state) {
   countEl.textContent = devices.length;
 
   if (devices.length === 0) {
-    container.innerHTML = '<p style="color: var(--color-text-muted); font-size: 12px;">No devices added yet.</p>';
+    container.innerHTML = `<p style="color: var(--color-text-muted); font-size: 12px;">${t('no_devices')}</p>`;
     return;
   }
 
-  // Sort by position
   const sorted = [...devices].sort((a, b) => a.position - b.position);
 
   container.innerHTML = sorted.map(d => `
@@ -62,16 +101,14 @@ function renderDeviceList(state) {
     </div>
   `).join('');
 
-  // Click to select
   container.querySelectorAll('.device-list-item').forEach(item => {
     item.addEventListener('click', (e) => {
       if (e.target.closest('.device-delete')) return;
       const id = item.dataset.deviceId;
-      dispatch('SELECT_DEVICE', id === selectedDeviceId ? null : id);
+      dispatch('SELECT_DEVICE', id === state.selectedDeviceId ? null : id);
     });
   });
 
-  // Delete buttons
   container.querySelectorAll('.device-delete').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
@@ -89,6 +126,8 @@ function handleSelection(state) {
     populateFormForEdit(null);
   }
 }
+
+// ─── Settings modal ─────────────────────────────────────────────────────────
 
 function initSettings() {
   const modal = document.getElementById('settings-modal');
@@ -121,9 +160,10 @@ function initSettings() {
   });
 }
 
+// ─── Keyboard shortcuts ──────────────────────────────────────────────────────
+
 function initKeyboardShortcuts() {
   document.addEventListener('keydown', (e) => {
-    // Don't handle shortcuts when typing in form fields
     if (e.target.matches('input, textarea, select')) return;
 
     const state = getState();
@@ -142,9 +182,11 @@ function initKeyboardShortcuts() {
   });
 }
 
+// ─── Clear button ────────────────────────────────────────────────────────────
+
 function initClearButton() {
   document.getElementById('clear-btn').addEventListener('click', () => {
-    if (confirm('Remove all devices and reset the rack?')) {
+    if (confirm(t('confirm_clear'))) {
       dispatch('CLEAR_STATE');
     }
   });

@@ -3,6 +3,7 @@
 import { getState, dispatch } from './state.js';
 import { canPlace, findNextFreeSlot } from './rack-model.js';
 import { generateSequence, parsePositionList } from './utils.js';
+import { t } from './i18n.js';
 
 let editingDeviceId = null;
 
@@ -94,13 +95,13 @@ function handleAdd() {
   const position = resolvePosition(posValue, data.height, data.face);
 
   if (position === null) {
-    showMessage('No free slot available for this device.', 'error');
+    showMessage(t('msg_no_slot'), 'error');
     return;
   }
 
   const result = dispatch('ADD_DEVICE', { ...data, position });
   if (result.ok) {
-    showMessage(`Added "${data.name}" at U${position}.`, 'success');
+    showMessage(t('msg_added', { name: data.name, pos: position }), 'success');
     document.getElementById('dev-name').value = '';
     document.getElementById('dev-position').value = 'auto';
   } else {
@@ -114,7 +115,7 @@ function handleUpdate() {
   const position = parseInt(posValue);
 
   if (isNaN(position)) {
-    showMessage('Position must be a number when editing.', 'error');
+    showMessage(t('msg_pos_number'), 'error');
     return;
   }
 
@@ -125,7 +126,7 @@ function handleUpdate() {
   });
 
   if (result.ok) {
-    showMessage('Device updated.', 'success');
+    showMessage(t('msg_updated'), 'success');
     resetForm();
   } else {
     showMessage(result.reason, 'error');
@@ -147,7 +148,7 @@ function handleBulkCreate() {
     // Specific positions mode
     const positions = parsePositionList(specificPositions);
     if (positions.length < qty) {
-      showMessage(`You specified ${positions.length} positions but need ${qty}. Add more positions or reduce quantity.`, 'error');
+      showMessage(t('msg_not_enough_pos', { specified: positions.length, total: qty }), 'error');
       return;
     }
     for (let i = 0; i < qty; i++) {
@@ -164,7 +165,7 @@ function handleBulkCreate() {
     let currentPos = resolvePosition(posValue, data.height, data.face);
 
     if (currentPos === null) {
-      showMessage('No free starting slot available.', 'error');
+      showMessage(t('msg_no_start'), 'error');
       return;
     }
 
@@ -173,7 +174,7 @@ function handleBulkCreate() {
     for (let i = 0; i < qty; i++) {
       const slot = findNextFreeSlot(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos);
       if (slot === null) {
-        showMessage(`Only ${i} of ${qty} devices could fit. Not enough space.`, 'error');
+        showMessage(t('msg_only_fit', { placed: i, total: qty }), 'error');
         return;
       }
       const device = {
@@ -195,10 +196,10 @@ function handleBulkCreate() {
     const failed = result.results.filter(r => !r.ok);
 
     if (failed.length === 0) {
-      showMessage(`Added ${placed} devices successfully.`, 'success');
+      showMessage(t('msg_bulk_added', { placed }), 'success');
     } else {
       const failedNames = failed.map(f => `${f.name}: ${f.reason}`).join('\n');
-      showMessage(`Added ${placed}/${qty} devices. Failed:\n${failedNames}`, 'error');
+      showMessage(`${t('msg_partial', { placed, total: qty })}\n${failedNames}`, 'error');
     }
 
     document.getElementById('dev-name').value = '';
@@ -228,7 +229,8 @@ export function populateFormForEdit(device) {
   document.getElementById('dev-color').value = device._color || '#3b82f6';
   document.getElementById('dev-comments').value = device.comments || '';
 
-  document.getElementById('form-submit-btn').textContent = 'Update Device';
+  document.getElementById('form-title').textContent = t('edit_device');
+  document.getElementById('form-submit-btn').textContent = t('btn_update');
   document.getElementById('form-delete-btn').style.display = '';
   document.getElementById('form-cancel-btn').style.display = '';
 
@@ -242,7 +244,8 @@ function resetForm() {
   document.getElementById('device-form').reset();
   document.getElementById('dev-position').value = 'auto';
   document.getElementById('dev-color').value = '#3b82f6';
-  document.getElementById('form-submit-btn').textContent = 'Add Device';
+  document.getElementById('form-title').textContent = t('add_device');
+  document.getElementById('form-submit-btn').textContent = t('btn_add');
   document.getElementById('form-delete-btn').style.display = 'none';
   document.getElementById('form-cancel-btn').style.display = 'none';
   showMessage('', '');

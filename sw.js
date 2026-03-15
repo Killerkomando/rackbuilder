@@ -1,6 +1,6 @@
 // Service Worker for offline capability
 
-const CACHE_NAME = 'rackbuilder-v1';
+const CACHE_NAME = 'rackbuilder-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -13,6 +13,7 @@ const ASSETS = [
   './js/drag-drop.js',
   './js/export.js',
   './js/utils.js',
+  './js/i18n.js',
   './manifest.json',
 ];
 

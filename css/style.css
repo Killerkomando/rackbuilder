@@ -22,6 +22,30 @@
   --radius: 6px;
 }
 
+/* Light theme overrides */
+[data-theme="light"] {
+  --bg-primary: #f1f5f9;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #e2e8f0;
+  --bg-rack: #cbd5e1;
+  --bg-rack-cell: #e8edf2;
+  --color-text: #1e293b;
+  --color-text-muted: #64748b;
+  --color-border: #cbd5e1;
+}
+
+[data-theme="light"] .rack {
+  border-color: #94a3b8;
+}
+
+[data-theme="light"] .rack-unit-number {
+  border-bottom-color: #d1d5db;
+}
+
+[data-theme="light"] .rack-cell {
+  border-bottom-color: #d1d5db;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -56,6 +80,17 @@ body {
 
 .app-header h1 .rack-icon {
   color: var(--color-accent);
+}
+
+.app-version {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin-left: 6px;
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  vertical-align: middle;
 }
 
 .header-actions {

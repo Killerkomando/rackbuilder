@@ -1,6 +1,7 @@
 // Rack visualization renderer
 
 import { getState, dispatch } from './state.js';
+import { t } from './i18n.js';
 import { getOccupiedUnits } from './rack-model.js';
 
 /**
@@ -27,9 +28,9 @@ export function renderRack(state) {
   let html = '';
 
   // Column headers
-  html += '<div class="rack-column-header front">Front</div>';
-  html += '<div class="rack-column-header units">U</div>';
-  html += '<div class="rack-column-header rear">Rear</div>';
+  html += `<div class="rack-column-header front">${t('col_front')}</div>`;
+  html += `<div class="rack-column-header units">${t('col_units')}</div>`;
+  html += `<div class="rack-column-header rear">${t('col_rear')}</div>`;
 
   // Front face column
   html += '<div class="rack-face" id="rack-face-front" data-face="front">';
