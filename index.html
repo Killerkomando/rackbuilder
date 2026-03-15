@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rack Builder</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+</head>
+<body>
+
+<header class="app-header">
+  <h1>
+    <span class="rack-icon">&#9638;</span>
+    <span data-i18n="app_title">Rack Builder</span>
+    <span class="app-version" data-i18n="version">v0.2.0</span>
+  </h1>
+  <div class="header-actions">
+    <button class="btn btn-secondary btn-sm" id="lang-btn" title="Switch language / Sprache wechseln">DE</button>
+    <button class="btn btn-secondary btn-sm" id="theme-btn">🌙 Dark</button>
+    <button class="btn btn-secondary btn-sm" id="settings-btn" data-i18n="btn_settings">Settings</button>
+    <button class="btn btn-secondary btn-sm" id="clear-devices-btn" data-i18n="btn_clear_devices">Clear Devices</button>
+    <button class="btn btn-secondary btn-sm" id="reset-all-btn" data-i18n="btn_reset_all">Reset All</button>
+  </div>
+</header>
+
+<main class="app-layout">
+  <!-- Left Sidebar: Device Form -->
+  <aside class="sidebar">
+    <h2 id="form-title" data-i18n="add_device">Add Device</h2>
+    <div id="form-message"></div>
+    <form id="device-form" autocomplete="off">
+      <div class="form-group">
+        <label for="dev-name" data-i18n="label_name">Name</label>
+        <input type="text" id="dev-name" required data-i18n-placeholder="ph_name" placeholder="e.g. Switch-01">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dev-type" data-i18n="label_device_type">Device Type</label>
+          <input type="text" id="dev-type" data-i18n-placeholder="ph_type" placeholder="e.g. catalyst-9300">
+        </div>
+        <div class="form-group">
+          <label for="dev-role" data-i18n="label_role">Role</label>
+          <input type="text" id="dev-role" data-i18n-placeholder="ph_role" placeholder="e.g. access-switch">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dev-height" data-i18n="label_height">Height (U)</label>
+          <input type="number" id="dev-height" min="1" max="20" value="1">
+        </div>
+        <div class="form-group">
+          <label for="dev-position" data-i18n="label_position">Position (U)</label>
+          <input type="text" id="dev-position" data-i18n-placeholder="ph_position" placeholder="auto" value="auto">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label data-i18n="label_face">Face</label>
+        <div class="form-radio-group">
+          <label><input type="radio" name="dev-face" value="front" checked> <span data-i18n="face_front">Front</span></label>
+          <label><input type="radio" name="dev-face" value="rear"> <span data-i18n="face_rear">Rear</span></label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="dev-status" data-i18n="label_status">Status</label>
+        <select id="dev-status">
+          <option value="planned" data-i18n="status_planned">Planned</option>
+          <option value="active" data-i18n="status_active">Active</option>
+          <option value="staged" data-i18n="status_staged">Staged</option>
+          <option value="failed" data-i18n="status_failed">Failed</option>
+          <option value="decommissioning" data-i18n="status_decommissioning">Decommissioning</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dev-serial" data-i18n="label_serial">Serial</label>
+          <input type="text" id="dev-serial" data-i18n-placeholder="ph_serial" placeholder="Optional">
+        </div>
+        <div class="form-group">
+          <label for="dev-asset" data-i18n="label_asset_tag">Asset Tag</label>
+          <input type="text" id="dev-asset" data-i18n-placeholder="ph_asset" placeholder="Optional">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="dev-color" data-i18n="label_color">Color</label>
+        <input type="color" id="dev-color" value="#3b82f6">
+      </div>
+
+      <div class="form-group">
+        <label for="dev-comments" data-i18n="label_comments">Comments</label>
+        <textarea id="dev-comments"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="form-submit-btn" data-i18n="btn_add">Add Device</button>
+      <button type="button" class="btn btn-danger btn-block" id="form-delete-btn" data-i18n="btn_delete" style="display:none; margin-top:6px;">Delete Device</button>
+      <button type="button" class="btn btn-secondary btn-block" id="form-cancel-btn" data-i18n="btn_cancel_edit" style="display:none; margin-top:6px;">Cancel Edit</button>
+
+      <!-- Bulk Section -->
+      <div class="bulk-section">
+        <div class="bulk-toggle" id="bulk-toggle">
+          <span class="arrow" id="bulk-arrow">&#9654;</span>
+          <span data-i18n="bulk_creation">Bulk Creation</span>
+        </div>
+        <div class="bulk-content" id="bulk-content">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="bulk-qty" data-i18n="bulk_quantity">Quantity</label>
+              <input type="number" id="bulk-qty" min="2" max="100" value="2">
+            </div>
+            <div class="form-group">
+              <label for="bulk-numbering" data-i18n="bulk_numbering">Numbering</label>
+              <select id="bulk-numbering">
+                <option value="numeric" data-i18n="bulk_numeric">Numeric (1, 2, 3…)</option>
+                <option value="alpha" data-i18n="bulk_alpha">Alpha (A, B, C…)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="bulk-start" data-i18n="bulk_start">Start Number / Letter</label>
+            <input type="text" id="bulk-start" value="1" placeholder="1 or A">
+          </div>
+          <div class="form-group">
+            <label for="bulk-positions" data-i18n="bulk_positions">Specific Positions (optional)</label>
+            <input type="text" id="bulk-positions" data-i18n-placeholder="ph_bulk_positions" placeholder="e.g. 10, 20, 24">
+          </div>
+          <div class="message message-info" style="margin-top:8px;" data-i18n="bulk_info">
+            Leave "Specific Positions" empty for sequential stacking from the start position.
+          </div>
+        </div>
+      </div>
+    </form>
+  </aside>
+
+  <!-- Center: Rack Visualization -->
+  <section class="rack-container">
+    <div class="rack-controls">
+      <span class="rack-name" id="rack-name-display">Rack-01</span>
+      <span class="rack-info" id="rack-info"></span>
+    </div>
+    <div class="rack" id="rack-view">
+      <!-- Rendered by rack-view.js -->
+    </div>
+  </section>
+
+  <!-- Right Sidebar: Export + Device List -->
+  <aside class="sidebar-right">
+    <h2 data-i18n="export_title">Export</h2>
+    <h3 style="font-size:12px; color:var(--color-text-muted); margin-bottom:6px;" data-i18n="export_netbox">NetBox Export</h3>
+    <div class="export-section">
+      <button class="btn btn-success btn-block" id="export-json-btn" data-i18n="btn_json">Download JSON</button>
+      <button class="btn btn-secondary btn-block" id="export-yaml-btn" data-i18n="btn_yaml">Download YAML</button>
+      <button class="btn btn-secondary btn-block" id="export-csv-btn" data-i18n="btn_csv">Download CSV</button>
+      <button class="btn btn-secondary btn-block" id="copy-btn" data-i18n="btn_copy">Copy JSON</button>
+    </div>
+
+    <h3 style="font-size:12px; color:var(--color-text-muted); margin-top:12px; margin-bottom:6px;" data-i18n="export_project">Project Save / Load</h3>
+    <div class="export-section">
+      <button class="btn btn-primary btn-block" id="save-project-btn" data-i18n="btn_save_project">Save Project</button>
+      <button class="btn btn-secondary btn-block" id="load-project-btn" data-i18n="btn_load_project">Load Project</button>
+      <input type="file" id="load-project-file" accept=".json" style="display:none">
+    </div>
+
+    <div class="export-section" style="margin-top:12px;">
+      <h3 style="font-size:12px; color:var(--color-text-muted); margin-bottom:6px;" data-i18n="import_title">NetBox Import</h3>
+      <button class="btn btn-secondary btn-block" id="import-btn" data-i18n="btn_import">Import JSON</button>
+      <input type="file" id="import-file" accept=".json" style="display:none">
+    </div>
+
+    <h2 style="margin-top:16px;">
+      <span data-i18n="devices_title">Devices</span> (<span id="device-count">0</span>)
+    </h2>
+    <div class="device-list" id="device-list">
+      <!-- Rendered by app.js -->
+    </div>
+  </aside>
+</main>
+
+<!-- Settings Modal -->
+<dialog id="settings-modal">
+  <h2 data-i18n="settings_title">Rack Settings</h2>
+  <form id="settings-form">
+    <div class="form-group">
+      <label for="setting-name" data-i18n="setting_name">Rack Name</label>
+      <input type="text" id="setting-name" required>
+    </div>
+    <div class="form-group">
+      <label for="setting-units" data-i18n="setting_units">Total Units (U)</label>
+      <input type="number" id="setting-units" min="1" max="60" required>
+    </div>
+    <div class="form-group">
+      <label for="setting-direction" data-i18n="setting_direction">Numbering Direction</label>
+      <select id="setting-direction">
+        <option value="bottom-to-top" data-i18n="dir_bottom">U1 at Bottom</option>
+        <option value="top-to-bottom" data-i18n="dir_top">U1 at Top</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="setting-site" data-i18n="setting_site">Site (for export)</label>
+      <input type="text" id="setting-site" data-i18n-placeholder="ph_site" placeholder="e.g. dc1">
+    </div>
+    <div class="form-group">
+      <label for="setting-location" data-i18n="setting_location">Location (for export)</label>
+      <input type="text" id="setting-location" data-i18n-placeholder="ph_location" placeholder="e.g. hall-a">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="setting-front-color" data-i18n="setting_front_color">Front Color</label>
+        <input type="color" id="setting-front-color" value="#3b82f6">
+      </div>
+      <div class="form-group">
+        <label for="setting-rear-color" data-i18n="setting_rear_color">Rear Color</label>
+        <input type="color" id="setting-rear-color" value="#f97316">
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-secondary" id="settings-cancel" data-i18n="btn_dialog_cancel">Cancel</button>
+      <button type="submit" class="btn btn-primary" data-i18n="btn_save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
