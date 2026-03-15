@@ -546,6 +546,11 @@ dialog {
   padding: 24px;
   max-width: 400px;
   width: 90%;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
 }
 
 dialog::backdrop {

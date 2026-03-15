@@ -167,6 +167,12 @@ export function dispatch(action, payload) {
       return { ok: true };
     }
 
+    case 'CLEAR_DEVICES': {
+      state = { ...state, devices: [], selectedDeviceId: null };
+      notify();
+      return { ok: true };
+    }
+
     case 'CLEAR_STATE': {
       state = { ...initialState, rackConfig: { ...DEFAULT_RACK_CONFIG } };
       notify();

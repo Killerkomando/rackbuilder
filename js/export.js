@@ -1,4 +1,4 @@
-// NetBox JSON export + YAML + CSV + download/clipboard
+// NetBox JSON export + YAML + CSV + Project save/load + download/clipboard
 
 import { getState, dispatch } from './state.js';
 import { toNetBoxJSON } from './rack-model.js';
@@ -13,6 +13,13 @@ export function initExport() {
     document.getElementById('import-file').click();
   });
   document.getElementById('import-file').addEventListener('change', importJSON);
+
+  // Project save/load
+  document.getElementById('save-project-btn').addEventListener('click', saveProject);
+  document.getElementById('load-project-btn').addEventListener('click', () => {
+    document.getElementById('load-project-file').click();
+  });
+  document.getElementById('load-project-file').addEventListener('change', loadProject);
 }
 
 function getExportData() {
@@ -24,14 +31,14 @@ function getRackName() {
   return getState().rackConfig.name;
 }
 
-// ─── JSON ───────────────────────────────────────────────────────────────────
+// ─── NetBox JSON ────────────────────────────────────────────────────────────
 
 function downloadJSON() {
   const data = getExportData();
   if (!data.length) { alert(t('msg_no_export')); return; }
   triggerDownload(
     JSON.stringify(data, null, 2),
-    `${getRackName()}_import.json`,
+    `${getRackName()}_netbox_import.json`,
     'application/json'
   );
 }
@@ -43,7 +50,7 @@ function downloadYAML() {
   if (!data.length) { alert(t('msg_no_export')); return; }
   triggerDownload(
     toYAML(data),
-    `${getRackName()}_import.yaml`,
+    `${getRackName()}_netbox_import.yaml`,
     'text/yaml'
   );
 }
@@ -61,7 +68,6 @@ function toYAML(items) {
 function yamlValue(v) {
   if (typeof v === 'number' || typeof v === 'boolean') return String(v);
   const s = String(v);
-  // Quote if needed: contains special chars, starts with digit, reserved words
   if (
     s === '' ||
     s === 'true' || s === 'false' || s === 'null' ||
@@ -81,7 +87,7 @@ function downloadCSV() {
   if (!data.length) { alert(t('msg_no_export')); return; }
   triggerDownload(
     toCSV(data),
-    `${getRackName()}_import.csv`,
+    `${getRackName()}_netbox_import.csv`,
     'text/csv'
   );
 }
@@ -124,7 +130,73 @@ async function copyToClipboard() {
   setTimeout(() => { btn.textContent = original; }, 2000);
 }
 
-// ─── Import ─────────────────────────────────────────────────────────────────
+// ─── Project Save/Load (internal format, preserves height + color + config) ─
+
+function saveProject() {
+  const state = getState();
+  if (!state.devices.length) { alert(t('msg_no_export')); return; }
+
+  const project = {
+    _format: 'rackbuilder-project',
+    _version: '0.2.0',
+    rackConfig: state.rackConfig,
+    devices: state.devices.map(d => ({
+      name: d.name,
+      deviceType: d.deviceType,
+      role: d.role,
+      position: d.position,
+      height: d.height,
+      face: d.face,
+      status: d.status,
+      serial: d.serial,
+      assetTag: d.assetTag,
+      comments: d.comments,
+      _color: d._color,
+    })),
+  };
+
+  triggerDownload(
+    JSON.stringify(project, null, 2),
+    `${getRackName()}_project.json`,
+    'application/json'
+  );
+}
+
+function loadProject(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const data = JSON.parse(event.target.result);
+
+      if (data._format === 'rackbuilder-project') {
+        // Internal project format — load rack config + devices with height
+        if (data.rackConfig) {
+          dispatch('UPDATE_RACK_CONFIG', data.rackConfig);
+        }
+        // Clear existing devices first
+        dispatch('CLEAR_DEVICES');
+        if (Array.isArray(data.devices) && data.devices.length) {
+          const result = dispatch('BULK_ADD_DEVICES', { devices: data.devices });
+          if (result.ok) {
+            const placed = result.results.filter(r => r.ok).length;
+            alert(t('msg_import_success', { placed, total: data.devices.length }));
+          }
+        }
+      } else {
+        alert(t('msg_import_invalid'));
+      }
+    } catch (err) {
+      alert('Failed to parse project file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ─── NetBox Import ──────────────────────────────────────────────────────────
 
 function importJSON(e) {
   const file = e.target.files[0];
@@ -134,6 +206,13 @@ function importJSON(e) {
   reader.onload = (event) => {
     try {
       const data = JSON.parse(event.target.result);
+
+      // Auto-detect: project format vs NetBox array
+      if (data._format === 'rackbuilder-project') {
+        alert(t('msg_use_load_project'));
+        return;
+      }
+
       if (!Array.isArray(data)) {
         alert(t('msg_import_invalid'));
         return;

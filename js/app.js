@@ -185,8 +185,14 @@ function initKeyboardShortcuts() {
 // ─── Clear button ────────────────────────────────────────────────────────────
 
 function initClearButton() {
-  document.getElementById('clear-btn').addEventListener('click', () => {
-    if (confirm(t('confirm_clear'))) {
+  document.getElementById('clear-devices-btn').addEventListener('click', () => {
+    if (confirm(t('confirm_clear_devices'))) {
+      dispatch('CLEAR_DEVICES');
+    }
+  });
+
+  document.getElementById('reset-all-btn').addEventListener('click', () => {
+    if (confirm(t('confirm_reset_all'))) {
       dispatch('CLEAR_STATE');
     }
   });

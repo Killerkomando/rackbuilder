@@ -20,7 +20,8 @@
     <button class="btn btn-secondary btn-sm" id="lang-btn" title="Switch language / Sprache wechseln">DE</button>
     <button class="btn btn-secondary btn-sm" id="theme-btn">🌙 Dark</button>
     <button class="btn btn-secondary btn-sm" id="settings-btn" data-i18n="btn_settings">Settings</button>
-    <button class="btn btn-secondary btn-sm" id="clear-btn" data-i18n="btn_clear">Clear All</button>
+    <button class="btn btn-secondary btn-sm" id="clear-devices-btn" data-i18n="btn_clear_devices">Clear Devices</button>
+    <button class="btn btn-secondary btn-sm" id="reset-all-btn" data-i18n="btn_reset_all">Reset All</button>
   </div>
 </header>
 
@@ -151,6 +152,7 @@
   <!-- Right Sidebar: Export + Device List -->
   <aside class="sidebar-right">
     <h2 data-i18n="export_title">Export</h2>
+    <h3 style="font-size:12px; color:var(--color-text-muted); margin-bottom:6px;" data-i18n="export_netbox">NetBox Export</h3>
     <div class="export-section">
       <button class="btn btn-success btn-block" id="export-json-btn" data-i18n="btn_json">Download JSON</button>
       <button class="btn btn-secondary btn-block" id="export-yaml-btn" data-i18n="btn_yaml">Download YAML</button>
@@ -158,8 +160,15 @@
       <button class="btn btn-secondary btn-block" id="copy-btn" data-i18n="btn_copy">Copy JSON</button>
     </div>
 
-    <div class="export-section" style="margin-top:16px;">
-      <h2 data-i18n="import_title">Import</h2>
+    <h3 style="font-size:12px; color:var(--color-text-muted); margin-top:12px; margin-bottom:6px;" data-i18n="export_project">Project Save / Load</h3>
+    <div class="export-section">
+      <button class="btn btn-primary btn-block" id="save-project-btn" data-i18n="btn_save_project">Save Project</button>
+      <button class="btn btn-secondary btn-block" id="load-project-btn" data-i18n="btn_load_project">Load Project</button>
+      <input type="file" id="load-project-file" accept=".json" style="display:none">
+    </div>
+
+    <div class="export-section" style="margin-top:12px;">
+      <h3 style="font-size:12px; color:var(--color-text-muted); margin-bottom:6px;" data-i18n="import_title">NetBox Import</h3>
       <button class="btn btn-secondary btn-block" id="import-btn" data-i18n="btn_import">Import JSON</button>
       <input type="file" id="import-file" accept=".json" style="display:none">
     </div>
