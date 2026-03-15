@@ -249,7 +249,9 @@ function resetForm() {
   document.getElementById('form-delete-btn').style.display = 'none';
   document.getElementById('form-cancel-btn').style.display = 'none';
   showMessage('', '');
-  dispatch('SELECT_DEVICE', null);
+  if (getState().selectedDeviceId !== null) {
+    dispatch('SELECT_DEVICE', null);
+  }
 }
 
 function showMessage(text, type) {

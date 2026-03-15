@@ -55,7 +55,7 @@ function applyTheme(theme) {
   localStorage.setItem('rackbuilder_theme', theme);
   const btn = document.getElementById('theme-btn');
   if (btn) {
-    btn.textContent = t(theme === 'dark' ? 'btn_theme_dark' : 'btn_theme_light');
+    btn.textContent = t(theme === 'dark' ? 'theme_dark' : 'theme_light');
   }
 }
 
@@ -70,7 +70,7 @@ function initLang() {
     // Also update theme button text (translated)
     const theme = document.documentElement.dataset.theme || 'dark';
     const btn = document.getElementById('theme-btn');
-    if (btn) btn.textContent = t(theme === 'dark' ? 'btn_theme_dark' : 'btn_theme_light');
+    if (btn) btn.textContent = t(theme === 'dark' ? 'theme_dark' : 'theme_light');
   });
 }
 

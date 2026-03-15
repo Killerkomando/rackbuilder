@@ -6,14 +6,19 @@ import { getUnitFromY } from './rack-view.js';
 
 let dragDeviceId = null;
 let dragDeviceHeight = 1;
-let dragGrabOffset = 0; // which U within the device was grabbed
+let dragGrabOffset = 0;
+
+// Performance: throttle + position caching
+let rafPending = false;
+let lastTargetPos = null;
+let lastTargetFace = null;
+let highlightedCells = [];
 
 export function initDragDrop() {
   const rackView = document.getElementById('rack-view');
 
   rackView.addEventListener('dragstart', handleDragStart);
   rackView.addEventListener('dragover', handleDragOver);
-  rackView.addEventListener('dragleave', handleDragLeave);
   rackView.addEventListener('drop', handleDrop);
   rackView.addEventListener('dragend', handleDragEnd);
 }
@@ -30,7 +35,6 @@ function handleDragStart(e) {
   dragDeviceId = deviceId;
   dragDeviceHeight = device.height;
 
-  // Calculate grab offset: which U within the device was clicked
   const face = block.closest('.rack-face');
   const faceRect = face.getBoundingClientRect();
   const relY = e.clientY - faceRect.top;
@@ -40,47 +44,67 @@ function handleDragStart(e) {
   block.classList.add('dragging');
   e.dataTransfer.effectAllowed = 'move';
   e.dataTransfer.setData('text/plain', deviceId);
+
+  // Reset caches
+  lastTargetPos = null;
+  lastTargetFace = null;
 }
 
 function handleDragOver(e) {
   e.preventDefault();
   e.dataTransfer.dropEffect = 'move';
 
-  if (!dragDeviceId) return;
+  if (!dragDeviceId || rafPending) return;
 
-  const face = e.target.closest('.rack-face');
+  rafPending = true;
+  // Capture coordinates synchronously (event object may be reused)
+  const clientY = e.clientY;
+  const target = e.target;
+
+  requestAnimationFrame(() => {
+    rafPending = false;
+    if (!dragDeviceId) return;
+    updateDragHighlights(clientY, target);
+  });
+}
+
+function updateDragHighlights(clientY, target) {
+  const face = target.closest ? target.closest('.rack-face') : null;
   if (!face) return;
 
   const faceType = face.dataset.face;
   const faceRect = face.getBoundingClientRect();
-  const relY = e.clientY - faceRect.top;
+  const relY = clientY - faceRect.top;
   const state = getState();
   const hoveredUnit = getUnitFromY(relY, state.rackConfig.totalUnits, state.rackConfig.numberingDirection);
   const targetPosition = hoveredUnit - dragGrabOffset;
 
-  // Clear all highlights
-  clearHighlights();
+  // Skip if position hasn't changed
+  if (targetPosition === lastTargetPos && faceType === lastTargetFace) return;
+  lastTargetPos = targetPosition;
+  lastTargetFace = faceType;
 
-  // Check if placement is valid
+  // Clear only previously highlighted cells (no DOM query)
+  for (const cell of highlightedCells) {
+    cell.classList.remove('drag-over-valid', 'drag-over-invalid');
+  }
+  highlightedCells = [];
+
+  // Check placement validity
   const result = canPlace(
     state.devices, targetPosition, dragDeviceHeight,
     faceType, state.rackConfig.totalUnits, dragDeviceId
   );
 
   // Highlight target cells
+  const className = result.ok ? 'drag-over-valid' : 'drag-over-invalid';
   const cells = face.querySelectorAll('.rack-cell');
   for (const cell of cells) {
     const cellUnit = parseInt(cell.dataset.unit);
     if (cellUnit >= targetPosition && cellUnit < targetPosition + dragDeviceHeight) {
-      cell.classList.add(result.ok ? 'drag-over-valid' : 'drag-over-invalid');
+      cell.classList.add(className);
+      highlightedCells.push(cell);
     }
-  }
-}
-
-function handleDragLeave(e) {
-  const cell = e.target.closest('.rack-cell');
-  if (cell) {
-    cell.classList.remove('drag-over-valid', 'drag-over-invalid');
   }
 }
 
@@ -106,19 +130,27 @@ function handleDrop(e) {
     face: faceType,
   });
 
-  dragDeviceId = null;
+  resetDragState();
 }
 
 function handleDragEnd() {
   clearHighlights();
-  document.querySelectorAll('.device-block.dragging').forEach(el => {
-    el.classList.remove('dragging');
-  });
-  dragDeviceId = null;
+  const rackView = document.getElementById('rack-view');
+  const dragging = rackView.querySelector('.device-block.dragging');
+  if (dragging) dragging.classList.remove('dragging');
+  resetDragState();
 }
 
 function clearHighlights() {
-  document.querySelectorAll('.drag-over-valid, .drag-over-invalid').forEach(el => {
-    el.classList.remove('drag-over-valid', 'drag-over-invalid');
-  });
+  for (const cell of highlightedCells) {
+    cell.classList.remove('drag-over-valid', 'drag-over-invalid');
+  }
+  highlightedCells = [];
+}
+
+function resetDragState() {
+  dragDeviceId = null;
+  lastTargetPos = null;
+  lastTargetFace = null;
+  rafPending = false;
 }

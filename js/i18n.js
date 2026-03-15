@@ -6,8 +6,8 @@ const translations = {
     version: 'v0.2.0',
     btn_settings: 'Settings',
     btn_clear: 'Clear All',
-    btn_theme_dark: '☀ Light',
-    btn_theme_light: '🌙 Dark',
+    theme_dark: '🌙 Dark',
+    theme_light: '☀ Light',
     add_device: 'Add Device',
     edit_device: 'Edit Device',
     label_name: 'Name',
@@ -92,8 +92,8 @@ const translations = {
     version: 'v0.2.0',
     btn_settings: 'Einstellungen',
     btn_clear: 'Alles löschen',
-    btn_theme_dark: '☀ Hell',
-    btn_theme_light: '🌙 Dunkel',
+    theme_dark: '🌙 Dunkel',
+    theme_light: '☀ Hell',
     add_device: 'Gerät hinzufügen',
     edit_device: 'Gerät bearbeiten',
     label_name: 'Name',
@@ -214,5 +214,5 @@ export function applyTranslations() {
   document.documentElement.lang = currentLang;
   // Update lang button
   const btn = document.getElementById('lang-btn');
-  if (btn) btn.textContent = currentLang === 'en' ? 'DE' : 'EN';
+  if (btn) btn.textContent = currentLang.toUpperCase();
 }

@@ -152,6 +152,7 @@ export function dispatch(action, payload) {
     }
 
     case 'SELECT_DEVICE': {
+      if (state.selectedDeviceId === payload) return { ok: true };
       state = { ...state, selectedDeviceId: payload };
       notify();
       return { ok: true };
