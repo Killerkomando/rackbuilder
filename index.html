@@ -14,9 +14,11 @@
   <h1>
     <span class="rack-icon">&#9638;</span>
     <span data-i18n="app_title">Rack Builder</span>
-    <span class="app-version" data-i18n="version">v0.2.0</span>
+    <span class="app-version" data-i18n="version">v0.3.0</span>
   </h1>
   <div class="header-actions">
+    <button class="btn btn-secondary btn-sm" id="undo-btn" data-i18n-title="btn_undo" title="Undo" disabled>&#x21A9;</button>
+    <button class="btn btn-secondary btn-sm" id="redo-btn" data-i18n-title="btn_redo" title="Redo" disabled>&#x21AA;</button>
     <button class="btn btn-secondary btn-sm" id="lang-btn" title="Switch language / Sprache wechseln">DE</button>
     <button class="btn btn-secondary btn-sm" id="theme-btn">🌙 Dark</button>
     <button class="btn btn-secondary btn-sm" id="settings-btn" data-i18n="btn_settings">Settings</button>
@@ -64,6 +66,13 @@
           <label><input type="radio" name="dev-face" value="front" checked> <span data-i18n="face_front">Front</span></label>
           <label><input type="radio" name="dev-face" value="rear"> <span data-i18n="face_rear">Rear</span></label>
         </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-checkbox-label">
+          <input type="checkbox" id="dev-full-depth">
+          <span data-i18n="label_full_depth">Full Depth</span>
+        </label>
       </div>
 
       <div class="form-group">
@@ -143,6 +152,7 @@
     <div class="rack-controls">
       <span class="rack-name" id="rack-name-display">Rack-01</span>
       <span class="rack-info" id="rack-info"></span>
+      <span class="rack-stats" id="rack-stats"></span>
     </div>
     <div class="rack" id="rack-view">
       <!-- Rendered by rack-view.js -->
@@ -173,11 +183,24 @@
       <input type="file" id="import-file" accept=".json" style="display:none">
     </div>
 
+    <div class="json-preview-section" style="margin-top:12px;">
+      <button class="btn btn-secondary btn-sm btn-block" id="json-preview-toggle" data-i18n="btn_json_preview">Live JSON Preview</button>
+      <pre class="json-preview" id="json-preview" style="display:none;"></pre>
+    </div>
+
     <h2 style="margin-top:16px;">
       <span data-i18n="devices_title">Devices</span> (<span id="device-count">0</span>)
     </h2>
     <div class="device-list" id="device-list">
       <!-- Rendered by app.js -->
+    </div>
+
+    <div class="storage-indicator" id="storage-indicator">
+      <div class="storage-label">
+        <span data-i18n="storage_usage">Storage</span>: <span id="storage-usage-text">0 KB / 5 MB</span>
+      </div>
+      <div class="storage-bar"><div class="storage-bar-fill" id="storage-bar-fill"></div></div>
+      <button class="btn btn-secondary btn-sm" id="clear-cache-btn" data-i18n="btn_clear_cache">Clear Cache</button>
     </div>
   </aside>
 </main>

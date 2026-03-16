@@ -13,6 +13,41 @@ const initialState = {
 let state = loadState();
 let listeners = [];
 
+// Reserved units (non-persisted, UI-only state for HE selection)
+let reservedUnits = []; // [{unit: number, face: string}]
+
+export function getReservedUnits() { return reservedUnits; }
+export function setReservedUnits(units) {
+  reservedUnits = units;
+  for (const listener of listeners) listener(state);
+}
+export function clearReservedUnits() { reservedUnits = []; }
+
+// Undo/Redo history
+let history = [];
+let historyIndex = -1;
+const MAX_HISTORY = 50;
+
+function deepClone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function pushHistory() {
+  // Truncate any future entries
+  history = history.slice(0, historyIndex + 1);
+  history.push(deepClone(state));
+  historyIndex = history.length - 1;
+  // Trim if exceeding max
+  if (history.length > MAX_HISTORY) {
+    history.shift();
+    historyIndex--;
+  }
+}
+
+// Initialize history with current state
+history.push(deepClone(state));
+historyIndex = 0;
+
 function loadState() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -52,6 +87,28 @@ export function subscribe(listener) {
   };
 }
 
+export function undo() {
+  if (historyIndex <= 0) return;
+  historyIndex--;
+  state = deepClone(history[historyIndex]);
+  notify();
+}
+
+export function redo() {
+  if (historyIndex >= history.length - 1) return;
+  historyIndex++;
+  state = deepClone(history[historyIndex]);
+  notify();
+}
+
+export function canUndo() {
+  return historyIndex > 0;
+}
+
+export function canRedo() {
+  return historyIndex < history.length - 1;
+}
+
 /**
  * Dispatch an action to update state.
  * @param {string} action
@@ -61,10 +118,11 @@ export function subscribe(listener) {
 export function dispatch(action, payload) {
   switch (action) {
     case 'ADD_DEVICE': {
+      pushHistory();
       const device = createDevice(payload, state.rackConfig);
       const result = canPlace(
         state.devices, device.position, device.height,
-        device.face, state.rackConfig.totalUnits
+        device.face, state.rackConfig.totalUnits, null, device.fullDepth
       );
       if (!result.ok) return result;
       state = { ...state, devices: [...state.devices, device] };
@@ -73,6 +131,7 @@ export function dispatch(action, payload) {
     }
 
     case 'REMOVE_DEVICE': {
+      pushHistory();
       const id = payload;
       state = {
         ...state,
@@ -84,16 +143,17 @@ export function dispatch(action, payload) {
     }
 
     case 'UPDATE_DEVICE': {
+      pushHistory();
       const { id, ...changes } = payload;
       const existing = state.devices.find(d => d.id === id);
       if (!existing) return { ok: false, reason: 'Device not found.' };
 
       const updated = { ...existing, ...changes };
       // Check placement if position, height, or face changed
-      if (changes.position !== undefined || changes.height !== undefined || changes.face !== undefined) {
+      if (changes.position !== undefined || changes.height !== undefined || changes.face !== undefined || changes.fullDepth !== undefined) {
         const result = canPlace(
           state.devices, updated.position, updated.height,
-          updated.face, state.rackConfig.totalUnits, id
+          updated.face, state.rackConfig.totalUnits, id, updated.fullDepth
         );
         if (!result.ok) return result;
       }
@@ -106,14 +166,18 @@ export function dispatch(action, payload) {
     }
 
     case 'MOVE_DEVICE': {
+      pushHistory();
       const { id, position, face } = payload;
+      if (!Number.isInteger(position) || position < 1) {
+        return { ok: false, reason: 'Invalid position.' };
+      }
       const existing = state.devices.find(d => d.id === id);
       if (!existing) return { ok: false, reason: 'Device not found.' };
 
       const newFace = face || existing.face;
       const result = canPlace(
         state.devices, position, existing.height,
-        newFace, state.rackConfig.totalUnits, id
+        newFace, state.rackConfig.totalUnits, id, existing.fullDepth
       );
       if (!result.ok) return result;
 
@@ -143,6 +207,7 @@ export function dispatch(action, payload) {
     }
 
     case 'BULK_ADD_DEVICES': {
+      pushHistory();
       const { devices: newDevices } = payload;
       const results = [];
       let currentDevices = [...state.devices];
@@ -151,7 +216,7 @@ export function dispatch(action, payload) {
         const device = createDevice(deviceData, state.rackConfig);
         const result = canPlace(
           currentDevices, device.position, device.height,
-          device.face, state.rackConfig.totalUnits
+          device.face, state.rackConfig.totalUnits, null, device.fullDepth
         );
         if (result.ok) {
           currentDevices.push(device);
@@ -174,6 +239,7 @@ export function dispatch(action, payload) {
     }
 
     case 'UPDATE_RACK_CONFIG': {
+      pushHistory();
       state = {
         ...state,
         rackConfig: { ...state.rackConfig, ...payload },
@@ -183,6 +249,7 @@ export function dispatch(action, payload) {
     }
 
     case 'CLEAR_DEVICES': {
+      pushHistory();
       state = { ...state, devices: [], selectedDeviceId: null };
       notify();
       return { ok: true };
@@ -190,12 +257,16 @@ export function dispatch(action, payload) {
 
     case 'CLEAR_STATE': {
       state = { ...initialState, rackConfig: { ...DEFAULT_RACK_CONFIG } };
+      history = [deepClone(state)];
+      historyIndex = 0;
       notify();
       return { ok: true };
     }
 
     case 'LOAD_STATE': {
       state = { ...initialState, ...payload };
+      history = [deepClone(state)];
+      historyIndex = 0;
       notify();
       return { ok: true };
     }

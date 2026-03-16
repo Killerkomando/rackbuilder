@@ -52,6 +52,7 @@ export function createDevice(overrides = {}, rackConfig = null) {
     serial: '',
     assetTag: '',
     comments: '',
+    fullDepth: false,
     _color: overrides.face === 'rear' ? rearColor : frontColor,
     ...overrides,
   };
@@ -77,7 +78,7 @@ function rangesOverlap(pos1, h1, pos2, h2) {
  * @param {string|null} excludeId - Device ID to exclude (for move operations)
  * @returns {{ok: boolean, reason?: string}}
  */
-export function canPlace(devices, position, height, face, totalUnits, excludeId = null) {
+export function canPlace(devices, position, height, face, totalUnits, excludeId = null, fullDepth = false) {
   if (position < 1) {
     return { ok: false, reason: 'Position must be at least 1.' };
   }
@@ -86,9 +87,16 @@ export function canPlace(devices, position, height, face, totalUnits, excludeId 
   }
   for (const d of devices) {
     if (d.id === excludeId) continue;
-    if (d.face !== face) continue;
-    if (rangesOverlap(position, height, d.position, d.height)) {
-      return { ok: false, reason: `Collision with "${d.name}" at U${d.position}.` };
+    if (d.face === face) {
+      // Same-face collision
+      if (rangesOverlap(position, height, d.position, d.height)) {
+        return { ok: false, reason: `Collision with "${d.name}" at U${d.position}.` };
+      }
+    } else {
+      // Cross-face depth collision: only if either device is full-depth
+      if ((fullDepth || d.fullDepth) && rangesOverlap(position, height, d.position, d.height)) {
+        return { ok: false, reason: `Depth collision with "${d.name}" (${d.face}) at U${d.position}.` };
+      }
     }
   }
   return { ok: true };
@@ -103,9 +111,9 @@ export function canPlace(devices, position, height, face, totalUnits, excludeId 
  * @param {number} startFrom - U position to start searching from
  * @returns {number|null}
  */
-export function findNextFreeSlot(devices, height, face, totalUnits, startFrom = 1) {
+export function findNextFreeSlot(devices, height, face, totalUnits, startFrom = 1, fullDepth = false) {
   for (let pos = startFrom; pos + height - 1 <= totalUnits; pos++) {
-    const result = canPlace(devices, pos, height, face, totalUnits);
+    const result = canPlace(devices, pos, height, face, totalUnits, null, fullDepth);
     if (result.ok) return pos;
   }
   return null;
@@ -129,6 +137,22 @@ export function getOccupiedUnits(devices, face) {
 }
 
 /**
+ * Calculate rack utilization statistics.
+ */
+export function getRackUtilization(devices, totalUnits) {
+  const frontOccupied = getOccupiedUnits(devices, 'front').size;
+  const rearOccupied = getOccupiedUnits(devices, 'rear').size;
+  return {
+    front: frontOccupied,
+    rear: rearOccupied,
+    total: frontOccupied + rearOccupied,
+    frontPercent: totalUnits > 0 ? Math.round((frontOccupied / totalUnits) * 100) : 0,
+    rearPercent: totalUnits > 0 ? Math.round((rearOccupied / totalUnits) * 100) : 0,
+    totalPercent: totalUnits > 0 ? Math.round(((frontOccupied + rearOccupied) / (totalUnits * 2)) * 100) : 0,
+  };
+}
+
+/**
  * Convert devices to NetBox-compatible JSON array.
  * Strips internal fields (id, _color, height).
  * @param {Device[]} devices
@@ -148,6 +172,7 @@ export function toNetBoxJSON(devices, rackConfig) {
     status: d.status,
     serial: d.serial || undefined,
     asset_tag: d.assetTag || undefined,
+    full_depth: d.fullDepth || undefined,
     comments: d.comments || undefined,
   })).map(obj => {
     // Remove undefined values

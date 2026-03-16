@@ -1,6 +1,6 @@
 // Service Worker for offline capability
 
-const CACHE_NAME = 'rackbuilder-v2';
+const CACHE_NAME = 'rackbuilder-v3';
 const ASSETS = [
   './',
   './index.html',
