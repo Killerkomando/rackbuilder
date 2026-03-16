@@ -41,6 +41,18 @@ export function generateSequence(baseName, count, startFrom, mode) {
 }
 
 /**
+ * Get localStorage usage statistics.
+ */
+export function getLocalStorageUsage() {
+  let total = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    total += key.length + localStorage.getItem(key).length;
+  }
+  return { usedChars: total, usedBytes: total * 2, limitBytes: 5 * 1024 * 1024 };
+}
+
+/**
  * Parse a comma-separated list of positions.
  * @param {string} input - e.g. "10, 20, 24"
  * @returns {number[]}

@@ -113,7 +113,8 @@ function renderDeviceBlocks(devices, face, unitOrder, selectedDeviceId) {
     const color = device._color || (face === 'front' ? '#3b82f6' : '#f97316');
     const fontSize = uh < 20 ? '10px' : '11px';
 
-    html += `<div class="device-block${isSelected ? ' selected' : ''}"
+    const fdClass = device.fullDepth ? ' device-block--full-depth' : '';
+    html += `<div class="device-block${isSelected ? ' selected' : ''}${fdClass}"
       data-device-id="${device.id}"
       draggable="true"
       style="top: ${top}px; height: ${height - 2}px; background: ${color}; font-size: ${fontSize};"
@@ -129,9 +130,30 @@ function renderDeviceBlocks(devices, face, unitOrder, selectedDeviceId) {
  */
 export function getUnitFromY(y, totalUnits, numberingDirection) {
   const rowIndex = Math.floor(y / currentUnitHeight);
+  let unit;
   if (numberingDirection === 'bottom-to-top') {
-    return totalUnits - rowIndex;
+    unit = totalUnits - rowIndex;
   } else {
-    return rowIndex + 1;
+    unit = rowIndex + 1;
   }
+  return Math.max(1, Math.min(totalUnits, unit));
+}
+
+/**
+ * Get pixel position and size for a device at the given rack coordinates.
+ * Used by drag-drop.js for the snap guide overlay.
+ */
+export function getPositionPixels(position, height, totalUnits, numberingDirection) {
+  // Build unit order (same logic as renderRack)
+  const unitOrder = [];
+  if (numberingDirection === 'bottom-to-top') {
+    for (let u = totalUnits; u >= 1; u--) unitOrder.push(u);
+  } else {
+    for (let u = 1; u <= totalUnits; u++) unitOrder.push(u);
+  }
+  const topIndex = unitOrder.indexOf(position + height - 1);
+  return {
+    top: topIndex * currentUnitHeight,
+    height: height * currentUnitHeight - 2,
+  };
 }

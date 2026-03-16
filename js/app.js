@@ -1,7 +1,9 @@
 // Rack Builder — Main application bootstrap
 
-import { getState, subscribe, dispatch } from './state.js';
+import { getState, subscribe, dispatch, undo, redo, canUndo, canRedo } from './state.js';
 import { renderRack } from './rack-view.js';
+import { getLocalStorageUsage } from './utils.js';
+import { getRackUtilization, toNetBoxJSON } from './rack-model.js';
 import { initDeviceForm, populateFormForEdit } from './device-form.js';
 import { initDragDrop } from './drag-drop.js';
 import { initExport } from './export.js';
@@ -22,6 +24,10 @@ function init() {
     renderRack(state);
     renderDeviceList(state);
     handleSelection(state);
+    updateUndoRedoButtons();
+    updateStorageIndicator();
+    updateStats(state);
+    updateJsonPreview(state);
   });
 
   // Initialize modules
@@ -31,6 +37,11 @@ function init() {
   initSettings();
   initKeyboardShortcuts();
   initClearButton();
+  initUndoRedo();
+  initJsonPreview();
+  initStorageIndicator();
+  updateStorageIndicator();
+  updateStats(state);
 
   // Register service worker
   if ('serviceWorker' in navigator) {
@@ -168,6 +179,18 @@ function initSettings() {
 
 function initKeyboardShortcuts() {
   document.addEventListener('keydown', (e) => {
+    // Undo/Redo work even in inputs
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+      e.preventDefault();
+      undo();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+      e.preventDefault();
+      redo();
+      return;
+    }
+
     if (e.target.matches('input, textarea, select')) return;
 
     const state = getState();
@@ -200,6 +223,95 @@ function initClearButton() {
       dispatch('CLEAR_STATE');
     }
   });
+}
+
+// ─── Live Statistics ────────────────────────────────────────────────────────
+
+function updateStats(state) {
+  const stats = getRackUtilization(state.devices, state.rackConfig.totalUnits);
+  const el = document.getElementById('rack-stats');
+  if (el) {
+    el.textContent = `${stats.totalPercent}% ${t('stat_used')} (F: ${stats.frontPercent}% | R: ${stats.rearPercent}%)`;
+  }
+}
+
+// ─── Live JSON Preview ──────────────────────────────────────────────────────
+
+function initJsonPreview() {
+  document.getElementById('json-preview-toggle').addEventListener('click', () => {
+    const el = document.getElementById('json-preview');
+    const isHidden = el.style.display === 'none' || !el.style.display;
+    el.style.display = isHidden ? 'block' : 'none';
+    if (isHidden) {
+      updateJsonPreview(getState());
+    }
+  });
+}
+
+function updateJsonPreview(state) {
+  const el = document.getElementById('json-preview');
+  if (!el || el.style.display === 'none') return;
+  const data = toNetBoxJSON(state.devices, state.rackConfig);
+  el.textContent = JSON.stringify(data, null, 2);
+}
+
+// ─── Storage indicator ──────────────────────────────────────────────────────
+
+function initStorageIndicator() {
+  document.getElementById('clear-cache-btn').addEventListener('click', () => {
+    if (confirm(t('confirm_clear_cache'))) {
+      // Keep theme and language preferences
+      const theme = localStorage.getItem('rackbuilder_theme');
+      const lang = localStorage.getItem('rackbuilder_lang');
+
+      // Remove all rackbuilder keys
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('rackbuilder')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+
+      // Restore preferences
+      if (theme) localStorage.setItem('rackbuilder_theme', theme);
+      if (lang) localStorage.setItem('rackbuilder_lang', lang);
+
+      dispatch('CLEAR_STATE');
+    }
+  });
+}
+
+function updateStorageIndicator() {
+  const { usedBytes, limitBytes } = getLocalStorageUsage();
+  const usedKB = (usedBytes / 1024).toFixed(1);
+  const limitMB = (limitBytes / (1024 * 1024)).toFixed(0);
+  const percent = Math.min(100, (usedBytes / limitBytes) * 100);
+
+  document.getElementById('storage-usage-text').textContent = `${usedKB} KB / ${limitMB} MB`;
+
+  const fill = document.getElementById('storage-bar-fill');
+  fill.style.width = `${percent}%`;
+  fill.classList.remove('warning', 'critical');
+  if (percent > 90) {
+    fill.classList.add('critical');
+  } else if (percent > 70) {
+    fill.classList.add('warning');
+  }
+}
+
+// ─── Undo/Redo ──────────────────────────────────────────────────────────────
+
+function initUndoRedo() {
+  document.getElementById('undo-btn').addEventListener('click', undo);
+  document.getElementById('redo-btn').addEventListener('click', redo);
+  updateUndoRedoButtons();
+}
+
+function updateUndoRedoButtons() {
+  document.getElementById('undo-btn').disabled = !canUndo();
+  document.getElementById('redo-btn').disabled = !canRedo();
 }
 
 // Start

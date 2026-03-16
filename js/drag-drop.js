@@ -2,10 +2,11 @@
 
 import { getState, dispatch } from './state.js';
 import { canPlace } from './rack-model.js';
-import { getUnitFromY } from './rack-view.js';
+import { getUnitFromY, getPositionPixels } from './rack-view.js';
 
 let dragDeviceId = null;
 let dragDeviceHeight = 1;
+let dragDeviceFullDepth = false;
 let dragGrabOffset = 0;
 
 // Performance: throttle + position caching
@@ -13,6 +14,7 @@ let rafPending = false;
 let lastTargetPos = null;
 let lastTargetFace = null;
 let highlightedCells = [];
+let snapGuide = null;
 
 export function initDragDrop() {
   const rackView = document.getElementById('rack-view');
@@ -34,6 +36,7 @@ function handleDragStart(e) {
 
   dragDeviceId = deviceId;
   dragDeviceHeight = device.height;
+  dragDeviceFullDepth = device.fullDepth || false;
 
   const face = block.closest('.rack-face');
   const faceRect = face.getBoundingClientRect();
@@ -44,6 +47,10 @@ function handleDragStart(e) {
   block.classList.add('dragging');
   e.dataTransfer.effectAllowed = 'move';
   e.dataTransfer.setData('text/plain', deviceId);
+
+  // Create snap guide element
+  snapGuide = document.createElement('div');
+  snapGuide.className = 'snap-guide';
 
   // Reset caches
   lastTargetPos = null;
@@ -93,7 +100,7 @@ function updateDragHighlights(clientY, target) {
   // Check placement validity
   const result = canPlace(
     state.devices, targetPosition, dragDeviceHeight,
-    faceType, state.rackConfig.totalUnits, dragDeviceId
+    faceType, state.rackConfig.totalUnits, dragDeviceId, dragDeviceFullDepth
   );
 
   // Highlight target cells
@@ -105,6 +112,19 @@ function updateDragHighlights(clientY, target) {
       cell.classList.add(className);
       highlightedCells.push(cell);
     }
+  }
+
+  // Position snap guide
+  if (snapGuide) {
+    // Ensure snap guide is in the correct face
+    if (snapGuide.parentElement !== face) {
+      if (snapGuide.parentElement) snapGuide.remove();
+      face.appendChild(snapGuide);
+    }
+    const px = getPositionPixels(targetPosition, dragDeviceHeight, state.rackConfig.totalUnits, state.rackConfig.numberingDirection);
+    snapGuide.style.top = `${px.top}px`;
+    snapGuide.style.height = `${px.height}px`;
+    snapGuide.classList.toggle('invalid', !result.ok);
   }
 }
 
@@ -122,7 +142,12 @@ function handleDrop(e) {
   const relY = e.clientY - faceRect.top;
   const state = getState();
   const hoveredUnit = getUnitFromY(relY, state.rackConfig.totalUnits, state.rackConfig.numberingDirection);
-  const targetPosition = hoveredUnit - dragGrabOffset;
+  let targetPosition = hoveredUnit - dragGrabOffset;
+
+  // Clamp to valid range
+  targetPosition = Math.max(1, Math.min(state.rackConfig.totalUnits - dragDeviceHeight + 1, targetPosition));
+
+  if (!Number.isInteger(targetPosition)) return;
 
   dispatch('MOVE_DEVICE', {
     id: dragDeviceId,
@@ -146,6 +171,10 @@ function clearHighlights() {
     cell.classList.remove('drag-over-valid', 'drag-over-invalid');
   }
   highlightedCells = [];
+  if (snapGuide) {
+    snapGuide.remove();
+    snapGuide = null;
+  }
 }
 
 function resetDragState() {

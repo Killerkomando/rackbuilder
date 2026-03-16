@@ -138,7 +138,7 @@ function saveProject() {
 
   const project = {
     _format: 'rackbuilder-project',
-    _version: '0.2.0',
+    _version: '0.3.0',
     rackConfig: state.rackConfig,
     devices: state.devices.map(d => ({
       name: d.name,

@@ -74,6 +74,7 @@ function getFormData() {
     status: document.getElementById('dev-status').value,
     serial: document.getElementById('dev-serial').value.trim(),
     assetTag: document.getElementById('dev-asset').value.trim(),
+    fullDepth: document.getElementById('dev-full-depth').checked,
     _color: document.getElementById('dev-color').value,
     comments: document.getElementById('dev-comments').value.trim(),
   };
@@ -86,7 +87,8 @@ function getPositionValue() {
 function resolvePosition(posValue, height, face) {
   const state = getState();
   if (posValue === '' || posValue.toLowerCase() === 'auto') {
-    return findNextFreeSlot(state.devices, height, face, state.rackConfig.totalUnits);
+    const fullDepth = document.getElementById('dev-full-depth').checked;
+    return findNextFreeSlot(state.devices, height, face, state.rackConfig.totalUnits, 1, fullDepth);
   }
   const pos = parseInt(posValue);
   return isNaN(pos) ? null : pos;
@@ -175,7 +177,7 @@ function handleBulkCreate() {
     // We need to simulate placement to find sequential positions
     const tempDevices = [...state.devices];
     for (let i = 0; i < qty; i++) {
-      const slot = findNextFreeSlot(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos);
+      const slot = findNextFreeSlot(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
       if (slot === null) {
         showMessage(t('msg_only_fit', { placed: i, total: qty }), 'error');
         return;
@@ -229,6 +231,7 @@ export function populateFormForEdit(device) {
   document.getElementById('dev-status').value = device.status;
   document.getElementById('dev-serial').value = device.serial || '';
   document.getElementById('dev-asset').value = device.assetTag || '';
+  document.getElementById('dev-full-depth').checked = device.fullDepth || false;
   document.getElementById('dev-color').value = device._color || '#3b82f6';
   document.getElementById('dev-comments').value = device.comments || '';
 
@@ -246,6 +249,7 @@ function resetForm() {
   editingDeviceId = null;
   document.getElementById('device-form').reset();
   document.getElementById('dev-position').value = 'auto';
+  document.getElementById('dev-full-depth').checked = false;
   document.getElementById('dev-color').value = getState().rackConfig.frontColor || '#3b82f6';
   document.getElementById('form-title').textContent = t('add_device');
   document.getElementById('form-submit-btn').textContent = t('btn_add');
