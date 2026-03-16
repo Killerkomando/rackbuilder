@@ -16,31 +16,51 @@ Works offline as a PWA after the first visit.
 
 ## Features
 
+### Rack Visualization
+
 - **Visual Rack Editor** — Front and rear view with color-coded device blocks
 - **Dynamic Rack Sizing** — Racks up to 46U+ fit on screen without scrolling; unit height scales automatically based on viewport
+- **Configurable Face Colors** — Set default colors for front and rear devices in Settings; custom per-device colors are preserved
+- **Light / Dark Mode** — Toggle between themes, preference saved in localStorage
+- **DE / EN Language** — Full German and English UI translation
+
+### Device Placement & Validation
+
 - **Drag & Drop** — Reposition devices by dragging, including cross-face (front ↔ rear) with U-snap guidelines and automatic color swap
 - **U-Snap Guidelines** — Visual dashed-border overlay shows exactly where a device will land during drag & drop
 - **Collision Detection** — Prevents overlapping devices with real-time visual feedback (green = valid, red = collision)
 - **Depth Validation** — Full-depth devices are checked for cross-face collisions (front vs rear at the same U position)
-- **Depth Blockade Visualization** — Full-depth devices show a persistent hatched blockade overlay on the opposite rack face, making blocked positions immediately visible without needing to drag
-- **HE Unit Selection** — Click on empty rack cells to select/reserve positions; the system auto-fills the position field and highlights the selected unit with a hatched pattern
-- **Bulk Position Preview** — When entering specific positions for bulk creation, all target positions are highlighted in the rack with hatched overlays, making it easy to spot conflicts before placing devices
-- **Bulk Creation** — Add multiple devices at once with auto-numbering (numeric 1,2,3 or alpha A,B,C) and sequential or specific position placement
-- **Configurable Face Colors** — Set default colors for front and rear devices in Settings; custom per-device colors are preserved
+- **Depth Blockade Visualization** — Full-depth devices show a persistent hatched blockade overlay on the opposite rack face, making blocked positions immediately visible at a glance — no dragging needed
 - **Auto Color Swap** — Dragging a device between front and rear automatically applies the target face's default color (custom colors stay unchanged)
+
+### HE Unit Selection & Bulk Creation
+
+- **HE Unit Selection** — Click on empty rack cells to select/reserve positions; the system auto-fills the position field, sets the correct face, and highlights the selected unit with a hatched pattern
+- **Bulk Position Preview** — When entering specific positions for bulk creation (e.g. "10, 20, 24"), all target positions are highlighted in the rack with hatched overlays, making it easy to spot conflicts before placing devices. Clicking cells in bulk mode adds to the position list.
+- **Bulk Creation** — Add multiple devices at once with auto-numbering (numeric 1,2,3 or alpha A,B,C) and sequential or specific position placement
+
+### State Management & History
+
 - **Undo / Redo** — Full undo/redo history (up to 50 steps) via Ctrl+Z / Ctrl+Y or header buttons
-- **Live Statistics** — Real-time rack utilization percentage broken down by front and rear face
-- **Live JSON Preview** — Toggle panel showing the NetBox JSON output in real-time as devices are added or moved
+- **Persistent State** — All rack data saved to localStorage automatically
+- **Storage Monitor** — Shows localStorage usage with visual indicator and "Clear Cache" button to free up space
+- **Clear Devices / Reset All** — "Clear Devices" removes all devices but keeps rack settings; "Reset All" returns everything to defaults
+
+### Export & Import
+
 - **NetBox Export** — JSON format compatible with `POST /api/dcim/devices/` (no `height` field — NetBox derives it from the device type)
 - **YAML & CSV Export** — Alternative export formats for other workflows
 - **Project Save / Load** — Save and restore full rack projects including device heights, colors, depth settings, and rack configuration
 - **NetBox JSON Import** — Re-import previously exported NetBox device lists
-- **Clear Devices / Reset All** — "Clear Devices" removes all devices but keeps rack settings; "Reset All" returns everything to defaults
-- **Storage Monitor** — Shows localStorage usage with visual indicator and "Clear Cache" button to free up space
-- **Light / Dark Mode** — Toggle between themes, preference saved in localStorage
-- **DE / EN Language** — Full German and English UI translation
+
+### Live Feedback
+
+- **Live Statistics** — Real-time rack utilization percentage broken down by front and rear face
+- **Live JSON Preview** — Toggle panel showing the NetBox JSON output in real-time as devices are added or moved
+
+### Offline & PWA
+
 - **Offline PWA** — Service worker caches all assets; installable on mobile and desktop
-- **Persistent State** — All rack data saved to localStorage automatically
 
 ## Export Formats
 
@@ -96,6 +116,7 @@ Use "Load Project" to restore from a project file. NetBox JSON files should be i
 | `Ctrl+Y` / `Ctrl+Shift+Z` | Redo |
 | `Delete` / `Backspace` | Remove selected device |
 | `Escape` | Deselect current device |
+| Click on empty rack cell | Select/reserve HE position |
 
 ## File Structure
 
@@ -103,10 +124,10 @@ Use "Load Project" to restore from a project file. NetBox JSON files should be i
 index.html          — App entry point (no build step)
 css/style.css       — Styles, dark/light theme via CSS custom properties
 js/
-  app.js            — Bootstrap, theme/lang init, device list, settings, stats
-  state.js          — Pub/sub state store + undo/redo + localStorage persistence
+  app.js            — Bootstrap, theme/lang init, device list, settings, stats, HE selection sync
+  state.js          — Pub/sub state store + undo/redo + localStorage persistence + reserved units
   rack-model.js     — Data model, collision + depth detection, NetBox export, stats
-  rack-view.js      — Rack grid renderer with dynamic unit height scaling
+  rack-view.js      — Rack grid renderer, depth blockades, reserved unit overlays
   device-form.js    — Add/edit form + bulk creation logic
   drag-drop.js      — HTML5 drag & drop with rAF throttle + snap guides
   export.js         — JSON, YAML, CSV export + project save/load + NetBox import
