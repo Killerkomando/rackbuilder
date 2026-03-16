@@ -162,7 +162,14 @@ function handleBulkCreate() {
 
   if (specificPositions) {
     // Specific positions mode
+    const bulkDirection = document.getElementById('bulk-direction').value;
     const positions = parsePositionList(specificPositions);
+    // Sort positions based on stacking direction so names match order
+    if (bulkDirection === 'top-to-bottom') {
+      positions.sort((a, b) => b - a); // highest first
+    } else {
+      positions.sort((a, b) => a - b); // lowest first
+    }
     if (positions.length < qty) {
       showMessage(t('msg_not_enough_pos', { specified: positions.length, total: qty }), 'error');
       return;
@@ -242,6 +249,12 @@ function handleBulkCreate() {
 
     document.getElementById('dev-name').value = '';
     document.getElementById('dev-position').value = 'auto';
+    // Reset bulk fields
+    document.getElementById('bulk-qty').value = '2';
+    document.getElementById('bulk-numbering').value = 'numeric';
+    document.getElementById('bulk-start').value = '1';
+    document.getElementById('bulk-direction').value = 'bottom-to-top';
+    document.getElementById('bulk-positions').value = '';
     // Close bulk section and uncheck checkbox
     document.getElementById('bulk-content').classList.remove('open');
     document.getElementById('bulk-checkbox').checked = false;

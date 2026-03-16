@@ -338,6 +338,7 @@ function syncReservedUnitsToForm() {
 
 function initBulkPositionHighlight() {
   const bulkPositionsInput = document.getElementById('bulk-positions');
+  const bulkQtyInput = document.getElementById('bulk-qty');
   bulkPositionsInput.addEventListener('input', () => {
     const value = bulkPositionsInput.value.trim();
     if (!value) {
@@ -345,6 +346,10 @@ function initBulkPositionHighlight() {
       return;
     }
     const positions = parsePositionList(value);
+    // Auto-update quantity to match number of positions
+    if (positions.length > 0) {
+      bulkQtyInput.value = positions.length;
+    }
     const face = document.querySelector('input[name="dev-face"]:checked')?.value || 'front';
     setReservedUnits(positions.map(unit => ({ unit, face })));
   });

@@ -467,7 +467,7 @@ body {
 
 /* Modern checkboxes — iOS-style toggle switch */
 .form-checkbox-label {
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
   gap: 10px;
   font-size: 13px;
@@ -667,11 +667,17 @@ body {
 }
 
 .bulk-content {
-  display: none;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.25s ease, margin-top 0.3s ease;
+  margin-top: 0;
 }
 
 .bulk-content.open {
-  display: block;
+  max-height: 500px;
+  opacity: 1;
+  margin-top: 10px;
 }
 
 /* Device list */
