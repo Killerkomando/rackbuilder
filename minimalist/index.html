@@ -473,11 +473,11 @@ body {
   border-color: var(--color-accent);
 }
 
-/* Modern checkboxes */
+/* Modern checkboxes — iOS-style toggle switch */
 .form-checkbox-label {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   font-size: 13px;
   cursor: pointer;
   color: var(--color-text);
@@ -486,40 +486,86 @@ body {
 .form-checkbox-label input[type="checkbox"] {
   -webkit-appearance: none;
   appearance: none;
-  width: 16px;
-  height: 16px;
-  min-width: 16px;
-  min-height: 16px;
-  border: 2px solid var(--color-border);
-  border-radius: 4px;
-  background: var(--bg-primary);
+  width: 36px;
+  height: 20px;
+  min-width: 36px;
+  min-height: 20px;
+  border: none;
+  border-radius: 10px;
+  background: var(--color-border);
   cursor: pointer;
   position: relative;
-  transition: border-color 0.15s, background 0.15s;
+  transition: background 0.2s;
   flex-shrink: 0;
   margin: 0;
   padding: 0;
 }
 
+.form-checkbox-label input[type="checkbox"]::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
 .form-checkbox-label input[type="checkbox"]:checked {
-  border-color: var(--color-accent);
   background: var(--color-accent);
 }
 
 .form-checkbox-label input[type="checkbox"]:checked::after {
-  content: '';
-  position: absolute;
-  top: 1px;
-  left: 4px;
-  width: 5px;
-  height: 8px;
-  border: solid #fff;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
+  transform: translateX(16px);
 }
 
 .form-checkbox-label input[type="checkbox"]:hover {
+  background: #475569;
+}
+
+.form-checkbox-label input[type="checkbox"]:checked:hover {
+  background: #4f46e5;
+}
+
+/* Modern color picker */
+.form-group input[type="color"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 36px;
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--bg-primary);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.form-group input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.form-group input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 3px;
+}
+
+.form-group input[type="color"]::-moz-color-swatch {
+  border: none;
+  border-radius: 3px;
+}
+
+.form-group input[type="color"]:hover {
   border-color: var(--color-accent);
+}
+
+.form-group input[type="color"]:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
 }
 
 /* Buttons */
@@ -1161,7 +1207,6 @@ function parsePositionList(input) {
     .filter(n => !isNaN(n) && n > 0);
 }
 
-
 // ─── i18n.js ─────────────────────────────────────────────────────────────────
 // Internationalization (EN / DE)
 
@@ -1428,7 +1473,6 @@ function applyTranslations() {
   if (btn) btn.textContent = currentLang.toUpperCase();
 }
 
-
 // ─── rack-model.js ───────────────────────────────────────────────────────────
 // Rack data model with collision detection and boundary checks
 
@@ -1606,7 +1650,7 @@ function getRackUtilization(devices, totalUnits) {
 function toNetBoxJSON(devices, rackConfig) {
   return devices.map(d => ({
     name: d.name,
-    manufacturer: d.manufacturer || undefined,
+    manufacturer: d.manufacturer,
     device_type: d.deviceType,
     role: d.role,
     site: rackConfig.site,
@@ -1624,7 +1668,6 @@ function toNetBoxJSON(devices, rackConfig) {
     return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
   });
 }
-
 
 // ─── state.js ────────────────────────────────────────────────────────────────
 // Central state store with pub/sub and localStorage persistence
@@ -1905,7 +1948,6 @@ function dispatch(action, payload) {
   }
 }
 
-
 // ─── rack-view.js ────────────────────────────────────────────────────────────
 // Rack visualization renderer
 
@@ -2127,7 +2169,6 @@ function getPositionPixels(position, height, totalUnits, numberingDirection) {
     height: height * currentUnitHeight - 2,
   };
 }
-
 
 // ─── device-form.js ──────────────────────────────────────────────────────────
 // Device form handling (add, edit, bulk creation)
@@ -2449,7 +2490,6 @@ function showMessage(text, type) {
   }
 }
 
-
 // ─── drag-drop.js ────────────────────────────────────────────────────────────
 // Drag and drop handling for repositioning devices in the rack
 
@@ -2635,7 +2675,6 @@ function resetDragState() {
   lastTargetFace = null;
   rafPending = false;
 }
-
 
 // ─── export.js ───────────────────────────────────────────────────────────────
 // NetBox JSON export + YAML + CSV + Project save/load + download/clipboard
@@ -2899,7 +2938,6 @@ function triggerDownload(content, filename, mimeType) {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
-
 
 // ─── app.js ──────────────────────────────────────────────────────────────────
 // Rack Builder — Main application bootstrap

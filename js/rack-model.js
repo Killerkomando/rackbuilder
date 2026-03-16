@@ -175,7 +175,7 @@ export function getRackUtilization(devices, totalUnits) {
 export function toNetBoxJSON(devices, rackConfig) {
   return devices.map(d => ({
     name: d.name,
-    manufacturer: d.manufacturer || undefined,
+    manufacturer: d.manufacturer,
     device_type: d.deviceType,
     role: d.role,
     site: rackConfig.site,
