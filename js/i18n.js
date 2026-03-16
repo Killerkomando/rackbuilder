@@ -102,6 +102,7 @@ const translations = {
     storage_usage: 'Storage',
     btn_clear_cache: 'Clear Cache',
     confirm_clear_cache: 'Clear all cached data? Your current project will be lost.',
+    msg_unit_reserved: 'Position U{unit} selected',
     ph_comments: '',
   },
   de: {
@@ -205,6 +206,7 @@ const translations = {
     storage_usage: 'Speicher',
     btn_clear_cache: 'Cache leeren',
     confirm_clear_cache: 'Alle zwischengespeicherten Daten löschen? Ihr aktuelles Projekt geht verloren.',
+    msg_unit_reserved: 'Position U{unit} ausgewählt',
     ph_comments: '',
   },
 };

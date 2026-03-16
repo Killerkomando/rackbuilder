@@ -306,6 +306,62 @@ body {
   ) !important;
 }
 
+/* Full-depth blockade on opposite face */
+.depth-blockade {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+  z-index: 0;
+  background: repeating-linear-gradient(
+    45deg, transparent, transparent 4px,
+    rgba(239, 68, 68, 0.12) 4px, rgba(239, 68, 68, 0.12) 8px
+  );
+  border: 1px dashed rgba(239, 68, 68, 0.3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 6px;
+}
+
+[data-theme="light"] .depth-blockade {
+  color: rgba(0, 0, 0, 0.3);
+  background: repeating-linear-gradient(
+    45deg, transparent, transparent 4px,
+    rgba(239, 68, 68, 0.08) 4px, rgba(239, 68, 68, 0.08) 8px
+  );
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+/* Reserved/selected HE units */
+.rack-cell--reserved {
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: repeating-linear-gradient(
+    -45deg, transparent, transparent 3px,
+    rgba(99, 102, 241, 0.2) 3px, rgba(99, 102, 241, 0.2) 6px
+  );
+  border: 1px dashed rgba(99, 102, 241, 0.5);
+  border-radius: 2px;
+}
+
+[data-theme="light"] .rack-cell--reserved {
+  background: repeating-linear-gradient(
+    -45deg, transparent, transparent 3px,
+    rgba(99, 102, 241, 0.15) 3px, rgba(99, 102, 241, 0.15) 6px
+  );
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
 /* Forms */
 .form-group {
   margin-bottom: 12px;

@@ -1,6 +1,6 @@
 // Device form handling (add, edit, bulk creation)
 
-import { getState, dispatch } from './state.js';
+import { getState, dispatch, clearReservedUnits } from './state.js';
 import { canPlace, findNextFreeSlot } from './rack-model.js';
 import { generateSequence, parsePositionList } from './utils.js';
 import { t } from './i18n.js';
@@ -109,6 +109,7 @@ function handleAdd() {
     showMessage(t('msg_added', { name: data.name, pos: position }), 'success');
     document.getElementById('dev-name').value = '';
     document.getElementById('dev-position').value = 'auto';
+    clearReservedUnits();
   } else {
     showMessage(result.reason, 'error');
   }
@@ -209,6 +210,7 @@ function handleBulkCreate() {
 
     document.getElementById('dev-name').value = '';
     document.getElementById('dev-position').value = 'auto';
+    clearReservedUnits();
   }
 }
 
@@ -250,6 +252,7 @@ function resetForm() {
   document.getElementById('device-form').reset();
   document.getElementById('dev-position').value = 'auto';
   document.getElementById('dev-full-depth').checked = false;
+  clearReservedUnits();
   document.getElementById('dev-color').value = getState().rackConfig.frontColor || '#3b82f6';
   document.getElementById('form-title').textContent = t('add_device');
   document.getElementById('form-submit-btn').textContent = t('btn_add');

@@ -22,6 +22,9 @@ Works offline as a PWA after the first visit.
 - **U-Snap Guidelines** — Visual dashed-border overlay shows exactly where a device will land during drag & drop
 - **Collision Detection** — Prevents overlapping devices with real-time visual feedback (green = valid, red = collision)
 - **Depth Validation** — Full-depth devices are checked for cross-face collisions (front vs rear at the same U position)
+- **Depth Blockade Visualization** — Full-depth devices show a persistent hatched blockade overlay on the opposite rack face, making blocked positions immediately visible without needing to drag
+- **HE Unit Selection** — Click on empty rack cells to select/reserve positions; the system auto-fills the position field and highlights the selected unit with a hatched pattern
+- **Bulk Position Preview** — When entering specific positions for bulk creation, all target positions are highlighted in the rack with hatched overlays, making it easy to spot conflicts before placing devices
 - **Bulk Creation** — Add multiple devices at once with auto-numbering (numeric 1,2,3 or alpha A,B,C) and sequential or specific position placement
 - **Configurable Face Colors** — Set default colors for front and rear devices in Settings; custom per-device colors are preserved
 - **Auto Color Swap** — Dragging a device between front and rear automatically applies the target face's default color (custom colors stay unchanged)

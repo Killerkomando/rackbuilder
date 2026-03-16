@@ -1,8 +1,8 @@
 // Rack Builder — Main application bootstrap
 
-import { getState, subscribe, dispatch, undo, redo, canUndo, canRedo } from './state.js';
+import { getState, subscribe, dispatch, undo, redo, canUndo, canRedo, getReservedUnits, setReservedUnits, clearReservedUnits } from './state.js';
 import { renderRack } from './rack-view.js';
-import { getLocalStorageUsage } from './utils.js';
+import { getLocalStorageUsage, parsePositionList } from './utils.js';
 import { getRackUtilization, toNetBoxJSON } from './rack-model.js';
 import { initDeviceForm, populateFormForEdit } from './device-form.js';
 import { initDragDrop } from './drag-drop.js';
@@ -24,6 +24,7 @@ function init() {
     renderRack(state);
     renderDeviceList(state);
     handleSelection(state);
+    syncReservedUnitsToForm();
     updateUndoRedoButtons();
     updateStorageIndicator();
     updateStats(state);
@@ -40,6 +41,7 @@ function init() {
   initUndoRedo();
   initJsonPreview();
   initStorageIndicator();
+  initBulkPositionHighlight();
   updateStorageIndicator();
   updateStats(state);
 
@@ -299,6 +301,49 @@ function updateStorageIndicator() {
   } else if (percent > 70) {
     fill.classList.add('warning');
   }
+}
+
+// ─── HE Selection / Reserved Units ──────────────────────────────────────────
+
+let lastSyncedReserved = null;
+
+function syncReservedUnitsToForm() {
+  const reserved = getReservedUnits();
+  const key = JSON.stringify(reserved);
+  if (key === lastSyncedReserved) return;
+  lastSyncedReserved = key;
+
+  const bulkOpen = document.getElementById('bulk-content')?.classList.contains('open');
+
+  if (!bulkOpen && reserved.length === 1) {
+    // Single mode: update position field and face
+    const posInput = document.getElementById('dev-position');
+    const r = reserved[0];
+    posInput.value = r.unit;
+    const faceRadio = document.querySelector(`input[name="dev-face"][value="${r.face}"]`);
+    if (faceRadio) faceRadio.checked = true;
+  }
+
+  if (bulkOpen && reserved.length > 0) {
+    // Update bulk positions field from clicked cells
+    const posInput = document.getElementById('bulk-positions');
+    const sorted = [...reserved].sort((a, b) => a.unit - b.unit);
+    posInput.value = sorted.map(r => r.unit).join(', ');
+  }
+}
+
+function initBulkPositionHighlight() {
+  const bulkPositionsInput = document.getElementById('bulk-positions');
+  bulkPositionsInput.addEventListener('input', () => {
+    const value = bulkPositionsInput.value.trim();
+    if (!value) {
+      clearReservedUnits();
+      return;
+    }
+    const positions = parsePositionList(value);
+    const face = document.querySelector('input[name="dev-face"]:checked')?.value || 'front';
+    setReservedUnits(positions.map(unit => ({ unit, face })));
+  });
 }
 
 // ─── Undo/Redo ──────────────────────────────────────────────────────────────

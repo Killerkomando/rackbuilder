@@ -1,6 +1,6 @@
 // Rack visualization renderer
 
-import { getState, dispatch } from './state.js';
+import { getState, dispatch, getReservedUnits, setReservedUnits } from './state.js';
 import { t } from './i18n.js';
 
 // Cached unit height — recalculated on each render
@@ -55,11 +55,15 @@ export function renderRack(state) {
   html += `<div class="rack-column-header units">${t('col_units')}</div>`;
   html += `<div class="rack-column-header rear">${t('col_rear')}</div>`;
 
+  const reserved = getReservedUnits();
+
   // Front face column
   html += '<div class="rack-face" id="rack-face-front" data-face="front">';
   for (const u of unitOrder) {
     html += `<div class="rack-cell" data-unit="${u}" data-face="front"></div>`;
   }
+  html += renderDepthBlockades(devices, 'front', unitOrder);
+  html += renderReservedOverlays('front', unitOrder, reserved);
   html += renderDeviceBlocks(devices, 'front', unitOrder, selectedDeviceId);
   html += '</div>';
 
@@ -75,6 +79,8 @@ export function renderRack(state) {
   for (const u of unitOrder) {
     html += `<div class="rack-cell" data-unit="${u}" data-face="rear"></div>`;
   }
+  html += renderDepthBlockades(devices, 'rear', unitOrder);
+  html += renderReservedOverlays('rear', unitOrder, reserved);
   html += renderDeviceBlocks(devices, 'rear', unitOrder, selectedDeviceId);
   html += '</div>';
 
@@ -89,11 +95,28 @@ export function renderRack(state) {
     });
   });
 
-  // Click on empty cell to deselect
+  // Click on empty cell: reserve unit or deselect
   container.querySelectorAll('.rack-cell').forEach(cell => {
     cell.addEventListener('click', () => {
       if (selectedDeviceId) {
         dispatch('SELECT_DEVICE', null);
+        return;
+      }
+      const unit = parseInt(cell.dataset.unit);
+      const face = cell.dataset.face;
+      const current = getReservedUnits();
+      const already = current.find(r => r.unit === unit && r.face === face);
+      if (already) {
+        // Deselect this unit
+        setReservedUnits(current.filter(r => !(r.unit === unit && r.face === face)));
+      } else {
+        // In single-add mode, replace; in bulk mode, add
+        const bulkOpen = document.getElementById('bulk-content')?.classList.contains('open');
+        if (bulkOpen) {
+          setReservedUnits([...current, { unit, face }]);
+        } else {
+          setReservedUnits([{ unit, face }]);
+        }
       }
     });
   });
@@ -122,6 +145,45 @@ function renderDeviceBlocks(devices, face, unitOrder, selectedDeviceId) {
     >${device.name || '(unnamed)'}</div>`;
   }
 
+  return html;
+}
+
+/**
+ * Render blockade overlays on this face for full-depth devices on the opposite face.
+ */
+function renderDepthBlockades(devices, face, unitOrder) {
+  const oppositeFace = face === 'front' ? 'rear' : 'front';
+  const fullDepthOnOtherSide = devices.filter(d => d.face === oppositeFace && d.fullDepth);
+  if (fullDepthOnOtherSide.length === 0) return '';
+
+  const uh = currentUnitHeight;
+  let html = '';
+  for (const device of fullDepthOnOtherSide) {
+    const topIndex = unitOrder.indexOf(device.position + device.height - 1);
+    const top = topIndex * uh;
+    const height = device.height * uh;
+    html += `<div class="depth-blockade"
+      style="top: ${top}px; height: ${height - 2}px;"
+      title="${device.name} (${oppositeFace}, ${t('label_full_depth')})"
+    >${device.name}</div>`;
+  }
+  return html;
+}
+
+/**
+ * Render hatched overlays for reserved/selected rack units.
+ */
+function renderReservedOverlays(face, unitOrder, reservedUnits) {
+  const matching = reservedUnits.filter(r => r.face === face);
+  if (matching.length === 0) return '';
+
+  const uh = currentUnitHeight;
+  let html = '';
+  for (const r of matching) {
+    const idx = unitOrder.indexOf(r.unit);
+    if (idx === -1) continue;
+    html += `<div class="rack-cell--reserved" style="top: ${idx * uh}px; height: ${uh}px;"></div>`;
+  }
   return html;
 }
 

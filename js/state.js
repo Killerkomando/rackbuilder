@@ -13,6 +13,16 @@ const initialState = {
 let state = loadState();
 let listeners = [];
 
+// Reserved units (non-persisted, UI-only state for HE selection)
+let reservedUnits = []; // [{unit: number, face: string}]
+
+export function getReservedUnits() { return reservedUnits; }
+export function setReservedUnits(units) {
+  reservedUnits = units;
+  for (const listener of listeners) listener(state);
+}
+export function clearReservedUnits() { reservedUnits = []; }
+
 // Undo/Redo history
 let history = [];
 let historyIndex = -1;
