@@ -316,19 +316,23 @@ function syncReservedUnitsToForm() {
   const bulkOpen = document.getElementById('bulk-content')?.classList.contains('open');
 
   if (!bulkOpen && reserved.length === 1) {
-    // Single mode: update position field and face
+    // Single mode: update position field and face (only if user isn't typing)
     const posInput = document.getElementById('dev-position');
-    const r = reserved[0];
-    posInput.value = r.unit;
-    const faceRadio = document.querySelector(`input[name="dev-face"][value="${r.face}"]`);
-    if (faceRadio) faceRadio.checked = true;
+    if (document.activeElement !== posInput) {
+      const r = reserved[0];
+      posInput.value = r.unit;
+      const faceRadio = document.querySelector(`input[name="dev-face"][value="${r.face}"]`);
+      if (faceRadio) faceRadio.checked = true;
+    }
   }
 
   if (bulkOpen && reserved.length > 0) {
-    // Update bulk positions field from clicked cells
+    // Update bulk positions field from clicked cells (only if user isn't typing)
     const posInput = document.getElementById('bulk-positions');
-    const sorted = [...reserved].sort((a, b) => a.unit - b.unit);
-    posInput.value = sorted.map(r => r.unit).join(', ');
+    if (document.activeElement !== posInput) {
+      const sorted = [...reserved].sort((a, b) => a.unit - b.unit);
+      posInput.value = sorted.map(r => r.unit).join(', ');
+    }
   }
 }
 
