@@ -1,0 +1,3137 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rack Builder (Minimalist)</title>
+  <meta name="theme-color" content="#0f172a">
+  <style>
+/* Rack Builder — Dark Theme */
+
+:root {
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-rack: #0a0a0a;
+  --bg-rack-cell: #1a1a1a;
+  --color-front: #3b82f6;
+  --color-front-light: #60a5fa;
+  --color-rear: #f97316;
+  --color-rear-light: #fb923c;
+  --color-text: #e2e8f0;
+  --color-text-muted: #94a3b8;
+  --color-border: #334155;
+  --color-warning: #ef4444;
+  --color-success: #22c55e;
+  --color-accent: #6366f1;
+  --unit-height: 28px;
+  --rack-width: 260px;
+  --sidebar-width: 320px;
+  --radius: 6px;
+}
+
+/* Light theme overrides */
+[data-theme="light"] {
+  --bg-primary: #f1f5f9;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #e2e8f0;
+  --bg-rack: #cbd5e1;
+  --bg-rack-cell: #e8edf2;
+  --color-text: #1e293b;
+  --color-text-muted: #64748b;
+  --color-border: #cbd5e1;
+}
+
+[data-theme="light"] .rack {
+  border-color: #94a3b8;
+}
+
+[data-theme="light"] .rack-unit-number {
+  border-bottom-color: #d1d5db;
+}
+
+[data-theme="light"] .rack-cell {
+  border-bottom-color: #d1d5db;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-primary);
+  color: var(--color-text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.app-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-header h1 .rack-icon {
+  color: var(--color-accent);
+}
+
+.app-version {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin-left: 6px;
+  background: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  vertical-align: middle;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Layout */
+.app-layout {
+  display: flex;
+  height: calc(100vh - 53px);
+}
+
+/* Sidebar */
+.sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--color-border);
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.sidebar-right {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--color-border);
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.sidebar h2, .sidebar-right h2 {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin-bottom: 12px;
+}
+
+/* Rack Container */
+.rack-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.rack-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.rack-name {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.rack-info {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.rack-stats {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  background: var(--bg-tertiary);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* Rack Grid */
+.rack {
+  display: grid;
+  grid-template-columns: var(--rack-width) 40px var(--rack-width);
+  background: var(--bg-rack);
+  border: 3px solid #444;
+  border-radius: 4px;
+  position: relative;
+}
+
+.rack-column {
+  position: relative;
+}
+
+.rack-column-header {
+  text-align: center;
+  padding: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.rack-column-header.front {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--color-front-light);
+}
+
+.rack-column-header.rear {
+  background: rgba(249, 115, 22, 0.15);
+  color: var(--color-rear-light);
+}
+
+.rack-column-header.units {
+  background: var(--bg-tertiary);
+  color: var(--color-text-muted);
+}
+
+.rack-unit-numbers {
+  display: flex;
+  flex-direction: column;
+}
+
+.rack-unit-number {
+  height: var(--unit-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid #222;
+  user-select: none;
+}
+
+.rack-face {
+  position: relative;
+}
+
+.rack-cell {
+  height: var(--unit-height);
+  border-bottom: 1px solid #222;
+  position: relative;
+}
+
+.rack-cell.drag-over-valid {
+  background: rgba(34, 197, 94, 0.2);
+  outline: 1px dashed var(--color-success);
+}
+
+.rack-cell.drag-over-invalid {
+  background: rgba(239, 68, 68, 0.15);
+  outline: 1px dashed var(--color-warning);
+}
+
+/* Device blocks */
+.device-block {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  cursor: grab;
+  user-select: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 8px;
+  z-index: 1;
+  transition: box-shadow 0.15s;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.device-block:hover {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+  z-index: 2;
+}
+
+.device-block.selected {
+  box-shadow: 0 0 0 2px #fff;
+  z-index: 3;
+}
+
+.device-block.dragging {
+  opacity: 0.5;
+  cursor: grabbing;
+}
+
+/* Snap guide (drag & drop) */
+.snap-guide {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  border: 2px dashed var(--color-success);
+  background: rgba(34, 197, 94, 0.1);
+  border-radius: 3px;
+  pointer-events: none;
+  z-index: 10;
+  transition: top 0.1s ease, height 0.1s ease;
+}
+
+.snap-guide.invalid {
+  border-color: var(--color-warning);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.device-block--full-depth {
+  background-image: repeating-linear-gradient(
+    45deg, transparent, transparent 4px,
+    rgba(255, 255, 255, 0.08) 4px, rgba(255, 255, 255, 0.08) 8px
+  ) !important;
+}
+
+/* Full-depth blockade on opposite face */
+.depth-blockade {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+  z-index: 0;
+  background: repeating-linear-gradient(
+    45deg, transparent, transparent 4px,
+    rgba(239, 68, 68, 0.12) 4px, rgba(239, 68, 68, 0.12) 8px
+  );
+  border: 1px dashed rgba(239, 68, 68, 0.3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 6px;
+}
+
+[data-theme="light"] .depth-blockade {
+  color: rgba(0, 0, 0, 0.3);
+  background: repeating-linear-gradient(
+    45deg, transparent, transparent 4px,
+    rgba(239, 68, 68, 0.08) 4px, rgba(239, 68, 68, 0.08) 8px
+  );
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+/* Reserved/selected HE units */
+.rack-cell--reserved {
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: repeating-linear-gradient(
+    -45deg, transparent, transparent 3px,
+    rgba(99, 102, 241, 0.2) 3px, rgba(99, 102, 241, 0.2) 6px
+  );
+  border: 1px dashed rgba(99, 102, 241, 0.5);
+  border-radius: 2px;
+}
+
+[data-theme="light"] .rack-cell--reserved {
+  background: repeating-linear-gradient(
+    -45deg, transparent, transparent 3px,
+    rgba(99, 102, 241, 0.15) 3px, rgba(99, 102, 241, 0.15) 6px
+  );
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+/* Forms */
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 7px 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.form-row {
+  display: flex;
+  gap: 8px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.form-radio-group {
+  display: flex;
+  gap: 8px;
+}
+
+.form-radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.form-radio-group input[type="radio"] {
+  width: auto;
+}
+
+.form-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--color-text);
+}
+
+.form-checkbox-label input[type="checkbox"] {
+  width: auto;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #4f46e5;
+}
+
+.btn-success {
+  background: var(--color-success);
+  color: #fff;
+}
+
+.btn-success:hover:not(:disabled) {
+  background: #16a34a;
+}
+
+.btn-danger {
+  background: var(--color-warning);
+  color: #fff;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--color-text);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #475569;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+/* Messages */
+.message {
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  margin-bottom: 12px;
+}
+
+.message-error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.message-success {
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.message-info {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* Bulk section */
+.bulk-section {
+  border-top: 1px solid var(--color-border);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+.bulk-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+}
+
+.bulk-toggle:hover {
+  color: var(--color-text);
+}
+
+.bulk-toggle .arrow {
+  transition: transform 0.2s;
+  font-size: 10px;
+}
+
+.bulk-toggle .arrow.open {
+  transform: rotate(90deg);
+}
+
+.bulk-content {
+  display: none;
+}
+
+.bulk-content.open {
+  display: block;
+}
+
+/* Device list */
+.device-list {
+  margin-top: 16px;
+}
+
+.device-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 10px;
+  background: var(--bg-primary);
+  border-radius: var(--radius);
+  margin-bottom: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+
+.device-list-item:hover {
+  border-color: var(--color-border);
+}
+
+.device-list-item.selected {
+  border-color: var(--color-accent);
+}
+
+.device-list-item .device-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.device-list-item .device-color {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.device-list-item .device-pos {
+  color: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.device-list-item .device-delete {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.device-list-item .device-delete:hover {
+  color: var(--color-warning);
+  background: rgba(239, 68, 68, 0.15);
+}
+
+/* Export section */
+.export-section {
+  margin-bottom: 16px;
+}
+
+.export-section .btn {
+  margin-bottom: 6px;
+}
+
+/* Settings modal */
+dialog {
+  background: var(--bg-secondary);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 400px;
+  width: 90%;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+dialog h2 {
+  margin-bottom: 16px;
+  font-size: 16px;
+}
+
+dialog .dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+/* JSON Preview */
+.json-preview {
+  background: var(--bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 10px;
+  font-size: 11px;
+  font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+  max-height: 300px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--color-text);
+  margin-top: 8px;
+}
+
+/* Storage indicator */
+.storage-indicator {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.storage-label {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+
+.storage-bar {
+  height: 4px;
+  background: var(--bg-tertiary);
+  border-radius: 2px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.storage-bar-fill {
+  height: 100%;
+  background: var(--color-success);
+  border-radius: 2px;
+  transition: width 0.3s;
+  width: 0;
+}
+
+.storage-bar-fill.warning {
+  background: #f59e0b;
+}
+
+.storage-bar-fill.critical {
+  background: var(--color-warning);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .sidebar-right {
+    display: none;
+  }
+}
+
+@media (max-width: 800px) {
+  .app-layout {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .sidebar {
+    width: 100%;
+    min-width: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .rack-container {
+    min-height: 60vh;
+  }
+}
+
+  </style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>
+    <span class="rack-icon">&#9638;</span>
+    <span data-i18n="app_title">Rack Builder</span>
+    <span class="app-version" data-i18n="version">v0.3.0</span>
+  </h1>
+  <div class="header-actions">
+    <button class="btn btn-secondary btn-sm" id="undo-btn" data-i18n-title="btn_undo" title="Undo" disabled>&#x21A9;</button>
+    <button class="btn btn-secondary btn-sm" id="redo-btn" data-i18n-title="btn_redo" title="Redo" disabled>&#x21AA;</button>
+    <button class="btn btn-secondary btn-sm" id="lang-btn" title="Switch language / Sprache wechseln">DE</button>
+    <button class="btn btn-secondary btn-sm" id="theme-btn">🌙 Dark</button>
+    <button class="btn btn-secondary btn-sm" id="settings-btn" data-i18n="btn_settings">Settings</button>
+    <button class="btn btn-secondary btn-sm" id="clear-devices-btn" data-i18n="btn_clear_devices">Clear Devices</button>
+    <button class="btn btn-secondary btn-sm" id="reset-all-btn" data-i18n="btn_reset_all">Reset All</button>
+  </div>
+</header>
+
+<main class="app-layout">
+  <!-- Left Sidebar: Device Form -->
+  <aside class="sidebar">
+    <h2 id="form-title" data-i18n="add_device">Add Device</h2>
+    <div id="form-message"></div>
+    <form id="device-form" autocomplete="off">
+      <div class="form-group">
+        <label for="dev-name" data-i18n="label_name">Name</label>
+        <input type="text" id="dev-name" required data-i18n-placeholder="ph_name" placeholder="e.g. Switch-01">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dev-type" data-i18n="label_device_type">Device Type</label>
+          <input type="text" id="dev-type" data-i18n-placeholder="ph_type" placeholder="e.g. catalyst-9300">
+        </div>
+        <div class="form-group">
+          <label for="dev-role" data-i18n="label_role">Role</label>
+          <input type="text" id="dev-role" data-i18n-placeholder="ph_role" placeholder="e.g. access-switch">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dev-height" data-i18n="label_height">Height (U)</label>
+          <input type="number" id="dev-height" min="1" max="20" value="1">
+        </div>
+        <div class="form-group">
+          <label for="dev-position" data-i18n="label_position">Position (U)</label>
+          <input type="text" id="dev-position" data-i18n-placeholder="ph_position" placeholder="auto" value="auto">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label data-i18n="label_face">Face</label>
+        <div class="form-radio-group">
+          <label><input type="radio" name="dev-face" value="front" checked> <span data-i18n="face_front">Front</span></label>
+          <label><input type="radio" name="dev-face" value="rear"> <span data-i18n="face_rear">Rear</span></label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-checkbox-label">
+          <input type="checkbox" id="dev-full-depth">
+          <span data-i18n="label_full_depth">Full Depth</span>
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label for="dev-status" data-i18n="label_status">Status</label>
+        <select id="dev-status">
+          <option value="planned" data-i18n="status_planned">Planned</option>
+          <option value="active" data-i18n="status_active">Active</option>
+          <option value="staged" data-i18n="status_staged">Staged</option>
+          <option value="failed" data-i18n="status_failed">Failed</option>
+          <option value="decommissioning" data-i18n="status_decommissioning">Decommissioning</option>
+        </select>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="dev-serial" data-i18n="label_serial">Serial</label>
+          <input type="text" id="dev-serial" data-i18n-placeholder="ph_serial" placeholder="Optional">
+        </div>
+        <div class="form-group">
+          <label for="dev-asset" data-i18n="label_asset_tag">Asset Tag</label>
+          <input type="text" id="dev-asset" data-i18n-placeholder="ph_asset" placeholder="Optional">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="dev-color" data-i18n="label_color">Color</label>
+        <input type="color" id="dev-color" value="#3b82f6">
+      </div>
+
+      <div class="form-group">
+        <label for="dev-comments" data-i18n="label_comments">Comments</label>
+        <textarea id="dev-comments"></textarea>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-block" id="form-submit-btn" data-i18n="btn_add">Add Device</button>
+      <button type="button" class="btn btn-danger btn-block" id="form-delete-btn" data-i18n="btn_delete" style="display:none; margin-top:6px;">Delete Device</button>
+      <button type="button" class="btn btn-secondary btn-block" id="form-cancel-btn" data-i18n="btn_cancel_edit" style="display:none; margin-top:6px;">Cancel Edit</button>
+
+      <!-- Bulk Section -->
+      <div class="bulk-section">
+        <div class="bulk-toggle" id="bulk-toggle">
+          <span class="arrow" id="bulk-arrow">&#9654;</span>
+          <span data-i18n="bulk_creation">Bulk Creation</span>
+        </div>
+        <div class="bulk-content" id="bulk-content">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="bulk-qty" data-i18n="bulk_quantity">Quantity</label>
+              <input type="number" id="bulk-qty" min="2" max="100" value="2">
+            </div>
+            <div class="form-group">
+              <label for="bulk-numbering" data-i18n="bulk_numbering">Numbering</label>
+              <select id="bulk-numbering">
+                <option value="numeric" data-i18n="bulk_numeric">Numeric (1, 2, 3…)</option>
+                <option value="alpha" data-i18n="bulk_alpha">Alpha (A, B, C…)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="bulk-start" data-i18n="bulk_start">Start Number / Letter</label>
+            <input type="text" id="bulk-start" value="1" placeholder="1 or A">
+          </div>
+          <div class="form-group">
+            <label for="bulk-positions" data-i18n="bulk_positions">Specific Positions (optional)</label>
+            <input type="text" id="bulk-positions" data-i18n-placeholder="ph_bulk_positions" placeholder="e.g. 10, 20, 24">
+          </div>
+          <div class="message message-info" style="margin-top:8px;" data-i18n="bulk_info">
+            Leave "Specific Positions" empty for sequential stacking from the start position.
+          </div>
+        </div>
+      </div>
+    </form>
+  </aside>
+
+  <!-- Center: Rack Visualization -->
+  <section class="rack-container">
+    <div class="rack-controls">
+      <span class="rack-name" id="rack-name-display">Rack-01</span>
+      <span class="rack-info" id="rack-info"></span>
+      <span class="rack-stats" id="rack-stats"></span>
+    </div>
+    <div class="rack" id="rack-view">
+      <!-- Rendered by rack-view.js -->
+    </div>
+  </section>
+
+  <!-- Right Sidebar: Export + Device List -->
+  <aside class="sidebar-right">
+    <h2 data-i18n="export_title">Export</h2>
+    <h3 style="font-size:12px; color:var(--color-text-muted); margin-bottom:6px;" data-i18n="export_netbox">NetBox Export</h3>
+    <div class="export-section">
+      <button class="btn btn-success btn-block" id="export-json-btn" data-i18n="btn_json">Download JSON</button>
+      <button class="btn btn-secondary btn-block" id="export-yaml-btn" data-i18n="btn_yaml">Download YAML</button>
+      <button class="btn btn-secondary btn-block" id="export-csv-btn" data-i18n="btn_csv">Download CSV</button>
+      <button class="btn btn-secondary btn-block" id="copy-btn" data-i18n="btn_copy">Copy JSON</button>
+    </div>
+
+    <h3 style="font-size:12px; color:var(--color-text-muted); margin-top:12px; margin-bottom:6px;" data-i18n="export_project">Project Save / Load</h3>
+    <div class="export-section">
+      <button class="btn btn-primary btn-block" id="save-project-btn" data-i18n="btn_save_project">Save Project</button>
+      <button class="btn btn-secondary btn-block" id="load-project-btn" data-i18n="btn_load_project">Load Project</button>
+      <input type="file" id="load-project-file" accept=".json" style="display:none">
+    </div>
+
+    <div class="export-section" style="margin-top:12px;">
+      <h3 style="font-size:12px; color:var(--color-text-muted); margin-bottom:6px;" data-i18n="import_title">NetBox Import</h3>
+      <button class="btn btn-secondary btn-block" id="import-btn" data-i18n="btn_import">Import JSON</button>
+      <input type="file" id="import-file" accept=".json" style="display:none">
+    </div>
+
+    <div class="json-preview-section" style="margin-top:12px;">
+      <button class="btn btn-secondary btn-sm btn-block" id="json-preview-toggle" data-i18n="btn_json_preview">Live JSON Preview</button>
+      <pre class="json-preview" id="json-preview" style="display:none;"></pre>
+    </div>
+
+    <h2 style="margin-top:16px;">
+      <span data-i18n="devices_title">Devices</span> (<span id="device-count">0</span>)
+    </h2>
+    <div class="device-list" id="device-list">
+      <!-- Rendered by app.js -->
+    </div>
+
+    <div class="storage-indicator" id="storage-indicator">
+      <div class="storage-label">
+        <span data-i18n="storage_usage">Storage</span>: <span id="storage-usage-text">0 KB / 5 MB</span>
+      </div>
+      <div class="storage-bar"><div class="storage-bar-fill" id="storage-bar-fill"></div></div>
+      <button class="btn btn-secondary btn-sm" id="clear-cache-btn" data-i18n="btn_clear_cache">Clear Cache</button>
+    </div>
+  </aside>
+</main>
+
+<!-- Settings Modal -->
+<dialog id="settings-modal">
+  <h2 data-i18n="settings_title">Rack Settings</h2>
+  <form id="settings-form">
+    <div class="form-group">
+      <label for="setting-name" data-i18n="setting_name">Rack Name</label>
+      <input type="text" id="setting-name" required>
+    </div>
+    <div class="form-group">
+      <label for="setting-units" data-i18n="setting_units">Total Units (U)</label>
+      <input type="number" id="setting-units" min="1" max="60" required>
+    </div>
+    <div class="form-group">
+      <label for="setting-direction" data-i18n="setting_direction">Numbering Direction</label>
+      <select id="setting-direction">
+        <option value="bottom-to-top" data-i18n="dir_bottom">U1 at Bottom</option>
+        <option value="top-to-bottom" data-i18n="dir_top">U1 at Top</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="setting-site" data-i18n="setting_site">Site (for export)</label>
+      <input type="text" id="setting-site" data-i18n-placeholder="ph_site" placeholder="e.g. dc1">
+    </div>
+    <div class="form-group">
+      <label for="setting-location" data-i18n="setting_location">Location (for export)</label>
+      <input type="text" id="setting-location" data-i18n-placeholder="ph_location" placeholder="e.g. hall-a">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="setting-front-color" data-i18n="setting_front_color">Front Color</label>
+        <input type="color" id="setting-front-color" value="#3b82f6">
+      </div>
+      <div class="form-group">
+        <label for="setting-rear-color" data-i18n="setting_rear_color">Rear Color</label>
+        <input type="color" id="setting-rear-color" value="#f97316">
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-secondary" id="settings-cancel" data-i18n="btn_dialog_cancel">Cancel</button>
+      <button type="submit" class="btn btn-primary" data-i18n="btn_save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════════════
+// Rack Builder v0.3.0 — Minimalist Single-File Edition
+// All modules merged into one file for easy local usage.
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ─── utils.js ────────────────────────────────────────────────────────────────
+// Utility helpers for Rack Builder
+
+/**
+ * Generate a unique ID (UUID v4)
+ */
+function generateId() {
+  if (crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+/**
+ * Generate a naming sequence.
+ * @param {string} baseName - Base name for devices
+ * @param {number} count - Number of names to generate
+ * @param {number|string} startFrom - Starting number (1) or letter ("A")
+ * @param {"numeric"|"alpha"} mode - Numbering mode
+ * @returns {string[]}
+ */
+function generateSequence(baseName, count, startFrom, mode) {
+  const names = [];
+  if (mode === 'alpha') {
+    let charCode = typeof startFrom === 'string'
+      ? startFrom.toUpperCase().charCodeAt(0)
+      : 64 + startFrom; // 1 -> A
+    for (let i = 0; i < count; i++) {
+      names.push(`${baseName}-${String.fromCharCode(charCode + i)}`);
+    }
+  } else {
+    const start = typeof startFrom === 'number' ? startFrom : parseInt(startFrom, 10) || 1;
+    for (let i = 0; i < count; i++) {
+      names.push(`${baseName}-${start + i}`);
+    }
+  }
+  return names;
+}
+
+/**
+ * Get localStorage usage statistics.
+ */
+function getLocalStorageUsage() {
+  let total = 0;
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    total += key.length + localStorage.getItem(key).length;
+  }
+  return { usedChars: total, usedBytes: total * 2, limitBytes: 5 * 1024 * 1024 };
+}
+
+/**
+ * Parse a comma-separated list of positions.
+ * @param {string} input - e.g. "10, 20, 24"
+ * @returns {number[]}
+ */
+function parsePositionList(input) {
+  return input
+    .split(',')
+    .map(s => parseInt(s.trim(), 10))
+    .filter(n => !isNaN(n) && n > 0);
+}
+
+
+// ─── i18n.js ─────────────────────────────────────────────────────────────────
+// Internationalization (EN / DE)
+
+const translations = {
+  en: {
+    app_title: 'Rack Builder',
+    version: 'v0.3.0',
+    btn_settings: 'Settings',
+    btn_clear_devices: 'Clear Devices',
+    btn_reset_all: 'Reset All',
+    theme_dark: '🌙 Dark',
+    theme_light: '☀ Light',
+    add_device: 'Add Device',
+    edit_device: 'Edit Device',
+    label_name: 'Name',
+    label_device_type: 'Device Type',
+    label_role: 'Role',
+    label_height: 'Height (U)',
+    label_position: 'Position (U)',
+    label_face: 'Face',
+    face_front: 'Front',
+    face_rear: 'Rear',
+    label_status: 'Status',
+    status_planned: 'Planned',
+    status_active: 'Active',
+    status_staged: 'Staged',
+    status_failed: 'Failed',
+    status_decommissioning: 'Decommissioning',
+    label_serial: 'Serial',
+    label_asset_tag: 'Asset Tag',
+    label_color: 'Color',
+    label_comments: 'Comments',
+    btn_add: 'Add Device',
+    btn_update: 'Update Device',
+    btn_delete: 'Delete Device',
+    btn_cancel_edit: 'Cancel Edit',
+    bulk_creation: 'Bulk Creation',
+    bulk_quantity: 'Quantity',
+    bulk_numbering: 'Numbering',
+    bulk_numeric: 'Numeric (1, 2, 3…)',
+    bulk_alpha: 'Alpha (A, B, C…)',
+    bulk_start: 'Start Number / Letter',
+    bulk_positions: 'Specific Positions (optional)',
+    bulk_info: 'Leave "Specific Positions" empty for sequential stacking from the start position.',
+    export_title: 'Export',
+    btn_json: 'Download JSON',
+    btn_yaml: 'Download YAML',
+    btn_csv: 'Download CSV',
+    btn_copy: 'Copy JSON',
+    export_netbox: 'NetBox Export',
+    export_project: 'Project Save / Load',
+    btn_save_project: 'Save Project',
+    btn_load_project: 'Load Project',
+    import_title: 'NetBox Import',
+    btn_import: 'Import NetBox JSON',
+    msg_use_load_project: 'This is a project file. Use "Load Project" instead.',
+    devices_title: 'Devices',
+    settings_title: 'Rack Settings',
+    setting_name: 'Rack Name',
+    setting_units: 'Total Units (U)',
+    setting_direction: 'Numbering Direction',
+    dir_bottom: 'U1 at Bottom',
+    dir_top: 'U1 at Top',
+    setting_site: 'Site (for export)',
+    setting_location: 'Location (for export)',
+    setting_front_color: 'Front Color',
+    setting_rear_color: 'Rear Color',
+    btn_save: 'Save',
+    btn_dialog_cancel: 'Cancel',
+    no_devices: 'No devices added yet.',
+    confirm_clear_devices: 'Remove all devices from the rack? Rack settings will be kept.',
+    confirm_reset_all: 'Remove all devices AND reset rack settings to defaults?',
+    msg_no_export: 'No devices to export.',
+    msg_copied: 'Copied!',
+    msg_import_invalid: 'Invalid file: expected a JSON array.',
+    msg_import_success: 'Imported {placed} of {total} devices.',
+    msg_added: 'Added "{name}" at U{pos}.',
+    msg_updated: 'Device updated.',
+    msg_no_slot: 'No free slot available for this device.',
+    msg_pos_number: 'Position must be a number when editing.',
+    msg_bulk_added: 'Added {placed} devices.',
+    msg_partial: 'Added {placed}/{total} devices. Failed:',
+    msg_only_fit: 'Only {placed} of {total} devices could fit. Not enough space.',
+    msg_not_enough_pos: 'You specified {specified} positions but need {total}. Add more positions or reduce quantity.',
+    msg_no_start: 'No free starting slot available.',
+    col_front: 'Front',
+    col_rear: 'Rear',
+    col_units: 'U',
+    ph_name: 'e.g. Switch-01',
+    ph_type: 'e.g. catalyst-9300',
+    ph_role: 'e.g. access-switch',
+    ph_position: 'auto',
+    ph_serial: 'Optional',
+    ph_asset: 'Optional',
+    ph_site: 'e.g. dc1',
+    ph_location: 'e.g. hall-a',
+    ph_bulk_positions: 'e.g. 10, 20, 24',
+    btn_undo: 'Undo',
+    btn_redo: 'Redo',
+    label_full_depth: 'Full Depth',
+    stat_used: 'used',
+    btn_json_preview: 'Live JSON Preview',
+    storage_usage: 'Storage',
+    btn_clear_cache: 'Clear Cache',
+    confirm_clear_cache: 'Clear all cached data? Your current project will be lost.',
+    msg_unit_reserved: 'Position U{unit} selected',
+    ph_comments: '',
+  },
+  de: {
+    app_title: 'Rack Builder',
+    version: 'v0.3.0',
+    btn_settings: 'Einstellungen',
+    btn_clear_devices: 'Geräte löschen',
+    btn_reset_all: 'Alles zurücksetzen',
+    theme_dark: '🌙 Dunkel',
+    theme_light: '☀ Hell',
+    add_device: 'Gerät hinzufügen',
+    edit_device: 'Gerät bearbeiten',
+    label_name: 'Name',
+    label_device_type: 'Gerätetyp',
+    label_role: 'Rolle',
+    label_height: 'Höhe (U)',
+    label_position: 'Position (U)',
+    label_face: 'Seite',
+    face_front: 'Vorderseite',
+    face_rear: 'Rückseite',
+    label_status: 'Status',
+    status_planned: 'Geplant',
+    status_active: 'Aktiv',
+    status_staged: 'Bereitgestellt',
+    status_failed: 'Ausgefallen',
+    status_decommissioning: 'Außerbetriebnahme',
+    label_serial: 'Seriennummer',
+    label_asset_tag: 'Asset-Tag',
+    label_color: 'Farbe',
+    label_comments: 'Kommentare',
+    btn_add: 'Gerät hinzufügen',
+    btn_update: 'Gerät aktualisieren',
+    btn_delete: 'Gerät löschen',
+    btn_cancel_edit: 'Bearbeitung abbrechen',
+    bulk_creation: 'Massenerstellung',
+    bulk_quantity: 'Anzahl',
+    bulk_numbering: 'Nummerierung',
+    bulk_numeric: 'Numerisch (1, 2, 3…)',
+    bulk_alpha: 'Alphabetisch (A, B, C…)',
+    bulk_start: 'Startnummer / -buchstabe',
+    bulk_positions: 'Spezifische Positionen (optional)',
+    bulk_info: '„Spezifische Positionen" leer lassen für sequenzielle Stapelung.',
+    export_title: 'Export',
+    btn_json: 'JSON herunterladen',
+    btn_yaml: 'YAML herunterladen',
+    btn_csv: 'CSV herunterladen',
+    btn_copy: 'JSON kopieren',
+    export_netbox: 'NetBox-Export',
+    export_project: 'Projekt speichern / laden',
+    btn_save_project: 'Projekt speichern',
+    btn_load_project: 'Projekt laden',
+    import_title: 'NetBox-Import',
+    btn_import: 'NetBox-JSON importieren',
+    msg_use_load_project: 'Dies ist eine Projektdatei. Bitte „Projekt laden" verwenden.',
+    devices_title: 'Geräte',
+    settings_title: 'Rack-Einstellungen',
+    setting_name: 'Rack-Name',
+    setting_units: 'Gesamteinheiten (U)',
+    setting_direction: 'Nummerierungsrichtung',
+    dir_bottom: 'U1 unten',
+    dir_top: 'U1 oben',
+    setting_site: 'Standort (für Export)',
+    setting_location: 'Ort (für Export)',
+    setting_front_color: 'Farbe Vorderseite',
+    setting_rear_color: 'Farbe Rückseite',
+    btn_save: 'Speichern',
+    btn_dialog_cancel: 'Abbrechen',
+    no_devices: 'Noch keine Geräte hinzugefügt.',
+    confirm_clear_devices: 'Alle Geräte aus dem Rack entfernen? Rack-Einstellungen bleiben erhalten.',
+    confirm_reset_all: 'Alle Geräte UND Rack-Einstellungen auf Standard zurücksetzen?',
+    msg_no_export: 'Keine Geräte zum Exportieren.',
+    msg_copied: 'Kopiert!',
+    msg_import_invalid: 'Ungültige Datei: JSON-Array erwartet.',
+    msg_import_success: '{placed} von {total} Geräten importiert.',
+    msg_added: '„{name}" an U{pos} hinzugefügt.',
+    msg_updated: 'Gerät aktualisiert.',
+    msg_no_slot: 'Kein freier Platz für dieses Gerät verfügbar.',
+    msg_pos_number: 'Position muss beim Bearbeiten eine Zahl sein.',
+    msg_bulk_added: '{placed} Geräte hinzugefügt.',
+    msg_partial: '{placed}/{total} Geräte hinzugefügt. Fehlgeschlagen:',
+    msg_only_fit: 'Nur {placed} von {total} Geräten passen. Nicht genug Platz.',
+    msg_not_enough_pos: '{specified} Positionen angegeben, aber {total} benötigt.',
+    msg_no_start: 'Kein freier Startplatz verfügbar.',
+    col_front: 'Vorderseite',
+    col_rear: 'Rückseite',
+    col_units: 'U',
+    ph_name: 'z.B. Switch-01',
+    ph_type: 'z.B. catalyst-9300',
+    ph_role: 'z.B. access-switch',
+    ph_position: 'auto',
+    ph_serial: 'Optional',
+    ph_asset: 'Optional',
+    ph_site: 'z.B. dc1',
+    ph_location: 'z.B. halle-a',
+    ph_bulk_positions: 'z.B. 10, 20, 24',
+    btn_undo: 'Rückgängig',
+    btn_redo: 'Wiederholen',
+    label_full_depth: 'Volle Tiefe',
+    stat_used: 'belegt',
+    btn_json_preview: 'Live JSON-Vorschau',
+    storage_usage: 'Speicher',
+    btn_clear_cache: 'Cache leeren',
+    confirm_clear_cache: 'Alle zwischengespeicherten Daten löschen? Ihr aktuelles Projekt geht verloren.',
+    msg_unit_reserved: 'Position U{unit} ausgewählt',
+    ph_comments: '',
+  },
+};
+
+let currentLang = localStorage.getItem('rackbuilder_lang') || 'en';
+
+/**
+ * Translate a key, optionally interpolating variables.
+ * @param {string} key
+ * @param {Object} vars - e.g. { placed: 5, total: 10 }
+ */
+function t(key, vars = {}) {
+  let str = translations[currentLang]?.[key] ?? translations.en[key] ?? key;
+  for (const [k, v] of Object.entries(vars)) {
+    str = str.replace(`{${k}}`, v);
+  }
+  return str;
+}
+
+function getCurrentLang() {
+  return currentLang;
+}
+
+function setLang(lang) {
+  if (!translations[lang]) return;
+  currentLang = lang;
+  localStorage.setItem('rackbuilder_lang', lang);
+  applyTranslations();
+}
+
+function applyTranslations() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    el.textContent = t(el.dataset.i18n);
+  });
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    el.placeholder = t(el.dataset.i18nPlaceholder);
+  });
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    el.title = t(el.dataset.i18nTitle);
+  });
+  document.documentElement.lang = currentLang;
+  // Update lang button
+  const btn = document.getElementById('lang-btn');
+  if (btn) btn.textContent = currentLang.toUpperCase();
+}
+
+
+// ─── rack-model.js ───────────────────────────────────────────────────────────
+// Rack data model with collision detection and boundary checks
+
+
+/**
+ * @typedef {Object} Device
+ * @property {string} id
+ * @property {string} name
+ * @property {string} deviceType
+ * @property {string} role
+ * @property {number} position - Lowest occupied U (1-based)
+ * @property {number} height - In rack units
+ * @property {"front"|"rear"} face
+ * @property {string} status
+ * @property {string} serial
+ * @property {string} assetTag
+ * @property {string} comments
+ * @property {string} _color
+ */
+
+/**
+ * @typedef {Object} RackConfig
+ * @property {string} name
+ * @property {number} totalUnits
+ * @property {"bottom-to-top"|"top-to-bottom"} numberingDirection
+ * @property {string} site
+ * @property {string} location
+ */
+
+const DEFAULT_RACK_CONFIG = {
+  name: 'Rack-01',
+  totalUnits: 42,
+  numberingDirection: 'bottom-to-top',
+  site: '',
+  location: '',
+  frontColor: '#3b82f6',
+  rearColor: '#f97316',
+};
+
+function createDevice(overrides = {}, rackConfig = null) {
+  const frontColor = rackConfig?.frontColor || '#3b82f6';
+  const rearColor = rackConfig?.rearColor || '#f97316';
+  return {
+    id: generateId(),
+    name: '',
+    deviceType: '',
+    role: '',
+    position: 1,
+    height: 1,
+    face: 'front',
+    status: 'planned',
+    serial: '',
+    assetTag: '',
+    comments: '',
+    fullDepth: false,
+    _color: overrides.face === 'rear' ? rearColor : frontColor,
+    ...overrides,
+  };
+}
+
+/**
+ * Check if two ranges overlap.
+ * Range: [start, start + height - 1]
+ */
+function rangesOverlap(pos1, h1, pos2, h2) {
+  const end1 = pos1 + h1 - 1;
+  const end2 = pos2 + h2 - 1;
+  return pos1 <= end2 && pos2 <= end1;
+}
+
+/**
+ * Check if a device can be placed at the given position.
+ * @param {Device[]} devices - Existing devices
+ * @param {number} position
+ * @param {number} height
+ * @param {"front"|"rear"} face
+ * @param {number} totalUnits
+ * @param {string|null} excludeId - Device ID to exclude (for move operations)
+ * @returns {{ok: boolean, reason?: string}}
+ */
+function canPlace(devices, position, height, face, totalUnits, excludeId = null, fullDepth = false) {
+  if (position < 1) {
+    return { ok: false, reason: 'Position must be at least 1.' };
+  }
+  if (position + height - 1 > totalUnits) {
+    return { ok: false, reason: `Device exceeds rack boundary (max ${totalUnits}U).` };
+  }
+  for (const d of devices) {
+    if (d.id === excludeId) continue;
+    if (d.face === face) {
+      // Same-face collision
+      if (rangesOverlap(position, height, d.position, d.height)) {
+        return { ok: false, reason: `Collision with "${d.name}" at U${d.position}.` };
+      }
+    } else {
+      // Cross-face depth collision: only if either device is full-depth
+      if ((fullDepth || d.fullDepth) && rangesOverlap(position, height, d.position, d.height)) {
+        return { ok: false, reason: `Depth collision with "${d.name}" (${d.face}) at U${d.position}.` };
+      }
+    }
+  }
+  return { ok: true };
+}
+
+/**
+ * Find the next free slot that can fit a device of given height.
+ * @param {Device[]} devices
+ * @param {number} height
+ * @param {"front"|"rear"} face
+ * @param {number} totalUnits
+ * @param {number} startFrom - U position to start searching from
+ * @returns {number|null}
+ */
+function findNextFreeSlot(devices, height, face, totalUnits, startFrom = 1, fullDepth = false) {
+  for (let pos = startFrom; pos + height - 1 <= totalUnits; pos++) {
+    const result = canPlace(devices, pos, height, face, totalUnits, null, fullDepth);
+    if (result.ok) return pos;
+  }
+  return null;
+}
+
+/**
+ * Get a set of all occupied unit numbers for a given face.
+ * @param {Device[]} devices
+ * @param {"front"|"rear"} face
+ * @returns {Set<number>}
+ */
+function getOccupiedUnits(devices, face) {
+  const occupied = new Set();
+  for (const d of devices) {
+    if (d.face !== face) continue;
+    for (let u = d.position; u < d.position + d.height; u++) {
+      occupied.add(u);
+    }
+  }
+  return occupied;
+}
+
+/**
+ * Calculate rack utilization statistics.
+ */
+function getRackUtilization(devices, totalUnits) {
+  const frontOccupied = getOccupiedUnits(devices, 'front').size;
+  const rearOccupied = getOccupiedUnits(devices, 'rear').size;
+  return {
+    front: frontOccupied,
+    rear: rearOccupied,
+    total: frontOccupied + rearOccupied,
+    frontPercent: totalUnits > 0 ? Math.round((frontOccupied / totalUnits) * 100) : 0,
+    rearPercent: totalUnits > 0 ? Math.round((rearOccupied / totalUnits) * 100) : 0,
+    totalPercent: totalUnits > 0 ? Math.round(((frontOccupied + rearOccupied) / (totalUnits * 2)) * 100) : 0,
+  };
+}
+
+/**
+ * Convert devices to NetBox-compatible JSON array.
+ * Strips internal fields (id, _color, height).
+ * @param {Device[]} devices
+ * @param {RackConfig} rackConfig
+ * @returns {Object[]}
+ */
+function toNetBoxJSON(devices, rackConfig) {
+  return devices.map(d => ({
+    name: d.name,
+    device_type: d.deviceType,
+    role: d.role,
+    site: rackConfig.site,
+    location: rackConfig.location || undefined,
+    rack: rackConfig.name,
+    position: d.position,
+    face: d.face,
+    status: d.status,
+    serial: d.serial || undefined,
+    asset_tag: d.assetTag || undefined,
+    full_depth: d.fullDepth || undefined,
+    comments: d.comments || undefined,
+  })).map(obj => {
+    // Remove undefined values
+    return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
+  });
+}
+
+
+// ─── state.js ────────────────────────────────────────────────────────────────
+// Central state store with pub/sub and localStorage persistence
+
+
+const STORAGE_KEY = 'rackbuilder_state';
+
+const initialState = {
+  rackConfig: { ...DEFAULT_RACK_CONFIG },
+  devices: [],
+  selectedDeviceId: null,
+};
+
+let state = loadState();
+let listeners = [];
+
+// Reserved units (non-persisted, UI-only state for HE selection)
+let reservedUnits = []; // [{unit: number, face: string}]
+
+function getReservedUnits() { return reservedUnits; }
+function setReservedUnits(units) {
+  reservedUnits = units;
+  for (const listener of listeners) listener(state);
+}
+function clearReservedUnits() { reservedUnits = []; }
+
+// Undo/Redo history
+let history = [];
+let historyIndex = -1;
+const MAX_HISTORY = 50;
+
+function deepClone(obj) {
+  return JSON.parse(JSON.stringify(obj));
+}
+
+function pushHistory() {
+  // Truncate any future entries
+  history = history.slice(0, historyIndex + 1);
+  history.push(deepClone(state));
+  historyIndex = history.length - 1;
+  // Trim if exceeding max
+  if (history.length > MAX_HISTORY) {
+    history.shift();
+    historyIndex--;
+  }
+}
+
+// Initialize history with current state
+history.push(deepClone(state));
+historyIndex = 0;
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return { ...initialState, ...parsed };
+    }
+  } catch (e) {
+    console.warn('Failed to load state from localStorage:', e);
+  }
+  return { ...initialState };
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    console.warn('Failed to save state to localStorage:', e);
+  }
+}
+
+function notify() {
+  saveState();
+  for (const listener of listeners) {
+    listener(state);
+  }
+}
+
+function getState() {
+  return state;
+}
+
+function subscribe(listener) {
+  listeners.push(listener);
+  return () => {
+    listeners = listeners.filter(l => l !== listener);
+  };
+}
+
+function undo() {
+  if (historyIndex <= 0) return;
+  historyIndex--;
+  state = deepClone(history[historyIndex]);
+  notify();
+}
+
+function redo() {
+  if (historyIndex >= history.length - 1) return;
+  historyIndex++;
+  state = deepClone(history[historyIndex]);
+  notify();
+}
+
+function canUndo() {
+  return historyIndex > 0;
+}
+
+function canRedo() {
+  return historyIndex < history.length - 1;
+}
+
+/**
+ * Dispatch an action to update state.
+ * @param {string} action
+ * @param {*} payload
+ * @returns {{ok: boolean, reason?: string}}
+ */
+function dispatch(action, payload) {
+  switch (action) {
+    case 'ADD_DEVICE': {
+      pushHistory();
+      const device = createDevice(payload, state.rackConfig);
+      const result = canPlace(
+        state.devices, device.position, device.height,
+        device.face, state.rackConfig.totalUnits, null, device.fullDepth
+      );
+      if (!result.ok) return result;
+      state = { ...state, devices: [...state.devices, device] };
+      notify();
+      return { ok: true, device };
+    }
+
+    case 'REMOVE_DEVICE': {
+      pushHistory();
+      const id = payload;
+      state = {
+        ...state,
+        devices: state.devices.filter(d => d.id !== id),
+        selectedDeviceId: state.selectedDeviceId === id ? null : state.selectedDeviceId,
+      };
+      notify();
+      return { ok: true };
+    }
+
+    case 'UPDATE_DEVICE': {
+      pushHistory();
+      const { id, ...changes } = payload;
+      const existing = state.devices.find(d => d.id === id);
+      if (!existing) return { ok: false, reason: 'Device not found.' };
+
+      const updated = { ...existing, ...changes };
+      // Check placement if position, height, or face changed
+      if (changes.position !== undefined || changes.height !== undefined || changes.face !== undefined || changes.fullDepth !== undefined) {
+        const result = canPlace(
+          state.devices, updated.position, updated.height,
+          updated.face, state.rackConfig.totalUnits, id, updated.fullDepth
+        );
+        if (!result.ok) return result;
+      }
+      state = {
+        ...state,
+        devices: state.devices.map(d => d.id === id ? updated : d),
+      };
+      notify();
+      return { ok: true };
+    }
+
+    case 'MOVE_DEVICE': {
+      pushHistory();
+      const { id, position, face } = payload;
+      if (!Number.isInteger(position) || position < 1) {
+        return { ok: false, reason: 'Invalid position.' };
+      }
+      const existing = state.devices.find(d => d.id === id);
+      if (!existing) return { ok: false, reason: 'Device not found.' };
+
+      const newFace = face || existing.face;
+      const result = canPlace(
+        state.devices, position, existing.height,
+        newFace, state.rackConfig.totalUnits, id, existing.fullDepth
+      );
+      if (!result.ok) return result;
+
+      // Auto-swap color when moving to opposite face (only if using default color)
+      let newColor = existing._color;
+      if (newFace !== existing.face) {
+        const cfg = state.rackConfig;
+        const oldDefault = existing.face === 'front'
+          ? (cfg.frontColor || '#3b82f6')
+          : (cfg.rearColor || '#f97316');
+        const newDefault = newFace === 'front'
+          ? (cfg.frontColor || '#3b82f6')
+          : (cfg.rearColor || '#f97316');
+        if (existing._color === oldDefault) {
+          newColor = newDefault;
+        }
+      }
+
+      state = {
+        ...state,
+        devices: state.devices.map(d =>
+          d.id === id ? { ...d, position, face: newFace, _color: newColor } : d
+        ),
+      };
+      notify();
+      return { ok: true };
+    }
+
+    case 'BULK_ADD_DEVICES': {
+      pushHistory();
+      const { devices: newDevices } = payload;
+      const results = [];
+      let currentDevices = [...state.devices];
+
+      for (const deviceData of newDevices) {
+        const device = createDevice(deviceData, state.rackConfig);
+        const result = canPlace(
+          currentDevices, device.position, device.height,
+          device.face, state.rackConfig.totalUnits, null, device.fullDepth
+        );
+        if (result.ok) {
+          currentDevices.push(device);
+          results.push({ ok: true, name: device.name });
+        } else {
+          results.push({ ok: false, name: device.name, reason: result.reason });
+        }
+      }
+
+      state = { ...state, devices: currentDevices };
+      notify();
+      return { ok: true, results };
+    }
+
+    case 'SELECT_DEVICE': {
+      if (state.selectedDeviceId === payload) return { ok: true };
+      state = { ...state, selectedDeviceId: payload };
+      notify();
+      return { ok: true };
+    }
+
+    case 'UPDATE_RACK_CONFIG': {
+      pushHistory();
+      state = {
+        ...state,
+        rackConfig: { ...state.rackConfig, ...payload },
+      };
+      notify();
+      return { ok: true };
+    }
+
+    case 'CLEAR_DEVICES': {
+      pushHistory();
+      state = { ...state, devices: [], selectedDeviceId: null };
+      notify();
+      return { ok: true };
+    }
+
+    case 'CLEAR_STATE': {
+      state = { ...initialState, rackConfig: { ...DEFAULT_RACK_CONFIG } };
+      history = [deepClone(state)];
+      historyIndex = 0;
+      notify();
+      return { ok: true };
+    }
+
+    case 'LOAD_STATE': {
+      state = { ...initialState, ...payload };
+      history = [deepClone(state)];
+      historyIndex = 0;
+      notify();
+      return { ok: true };
+    }
+
+    default:
+      console.warn('Unknown action:', action);
+      return { ok: false, reason: `Unknown action: ${action}` };
+  }
+}
+
+
+// ─── rack-view.js ────────────────────────────────────────────────────────────
+// Rack visualization renderer
+
+
+
+// Cached unit height — recalculated on each render
+let currentUnitHeight = 28;
+
+/**
+ * Calculate the optimal unit height to fit the rack on screen.
+ */
+function calcUnitHeight(totalUnits) {
+  const overhead = 53 + 50 + 60; // header + controls + padding
+  const available = window.innerHeight - overhead;
+  const ideal = Math.floor(available / totalUnits);
+  return Math.max(14, Math.min(28, ideal));
+}
+
+/**
+ * Get the current unit height (used by drag-drop.js).
+ */
+function getUnitHeight() {
+  return currentUnitHeight;
+}
+
+/**
+ * Render the rack visualization into the #rack-view element.
+ */
+function renderRack(state) {
+  const container = document.getElementById('rack-view');
+  const { rackConfig, devices, selectedDeviceId } = state;
+  const { totalUnits, numberingDirection } = rackConfig;
+
+  // Dynamic unit height
+  currentUnitHeight = calcUnitHeight(totalUnits);
+  container.style.setProperty('--unit-height', `${currentUnitHeight}px`);
+
+  // Update header info
+  document.getElementById('rack-name-display').textContent = rackConfig.name;
+  document.getElementById('rack-info').textContent = `${totalUnits}U | ${numberingDirection === 'bottom-to-top' ? 'U1 Bottom' : 'U1 Top'}`;
+
+  // Build unit order (visual top to bottom)
+  const unitOrder = [];
+  if (numberingDirection === 'bottom-to-top') {
+    for (let u = totalUnits; u >= 1; u--) unitOrder.push(u);
+  } else {
+    for (let u = 1; u <= totalUnits; u++) unitOrder.push(u);
+  }
+
+  // Build HTML
+  let html = '';
+
+  // Column headers
+  html += `<div class="rack-column-header front">${t('col_front')}</div>`;
+  html += `<div class="rack-column-header units">${t('col_units')}</div>`;
+  html += `<div class="rack-column-header rear">${t('col_rear')}</div>`;
+
+  const reserved = getReservedUnits();
+
+  // Front face column
+  html += '<div class="rack-face" id="rack-face-front" data-face="front">';
+  for (const u of unitOrder) {
+    html += `<div class="rack-cell" data-unit="${u}" data-face="front"></div>`;
+  }
+  html += renderDepthBlockades(devices, 'front', unitOrder);
+  html += renderReservedOverlays('front', unitOrder, reserved);
+  html += renderDeviceBlocks(devices, 'front', unitOrder, selectedDeviceId);
+  html += '</div>';
+
+  // Unit numbers column
+  html += '<div class="rack-unit-numbers">';
+  for (const u of unitOrder) {
+    html += `<div class="rack-unit-number">${u}</div>`;
+  }
+  html += '</div>';
+
+  // Rear face column
+  html += '<div class="rack-face" id="rack-face-rear" data-face="rear">';
+  for (const u of unitOrder) {
+    html += `<div class="rack-cell" data-unit="${u}" data-face="rear"></div>`;
+  }
+  html += renderDepthBlockades(devices, 'rear', unitOrder);
+  html += renderReservedOverlays('rear', unitOrder, reserved);
+  html += renderDeviceBlocks(devices, 'rear', unitOrder, selectedDeviceId);
+  html += '</div>';
+
+  container.innerHTML = html;
+
+  // Add click handlers for device blocks
+  container.querySelectorAll('.device-block').forEach(block => {
+    block.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = block.dataset.deviceId;
+      dispatch('SELECT_DEVICE', id === selectedDeviceId ? null : id);
+    });
+  });
+
+  // Click on empty cell: reserve unit or deselect
+  container.querySelectorAll('.rack-cell').forEach(cell => {
+    cell.addEventListener('click', () => {
+      if (selectedDeviceId) {
+        dispatch('SELECT_DEVICE', null);
+        return;
+      }
+      const unit = parseInt(cell.dataset.unit);
+      const face = cell.dataset.face;
+      const current = getReservedUnits();
+      const already = current.find(r => r.unit === unit && r.face === face);
+      if (already) {
+        // Deselect this unit
+        setReservedUnits(current.filter(r => !(r.unit === unit && r.face === face)));
+      } else {
+        // In single-add mode, replace; in bulk mode, add
+        const bulkOpen = document.getElementById('bulk-content')?.classList.contains('open');
+        if (bulkOpen) {
+          setReservedUnits([...current, { unit, face }]);
+        } else {
+          setReservedUnits([{ unit, face }]);
+        }
+      }
+    });
+  });
+}
+
+function renderDeviceBlocks(devices, face, unitOrder, selectedDeviceId) {
+  let html = '';
+  const faceDevices = devices.filter(d => d.face === face);
+  const uh = currentUnitHeight;
+
+  for (const device of faceDevices) {
+    const topIndex = unitOrder.indexOf(device.position + device.height - 1);
+    const top = topIndex * uh;
+    const height = device.height * uh;
+
+    const isSelected = device.id === selectedDeviceId;
+    const color = device._color || (face === 'front' ? '#3b82f6' : '#f97316');
+    const fontSize = uh < 20 ? '10px' : '11px';
+
+    const fdClass = device.fullDepth ? ' device-block--full-depth' : '';
+    html += `<div class="device-block${isSelected ? ' selected' : ''}${fdClass}"
+      data-device-id="${device.id}"
+      draggable="true"
+      style="top: ${top}px; height: ${height - 2}px; background: ${color}; font-size: ${fontSize};"
+      title="${device.name} (U${device.position}${device.height > 1 ? '-U' + (device.position + device.height - 1) : ''}, ${face})"
+    >${device.name || '(unnamed)'}</div>`;
+  }
+
+  return html;
+}
+
+/**
+ * Render blockade overlays on this face for full-depth devices on the opposite face.
+ */
+function renderDepthBlockades(devices, face, unitOrder) {
+  const oppositeFace = face === 'front' ? 'rear' : 'front';
+  const fullDepthOnOtherSide = devices.filter(d => d.face === oppositeFace && d.fullDepth);
+  if (fullDepthOnOtherSide.length === 0) return '';
+
+  const uh = currentUnitHeight;
+  let html = '';
+  for (const device of fullDepthOnOtherSide) {
+    const topIndex = unitOrder.indexOf(device.position + device.height - 1);
+    const top = topIndex * uh;
+    const height = device.height * uh;
+    html += `<div class="depth-blockade"
+      style="top: ${top}px; height: ${height - 2}px;"
+      title="${device.name} (${oppositeFace}, ${t('label_full_depth')})"
+    >${device.name}</div>`;
+  }
+  return html;
+}
+
+/**
+ * Render hatched overlays for reserved/selected rack units.
+ */
+function renderReservedOverlays(face, unitOrder, reservedUnits) {
+  const matching = reservedUnits.filter(r => r.face === face);
+  if (matching.length === 0) return '';
+
+  const uh = currentUnitHeight;
+  let html = '';
+  for (const r of matching) {
+    const idx = unitOrder.indexOf(r.unit);
+    if (idx === -1) continue;
+    html += `<div class="rack-cell--reserved" style="top: ${idx * uh}px; height: ${uh}px;"></div>`;
+  }
+  return html;
+}
+
+/**
+ * Get the unit number from a Y coordinate relative to the rack face.
+ */
+function getUnitFromY(y, totalUnits, numberingDirection) {
+  const rowIndex = Math.floor(y / currentUnitHeight);
+  let unit;
+  if (numberingDirection === 'bottom-to-top') {
+    unit = totalUnits - rowIndex;
+  } else {
+    unit = rowIndex + 1;
+  }
+  return Math.max(1, Math.min(totalUnits, unit));
+}
+
+/**
+ * Get pixel position and size for a device at the given rack coordinates.
+ * Used by drag-drop.js for the snap guide overlay.
+ */
+function getPositionPixels(position, height, totalUnits, numberingDirection) {
+  // Build unit order (same logic as renderRack)
+  const unitOrder = [];
+  if (numberingDirection === 'bottom-to-top') {
+    for (let u = totalUnits; u >= 1; u--) unitOrder.push(u);
+  } else {
+    for (let u = 1; u <= totalUnits; u++) unitOrder.push(u);
+  }
+  const topIndex = unitOrder.indexOf(position + height - 1);
+  return {
+    top: topIndex * currentUnitHeight,
+    height: height * currentUnitHeight - 2,
+  };
+}
+
+
+// ─── device-form.js ──────────────────────────────────────────────────────────
+// Device form handling (add, edit, bulk creation)
+
+
+
+
+
+let editingDeviceId = null;
+
+function initDeviceForm() {
+  const form = document.getElementById('device-form');
+  const bulkToggle = document.getElementById('bulk-toggle');
+  const bulkArrow = document.getElementById('bulk-arrow');
+  const bulkContent = document.getElementById('bulk-content');
+  const deleteBtn = document.getElementById('form-delete-btn');
+  const cancelBtn = document.getElementById('form-cancel-btn');
+  const submitBtn = document.getElementById('form-submit-btn');
+  const faceRadios = document.querySelectorAll('input[name="dev-face"]');
+
+  // Update color when face changes
+  faceRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      if (!editingDeviceId) {
+        const cfg = getState().rackConfig;
+        const colorInput = document.getElementById('dev-color');
+        colorInput.value = radio.value === 'rear'
+          ? (cfg.rearColor || '#f97316')
+          : (cfg.frontColor || '#3b82f6');
+      }
+    });
+  });
+
+  // Bulk toggle
+  bulkToggle.addEventListener('click', () => {
+    const isOpen = bulkContent.classList.toggle('open');
+    bulkArrow.classList.toggle('open', isOpen);
+  });
+
+  // Form submit
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const isBulk = bulkContent.classList.contains('open') && !editingDeviceId;
+
+    if (isBulk) {
+      handleBulkCreate();
+    } else if (editingDeviceId) {
+      handleUpdate();
+    } else {
+      handleAdd();
+    }
+  });
+
+  // Delete
+  deleteBtn.addEventListener('click', () => {
+    if (editingDeviceId) {
+      dispatch('REMOVE_DEVICE', editingDeviceId);
+      resetForm();
+    }
+  });
+
+  // Cancel edit
+  cancelBtn.addEventListener('click', () => {
+    resetForm();
+  });
+}
+
+function getFormData() {
+  return {
+    name: document.getElementById('dev-name').value.trim(),
+    deviceType: document.getElementById('dev-type').value.trim(),
+    role: document.getElementById('dev-role').value.trim(),
+    height: parseInt(document.getElementById('dev-height').value) || 1,
+    face: document.querySelector('input[name="dev-face"]:checked').value,
+    status: document.getElementById('dev-status').value,
+    serial: document.getElementById('dev-serial').value.trim(),
+    assetTag: document.getElementById('dev-asset').value.trim(),
+    fullDepth: document.getElementById('dev-full-depth').checked,
+    _color: document.getElementById('dev-color').value,
+    comments: document.getElementById('dev-comments').value.trim(),
+  };
+}
+
+function getPositionValue() {
+  return document.getElementById('dev-position').value.trim();
+}
+
+function resolvePosition(posValue, height, face) {
+  const state = getState();
+  if (posValue === '' || posValue.toLowerCase() === 'auto') {
+    const fullDepth = document.getElementById('dev-full-depth').checked;
+    return findNextFreeSlot(state.devices, height, face, state.rackConfig.totalUnits, 1, fullDepth);
+  }
+  const pos = parseInt(posValue);
+  return isNaN(pos) ? null : pos;
+}
+
+function handleAdd() {
+  const data = getFormData();
+  const posValue = getPositionValue();
+  const position = resolvePosition(posValue, data.height, data.face);
+
+  if (position === null) {
+    showMessage(t('msg_no_slot'), 'error');
+    return;
+  }
+
+  const result = dispatch('ADD_DEVICE', { ...data, position });
+  if (result.ok) {
+    showMessage(t('msg_added', { name: data.name, pos: position }), 'success');
+    document.getElementById('dev-name').value = '';
+    document.getElementById('dev-position').value = 'auto';
+    clearReservedUnits();
+  } else {
+    showMessage(result.reason, 'error');
+  }
+}
+
+function handleUpdate() {
+  const data = getFormData();
+  const posValue = getPositionValue();
+  const position = parseInt(posValue);
+
+  if (isNaN(position)) {
+    showMessage(t('msg_pos_number'), 'error');
+    return;
+  }
+
+  const result = dispatch('UPDATE_DEVICE', {
+    id: editingDeviceId,
+    ...data,
+    position,
+  });
+
+  if (result.ok) {
+    showMessage(t('msg_updated'), 'success');
+    resetForm();
+  } else {
+    showMessage(result.reason, 'error');
+  }
+}
+
+function handleBulkCreate() {
+  const data = getFormData();
+  const qty = parseInt(document.getElementById('bulk-qty').value) || 2;
+  const numbering = document.getElementById('bulk-numbering').value;
+  const startValue = document.getElementById('bulk-start').value.trim() || '1';
+  const specificPositions = document.getElementById('bulk-positions').value.trim();
+
+  const names = generateSequence(data.name, qty, numbering === 'alpha' ? startValue : parseInt(startValue) || 1, numbering);
+
+  let devicesToAdd = [];
+
+  if (specificPositions) {
+    // Specific positions mode
+    const positions = parsePositionList(specificPositions);
+    if (positions.length < qty) {
+      showMessage(t('msg_not_enough_pos', { specified: positions.length, total: qty }), 'error');
+      return;
+    }
+    for (let i = 0; i < qty; i++) {
+      devicesToAdd.push({
+        ...data,
+        name: names[i],
+        position: positions[i],
+      });
+    }
+  } else {
+    // Sequential stacking mode
+    const posValue = getPositionValue();
+    const state = getState();
+    let currentPos = resolvePosition(posValue, data.height, data.face);
+
+    if (currentPos === null) {
+      showMessage(t('msg_no_start'), 'error');
+      return;
+    }
+
+    // We need to simulate placement to find sequential positions
+    const tempDevices = [...state.devices];
+    for (let i = 0; i < qty; i++) {
+      const slot = findNextFreeSlot(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
+      if (slot === null) {
+        showMessage(t('msg_only_fit', { placed: i, total: qty }), 'error');
+        return;
+      }
+      const device = {
+        ...data,
+        name: names[i],
+        position: slot,
+        id: `temp-${i}`,
+      };
+      tempDevices.push(device);
+      devicesToAdd.push({ ...data, name: names[i], position: slot });
+      currentPos = slot + data.height;
+    }
+  }
+
+  const result = dispatch('BULK_ADD_DEVICES', { devices: devicesToAdd });
+
+  if (result.ok) {
+    const placed = result.results.filter(r => r.ok).length;
+    const failed = result.results.filter(r => !r.ok);
+
+    if (failed.length === 0) {
+      showMessage(t('msg_bulk_added', { placed }), 'success');
+    } else {
+      const failedNames = failed.map(f => `${f.name}: ${f.reason}`).join('\n');
+      showMessage(`${t('msg_partial', { placed, total: qty })}\n${failedNames}`, 'error');
+    }
+
+    document.getElementById('dev-name').value = '';
+    document.getElementById('dev-position').value = 'auto';
+    clearReservedUnits();
+  }
+}
+
+/**
+ * Populate the form for editing a selected device.
+ */
+function populateFormForEdit(device) {
+  if (!device) {
+    resetForm();
+    return;
+  }
+
+  editingDeviceId = device.id;
+  document.getElementById('dev-name').value = device.name;
+  document.getElementById('dev-type').value = device.deviceType;
+  document.getElementById('dev-role').value = device.role;
+  document.getElementById('dev-height').value = device.height;
+  document.getElementById('dev-position').value = device.position;
+  document.querySelector(`input[name="dev-face"][value="${device.face}"]`).checked = true;
+  document.getElementById('dev-status').value = device.status;
+  document.getElementById('dev-serial').value = device.serial || '';
+  document.getElementById('dev-asset').value = device.assetTag || '';
+  document.getElementById('dev-full-depth').checked = device.fullDepth || false;
+  document.getElementById('dev-color').value = device._color || '#3b82f6';
+  document.getElementById('dev-comments').value = device.comments || '';
+
+  document.getElementById('form-title').textContent = t('edit_device');
+  document.getElementById('form-submit-btn').textContent = t('btn_update');
+  document.getElementById('form-delete-btn').style.display = '';
+  document.getElementById('form-cancel-btn').style.display = '';
+
+  // Close bulk section when editing
+  document.getElementById('bulk-content').classList.remove('open');
+  document.getElementById('bulk-arrow').classList.remove('open');
+}
+
+function resetForm() {
+  editingDeviceId = null;
+  document.getElementById('device-form').reset();
+  document.getElementById('dev-position').value = 'auto';
+  document.getElementById('dev-full-depth').checked = false;
+  document.getElementById('dev-color').value = getState().rackConfig.frontColor || '#3b82f6';
+  document.getElementById('form-title').textContent = t('add_device');
+  document.getElementById('form-submit-btn').textContent = t('btn_add');
+  document.getElementById('form-delete-btn').style.display = 'none';
+  document.getElementById('form-cancel-btn').style.display = 'none';
+  showMessage('', '');
+  if (getState().selectedDeviceId !== null) {
+    dispatch('SELECT_DEVICE', null);
+  }
+}
+
+function showMessage(text, type) {
+  const el = document.getElementById('form-message');
+  if (!text) {
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = `<div class="message message-${type}">${text.replace(/\n/g, '<br>')}</div>`;
+  if (type === 'success') {
+    setTimeout(() => {
+      if (el.querySelector('.message-success')) {
+        el.innerHTML = '';
+      }
+    }, 3000);
+  }
+}
+
+
+// ─── drag-drop.js ────────────────────────────────────────────────────────────
+// Drag and drop handling for repositioning devices in the rack
+
+
+
+
+let dragDeviceId = null;
+let dragDeviceHeight = 1;
+let dragDeviceFullDepth = false;
+let dragGrabOffset = 0;
+
+// Performance: throttle + position caching
+let rafPending = false;
+let lastTargetPos = null;
+let lastTargetFace = null;
+let highlightedCells = [];
+let snapGuide = null;
+
+function initDragDrop() {
+  const rackView = document.getElementById('rack-view');
+
+  rackView.addEventListener('dragstart', handleDragStart);
+  rackView.addEventListener('dragover', handleDragOver);
+  rackView.addEventListener('drop', handleDrop);
+  rackView.addEventListener('dragend', handleDragEnd);
+}
+
+function handleDragStart(e) {
+  const block = e.target.closest('.device-block');
+  if (!block) return;
+
+  const deviceId = block.dataset.deviceId;
+  const state = getState();
+  const device = state.devices.find(d => d.id === deviceId);
+  if (!device) return;
+
+  dragDeviceId = deviceId;
+  dragDeviceHeight = device.height;
+  dragDeviceFullDepth = device.fullDepth || false;
+
+  const face = block.closest('.rack-face');
+  const faceRect = face.getBoundingClientRect();
+  const relY = e.clientY - faceRect.top;
+  const clickedUnit = getUnitFromY(relY, state.rackConfig.totalUnits, state.rackConfig.numberingDirection);
+  dragGrabOffset = clickedUnit - device.position;
+
+  block.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', deviceId);
+
+  // Create snap guide element
+  snapGuide = document.createElement('div');
+  snapGuide.className = 'snap-guide';
+
+  // Reset caches
+  lastTargetPos = null;
+  lastTargetFace = null;
+}
+
+function handleDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+
+  if (!dragDeviceId || rafPending) return;
+
+  rafPending = true;
+  // Capture coordinates synchronously (event object may be reused)
+  const clientY = e.clientY;
+  const target = e.target;
+
+  requestAnimationFrame(() => {
+    rafPending = false;
+    if (!dragDeviceId) return;
+    updateDragHighlights(clientY, target);
+  });
+}
+
+function updateDragHighlights(clientY, target) {
+  const face = target.closest ? target.closest('.rack-face') : null;
+  if (!face) return;
+
+  const faceType = face.dataset.face;
+  const faceRect = face.getBoundingClientRect();
+  const relY = clientY - faceRect.top;
+  const state = getState();
+  const hoveredUnit = getUnitFromY(relY, state.rackConfig.totalUnits, state.rackConfig.numberingDirection);
+  const targetPosition = hoveredUnit - dragGrabOffset;
+
+  // Skip if position hasn't changed
+  if (targetPosition === lastTargetPos && faceType === lastTargetFace) return;
+  lastTargetPos = targetPosition;
+  lastTargetFace = faceType;
+
+  // Clear only previously highlighted cells (no DOM query)
+  for (const cell of highlightedCells) {
+    cell.classList.remove('drag-over-valid', 'drag-over-invalid');
+  }
+  highlightedCells = [];
+
+  // Check placement validity
+  const result = canPlace(
+    state.devices, targetPosition, dragDeviceHeight,
+    faceType, state.rackConfig.totalUnits, dragDeviceId, dragDeviceFullDepth
+  );
+
+  // Highlight target cells
+  const className = result.ok ? 'drag-over-valid' : 'drag-over-invalid';
+  const cells = face.querySelectorAll('.rack-cell');
+  for (const cell of cells) {
+    const cellUnit = parseInt(cell.dataset.unit);
+    if (cellUnit >= targetPosition && cellUnit < targetPosition + dragDeviceHeight) {
+      cell.classList.add(className);
+      highlightedCells.push(cell);
+    }
+  }
+
+  // Position snap guide
+  if (snapGuide) {
+    // Ensure snap guide is in the correct face
+    if (snapGuide.parentElement !== face) {
+      if (snapGuide.parentElement) snapGuide.remove();
+      face.appendChild(snapGuide);
+    }
+    const px = getPositionPixels(targetPosition, dragDeviceHeight, state.rackConfig.totalUnits, state.rackConfig.numberingDirection);
+    snapGuide.style.top = `${px.top}px`;
+    snapGuide.style.height = `${px.height}px`;
+    snapGuide.classList.toggle('invalid', !result.ok);
+  }
+}
+
+function handleDrop(e) {
+  e.preventDefault();
+  clearHighlights();
+
+  if (!dragDeviceId) return;
+
+  const face = e.target.closest('.rack-face');
+  if (!face) return;
+
+  const faceType = face.dataset.face;
+  const faceRect = face.getBoundingClientRect();
+  const relY = e.clientY - faceRect.top;
+  const state = getState();
+  const hoveredUnit = getUnitFromY(relY, state.rackConfig.totalUnits, state.rackConfig.numberingDirection);
+  let targetPosition = hoveredUnit - dragGrabOffset;
+
+  // Clamp to valid range
+  targetPosition = Math.max(1, Math.min(state.rackConfig.totalUnits - dragDeviceHeight + 1, targetPosition));
+
+  if (!Number.isInteger(targetPosition)) return;
+
+  dispatch('MOVE_DEVICE', {
+    id: dragDeviceId,
+    position: targetPosition,
+    face: faceType,
+  });
+
+  resetDragState();
+}
+
+function handleDragEnd() {
+  clearHighlights();
+  const rackView = document.getElementById('rack-view');
+  const dragging = rackView.querySelector('.device-block.dragging');
+  if (dragging) dragging.classList.remove('dragging');
+  resetDragState();
+}
+
+function clearHighlights() {
+  for (const cell of highlightedCells) {
+    cell.classList.remove('drag-over-valid', 'drag-over-invalid');
+  }
+  highlightedCells = [];
+  if (snapGuide) {
+    snapGuide.remove();
+    snapGuide = null;
+  }
+}
+
+function resetDragState() {
+  dragDeviceId = null;
+  lastTargetPos = null;
+  lastTargetFace = null;
+  rafPending = false;
+}
+
+
+// ─── export.js ───────────────────────────────────────────────────────────────
+// NetBox JSON export + YAML + CSV + Project save/load + download/clipboard
+
+
+
+
+function initExport() {
+  document.getElementById('export-json-btn').addEventListener('click', downloadJSON);
+  document.getElementById('export-yaml-btn').addEventListener('click', downloadYAML);
+  document.getElementById('export-csv-btn').addEventListener('click', downloadCSV);
+  document.getElementById('copy-btn').addEventListener('click', copyToClipboard);
+  document.getElementById('import-btn').addEventListener('click', () => {
+    document.getElementById('import-file').click();
+  });
+  document.getElementById('import-file').addEventListener('change', importJSON);
+
+  // Project save/load
+  document.getElementById('save-project-btn').addEventListener('click', saveProject);
+  document.getElementById('load-project-btn').addEventListener('click', () => {
+    document.getElementById('load-project-file').click();
+  });
+  document.getElementById('load-project-file').addEventListener('change', loadProject);
+}
+
+function getExportData() {
+  const state = getState();
+  return toNetBoxJSON(state.devices, state.rackConfig);
+}
+
+function getRackName() {
+  return getState().rackConfig.name;
+}
+
+// ─── NetBox JSON ────────────────────────────────────────────────────────────
+
+function downloadJSON() {
+  const data = getExportData();
+  if (!data.length) { alert(t('msg_no_export')); return; }
+  triggerDownload(
+    JSON.stringify(data, null, 2),
+    `${getRackName()}_netbox_import.json`,
+    'application/json'
+  );
+}
+
+// ─── YAML ───────────────────────────────────────────────────────────────────
+
+function downloadYAML() {
+  const data = getExportData();
+  if (!data.length) { alert(t('msg_no_export')); return; }
+  triggerDownload(
+    toYAML(data),
+    `${getRackName()}_netbox_import.yaml`,
+    'text/yaml'
+  );
+}
+
+function toYAML(items) {
+  return items.map(item => {
+    const entries = Object.entries(item);
+    return entries.map(([k, v], i) => {
+      const prefix = i === 0 ? '- ' : '  ';
+      return `${prefix}${k}: ${yamlValue(v)}`;
+    }).join('\n');
+  }).join('\n');
+}
+
+function yamlValue(v) {
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  const s = String(v);
+  if (
+    s === '' ||
+    s === 'true' || s === 'false' || s === 'null' ||
+    /^[\d]/.test(s) ||
+    /[:\[\]{},#&*!|>'"%@`\n\r]/.test(s) ||
+    /^\s|\s$/.test(s)
+  ) {
+    return `"${s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
+  }
+  return s;
+}
+
+// ─── CSV ────────────────────────────────────────────────────────────────────
+
+function downloadCSV() {
+  const data = getExportData();
+  if (!data.length) { alert(t('msg_no_export')); return; }
+  triggerDownload(
+    toCSV(data),
+    `${getRackName()}_netbox_import.csv`,
+    'text/csv'
+  );
+}
+
+function toCSV(items) {
+  const headers = Object.keys(items[0]);
+  const escape = v => {
+    const s = String(v ?? '');
+    return (s.includes(',') || s.includes('"') || s.includes('\n'))
+      ? `"${s.replace(/"/g, '""')}"`
+      : s;
+  };
+  return [
+    headers.join(','),
+    ...items.map(item => headers.map(h => escape(item[h])).join(',')),
+  ].join('\n');
+}
+
+// ─── Copy ───────────────────────────────────────────────────────────────────
+
+async function copyToClipboard() {
+  const data = getExportData();
+  if (!data.length) { alert(t('msg_no_export')); return; }
+
+  const json = JSON.stringify(data, null, 2);
+  try {
+    await navigator.clipboard.writeText(json);
+  } catch {
+    const textarea = document.createElement('textarea');
+    textarea.value = json;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+  }
+
+  const btn = document.getElementById('copy-btn');
+  const original = btn.textContent;
+  btn.textContent = t('msg_copied');
+  setTimeout(() => { btn.textContent = original; }, 2000);
+}
+
+// ─── Project Save/Load (internal format, preserves height + color + config) ─
+
+function saveProject() {
+  const state = getState();
+  if (!state.devices.length) { alert(t('msg_no_export')); return; }
+
+  const project = {
+    _format: 'rackbuilder-project',
+    _version: '0.3.0',
+    rackConfig: state.rackConfig,
+    devices: state.devices.map(d => ({
+      name: d.name,
+      deviceType: d.deviceType,
+      role: d.role,
+      position: d.position,
+      height: d.height,
+      face: d.face,
+      status: d.status,
+      serial: d.serial,
+      assetTag: d.assetTag,
+      comments: d.comments,
+      _color: d._color,
+    })),
+  };
+
+  triggerDownload(
+    JSON.stringify(project, null, 2),
+    `${getRackName()}_project.json`,
+    'application/json'
+  );
+}
+
+function loadProject(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const data = JSON.parse(event.target.result);
+
+      if (data._format === 'rackbuilder-project') {
+        // Internal project format — load rack config + devices with height
+        if (data.rackConfig) {
+          dispatch('UPDATE_RACK_CONFIG', data.rackConfig);
+        }
+        // Clear existing devices first
+        dispatch('CLEAR_DEVICES');
+        if (Array.isArray(data.devices) && data.devices.length) {
+          const result = dispatch('BULK_ADD_DEVICES', { devices: data.devices });
+          if (result.ok) {
+            const placed = result.results.filter(r => r.ok).length;
+            alert(t('msg_import_success', { placed, total: data.devices.length }));
+          }
+        }
+      } else {
+        alert(t('msg_import_invalid'));
+      }
+    } catch (err) {
+      alert('Failed to parse project file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ─── NetBox Import ──────────────────────────────────────────────────────────
+
+function importJSON(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const data = JSON.parse(event.target.result);
+
+      // Auto-detect: project format vs NetBox array
+      if (data._format === 'rackbuilder-project') {
+        alert(t('msg_use_load_project'));
+        return;
+      }
+
+      if (!Array.isArray(data)) {
+        alert(t('msg_import_invalid'));
+        return;
+      }
+
+      const devices = data.map(d => ({
+        name: d.name || '',
+        deviceType: d.device_type || '',
+        role: d.role || '',
+        position: d.position || 1,
+        height: 1,
+        face: d.face || 'front',
+        status: d.status || 'planned',
+        serial: d.serial || '',
+        assetTag: d.asset_tag || '',
+        comments: d.comments || '',
+        _color: d.face === 'rear' ? '#f97316' : '#3b82f6',
+      }));
+
+      const result = dispatch('BULK_ADD_DEVICES', { devices });
+      if (result.ok) {
+        const placed = result.results.filter(r => r.ok).length;
+        alert(t('msg_import_success', { placed, total: devices.length }));
+      }
+    } catch (err) {
+      alert('Failed to parse JSON file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function triggerDownload(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+
+// ─── app.js ──────────────────────────────────────────────────────────────────
+// Rack Builder — Main application bootstrap
+
+
+
+
+
+
+
+
+
+// Initialize the application
+function init() {
+  initTheme();
+  initLang();
+
+  // Render initial state
+  const state = getState();
+  renderRack(state);
+  renderDeviceList(state);
+
+  // Subscribe to state changes
+  subscribe((state) => {
+    renderRack(state);
+    renderDeviceList(state);
+    handleSelection(state);
+    syncReservedUnitsToForm();
+    updateUndoRedoButtons();
+    updateStorageIndicator();
+    updateStats(state);
+    updateJsonPreview(state);
+  });
+
+  // Initialize modules
+  initDeviceForm();
+  initDragDrop();
+  initExport();
+  initSettings();
+  initKeyboardShortcuts();
+  initClearButton();
+  initUndoRedo();
+  initJsonPreview();
+  initStorageIndicator();
+  initBulkPositionHighlight();
+  updateStorageIndicator();
+  updateStats(state);
+
+  // Service worker removed — minimalist single-file version
+}
+
+// ─── Theme ──────────────────────────────────────────────────────────────────
+
+function initTheme() {
+  const saved = localStorage.getItem('rackbuilder_theme') || 'dark';
+  applyTheme(saved);
+
+  document.getElementById('theme-btn').addEventListener('click', () => {
+    const current = document.documentElement.dataset.theme;
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  });
+}
+
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  localStorage.setItem('rackbuilder_theme', theme);
+  const btn = document.getElementById('theme-btn');
+  if (btn) {
+    btn.textContent = t(theme === 'dark' ? 'theme_dark' : 'theme_light');
+  }
+}
+
+// ─── Language ───────────────────────────────────────────────────────────────
+
+function initLang() {
+  applyTranslations();
+
+  document.getElementById('lang-btn').addEventListener('click', () => {
+    const next = getCurrentLang() === 'en' ? 'de' : 'en';
+    setLang(next);
+    // Also update theme button text (translated)
+    const theme = document.documentElement.dataset.theme || 'dark';
+    const btn = document.getElementById('theme-btn');
+    if (btn) btn.textContent = t(theme === 'dark' ? 'theme_dark' : 'theme_light');
+  });
+}
+
+// ─── Device list ────────────────────────────────────────────────────────────
+
+function renderDeviceList(state) {
+  const container = document.getElementById('device-list');
+  const countEl = document.getElementById('device-count');
+  const { devices, selectedDeviceId } = state;
+
+  countEl.textContent = devices.length;
+
+  if (devices.length === 0) {
+    container.innerHTML = `<p style="color: var(--color-text-muted); font-size: 12px;">${t('no_devices')}</p>`;
+    return;
+  }
+
+  const sorted = [...devices].sort((a, b) => a.position - b.position);
+
+  container.innerHTML = sorted.map(d => `
+    <div class="device-list-item${d.id === selectedDeviceId ? ' selected' : ''}" data-device-id="${d.id}">
+      <div class="device-info">
+        <span class="device-color" style="background: ${d._color || '#3b82f6'}"></span>
+        <span>${d.name || '(unnamed)'}</span>
+      </div>
+      <span class="device-pos">U${d.position}${d.height > 1 ? '-' + (d.position + d.height - 1) : ''} ${d.face}</span>
+      <button class="device-delete" data-device-id="${d.id}" title="Delete">&times;</button>
+    </div>
+  `).join('');
+
+  container.querySelectorAll('.device-list-item').forEach(item => {
+    item.addEventListener('click', (e) => {
+      if (e.target.closest('.device-delete')) return;
+      const id = item.dataset.deviceId;
+      dispatch('SELECT_DEVICE', id === state.selectedDeviceId ? null : id);
+    });
+  });
+
+  container.querySelectorAll('.device-delete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      dispatch('REMOVE_DEVICE', btn.dataset.deviceId);
+    });
+  });
+}
+
+function handleSelection(state) {
+  const { selectedDeviceId, devices } = state;
+  if (selectedDeviceId) {
+    const device = devices.find(d => d.id === selectedDeviceId);
+    populateFormForEdit(device || null);
+  } else {
+    populateFormForEdit(null);
+  }
+}
+
+// ─── Settings modal ─────────────────────────────────────────────────────────
+
+function initSettings() {
+  const modal = document.getElementById('settings-modal');
+  const form = document.getElementById('settings-form');
+
+  document.getElementById('settings-btn').addEventListener('click', () => {
+    const { rackConfig } = getState();
+    document.getElementById('setting-name').value = rackConfig.name;
+    document.getElementById('setting-units').value = rackConfig.totalUnits;
+    document.getElementById('setting-direction').value = rackConfig.numberingDirection;
+    document.getElementById('setting-site').value = rackConfig.site;
+    document.getElementById('setting-location').value = rackConfig.location;
+    document.getElementById('setting-front-color').value = rackConfig.frontColor || '#3b82f6';
+    document.getElementById('setting-rear-color').value = rackConfig.rearColor || '#f97316';
+    modal.showModal();
+  });
+
+  document.getElementById('settings-cancel').addEventListener('click', () => {
+    modal.close();
+  });
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    dispatch('UPDATE_RACK_CONFIG', {
+      name: document.getElementById('setting-name').value.trim(),
+      totalUnits: parseInt(document.getElementById('setting-units').value) || 42,
+      numberingDirection: document.getElementById('setting-direction').value,
+      site: document.getElementById('setting-site').value.trim(),
+      location: document.getElementById('setting-location').value.trim(),
+      frontColor: document.getElementById('setting-front-color').value,
+      rearColor: document.getElementById('setting-rear-color').value,
+    });
+    modal.close();
+  });
+}
+
+// ─── Keyboard shortcuts ──────────────────────────────────────────────────────
+
+function initKeyboardShortcuts() {
+  document.addEventListener('keydown', (e) => {
+    // Undo/Redo work even in inputs
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
+      e.preventDefault();
+      undo();
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+      e.preventDefault();
+      redo();
+      return;
+    }
+
+    if (e.target.matches('input, textarea, select')) return;
+
+    const state = getState();
+
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      if (state.selectedDeviceId) {
+        dispatch('REMOVE_DEVICE', state.selectedDeviceId);
+      }
+    }
+
+    if (e.key === 'Escape') {
+      if (state.selectedDeviceId) {
+        dispatch('SELECT_DEVICE', null);
+      }
+    }
+  });
+}
+
+// ─── Clear button ────────────────────────────────────────────────────────────
+
+function initClearButton() {
+  document.getElementById('clear-devices-btn').addEventListener('click', () => {
+    if (confirm(t('confirm_clear_devices'))) {
+      dispatch('CLEAR_DEVICES');
+    }
+  });
+
+  document.getElementById('reset-all-btn').addEventListener('click', () => {
+    if (confirm(t('confirm_reset_all'))) {
+      dispatch('CLEAR_STATE');
+    }
+  });
+}
+
+// ─── Live Statistics ────────────────────────────────────────────────────────
+
+function updateStats(state) {
+  const stats = getRackUtilization(state.devices, state.rackConfig.totalUnits);
+  const el = document.getElementById('rack-stats');
+  if (el) {
+    el.textContent = `${stats.totalPercent}% ${t('stat_used')} (F: ${stats.frontPercent}% | R: ${stats.rearPercent}%)`;
+  }
+}
+
+// ─── Live JSON Preview ──────────────────────────────────────────────────────
+
+function initJsonPreview() {
+  document.getElementById('json-preview-toggle').addEventListener('click', () => {
+    const el = document.getElementById('json-preview');
+    const isHidden = el.style.display === 'none' || !el.style.display;
+    el.style.display = isHidden ? 'block' : 'none';
+    if (isHidden) {
+      updateJsonPreview(getState());
+    }
+  });
+}
+
+function updateJsonPreview(state) {
+  const el = document.getElementById('json-preview');
+  if (!el || el.style.display === 'none') return;
+  const data = toNetBoxJSON(state.devices, state.rackConfig);
+  el.textContent = JSON.stringify(data, null, 2);
+}
+
+// ─── Storage indicator ──────────────────────────────────────────────────────
+
+function initStorageIndicator() {
+  document.getElementById('clear-cache-btn').addEventListener('click', () => {
+    if (confirm(t('confirm_clear_cache'))) {
+      // Keep theme and language preferences
+      const theme = localStorage.getItem('rackbuilder_theme');
+      const lang = localStorage.getItem('rackbuilder_lang');
+
+      // Remove all rackbuilder keys
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key.startsWith('rackbuilder')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+
+      // Restore preferences
+      if (theme) localStorage.setItem('rackbuilder_theme', theme);
+      if (lang) localStorage.setItem('rackbuilder_lang', lang);
+
+      dispatch('CLEAR_STATE');
+    }
+  });
+}
+
+function updateStorageIndicator() {
+  const { usedBytes, limitBytes } = getLocalStorageUsage();
+  const usedKB = (usedBytes / 1024).toFixed(1);
+  const limitMB = (limitBytes / (1024 * 1024)).toFixed(0);
+  const percent = Math.min(100, (usedBytes / limitBytes) * 100);
+
+  document.getElementById('storage-usage-text').textContent = `${usedKB} KB / ${limitMB} MB`;
+
+  const fill = document.getElementById('storage-bar-fill');
+  fill.style.width = `${percent}%`;
+  fill.classList.remove('warning', 'critical');
+  if (percent > 90) {
+    fill.classList.add('critical');
+  } else if (percent > 70) {
+    fill.classList.add('warning');
+  }
+}
+
+// ─── HE Selection / Reserved Units ──────────────────────────────────────────
+
+let lastSyncedReserved = null;
+
+function syncReservedUnitsToForm() {
+  const reserved = getReservedUnits();
+  const key = JSON.stringify(reserved);
+  if (key === lastSyncedReserved) return;
+  lastSyncedReserved = key;
+
+  const bulkOpen = document.getElementById('bulk-content')?.classList.contains('open');
+
+  if (!bulkOpen && reserved.length === 1) {
+    // Single mode: update position field and face (only if user isn't typing)
+    const posInput = document.getElementById('dev-position');
+    if (document.activeElement !== posInput) {
+      const r = reserved[0];
+      posInput.value = r.unit;
+      const faceRadio = document.querySelector(`input[name="dev-face"][value="${r.face}"]`);
+      if (faceRadio) faceRadio.checked = true;
+    }
+  }
+
+  if (bulkOpen && reserved.length > 0) {
+    // Update bulk positions field from clicked cells (only if user isn't typing)
+    const posInput = document.getElementById('bulk-positions');
+    if (document.activeElement !== posInput) {
+      const sorted = [...reserved].sort((a, b) => a.unit - b.unit);
+      posInput.value = sorted.map(r => r.unit).join(', ');
+    }
+  }
+}
+
+function initBulkPositionHighlight() {
+  const bulkPositionsInput = document.getElementById('bulk-positions');
+  bulkPositionsInput.addEventListener('input', () => {
+    const value = bulkPositionsInput.value.trim();
+    if (!value) {
+      clearReservedUnits();
+      return;
+    }
+    const positions = parsePositionList(value);
+    const face = document.querySelector('input[name="dev-face"]:checked')?.value || 'front';
+    setReservedUnits(positions.map(unit => ({ unit, face })));
+  });
+}
+
+// ─── Undo/Redo ──────────────────────────────────────────────────────────────
+
+function initUndoRedo() {
+  document.getElementById('undo-btn').addEventListener('click', undo);
+  document.getElementById('redo-btn').addEventListener('click', redo);
+  updateUndoRedoButtons();
+}
+
+function updateUndoRedoButtons() {
+  document.getElementById('undo-btn').disabled = !canUndo();
+  document.getElementById('redo-btn').disabled = !canRedo();
+}
+
+// Start
+document.addEventListener('DOMContentLoaded', init);
+
+</script>
+</body>
+</html>
