@@ -43,6 +43,7 @@ export function createDevice(overrides = {}, rackConfig = null) {
   return {
     id: generateId(),
     name: '',
+    manufacturer: '',
     deviceType: '',
     role: '',
     position: 1,
@@ -120,6 +121,18 @@ export function findNextFreeSlot(devices, height, face, totalUnits, startFrom = 
 }
 
 /**
+ * Find the next free slot searching downwards (from high U to low U).
+ */
+export function findNextFreeSlotReverse(devices, height, face, totalUnits, startFrom = null, fullDepth = false) {
+  if (startFrom === null) startFrom = totalUnits - height + 1;
+  for (let pos = startFrom; pos >= 1; pos--) {
+    const result = canPlace(devices, pos, height, face, totalUnits, null, fullDepth);
+    if (result.ok) return pos;
+  }
+  return null;
+}
+
+/**
  * Get a set of all occupied unit numbers for a given face.
  * @param {Device[]} devices
  * @param {"front"|"rear"} face
@@ -162,6 +175,7 @@ export function getRackUtilization(devices, totalUnits) {
 export function toNetBoxJSON(devices, rackConfig) {
   return devices.map(d => ({
     name: d.name,
+    manufacturer: d.manufacturer || undefined,
     device_type: d.deviceType,
     role: d.role,
     site: rackConfig.site,

@@ -418,6 +418,7 @@ body {
   flex: 1;
 }
 
+/* Modern radio buttons */
 .form-radio-group {
   display: flex;
   gap: 8px;
@@ -426,27 +427,90 @@ body {
 .form-radio-group label {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   cursor: pointer;
   font-size: 13px;
   color: var(--color-text);
 }
 
 .form-radio-group input[type="radio"] {
-  width: auto;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--bg-primary);
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.15s, background 0.15s;
+  flex-shrink: 0;
 }
 
+.form-radio-group input[type="radio"]:checked {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+.form-radio-group input[type="radio"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.form-radio-group input[type="radio"]:hover {
+  border-color: var(--color-accent);
+}
+
+/* Modern checkboxes */
 .form-checkbox-label {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   font-size: 13px;
   cursor: pointer;
   color: var(--color-text);
 }
 
 .form-checkbox-label input[type="checkbox"] {
-  width: auto;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color-border);
+  border-radius: 4px;
+  background: var(--bg-primary);
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+
+.form-checkbox-label input[type="checkbox"]:checked {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+.form-checkbox-label input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 5px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.form-checkbox-label input[type="checkbox"]:hover {
+  border-color: var(--color-accent);
 }
 
 /* Buttons */
@@ -548,27 +612,11 @@ body {
   margin-top: 12px;
 }
 
-.bulk-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
+.bulk-toggle-label {
   font-size: 13px;
-  color: var(--color-text-muted);
-  margin-bottom: 8px;
-}
-
-.bulk-toggle:hover {
+  font-weight: 500;
   color: var(--color-text);
-}
-
-.bulk-toggle .arrow {
-  transition: transform 0.2s;
-  font-size: 10px;
-}
-
-.bulk-toggle .arrow.open {
-  transform: rotate(90deg);
+  margin-bottom: 8px;
 }
 
 .bulk-content {
@@ -784,7 +832,7 @@ dialog .dialog-actions {
   <h1>
     <span class="rack-icon">&#9638;</span>
     <span data-i18n="app_title">Rack Builder</span>
-    <span class="app-version" data-i18n="version">v0.3.0</span>
+    <span class="app-version" data-i18n="version">v0.4.0</span>
   </h1>
   <div class="header-actions">
     <button class="btn btn-secondary btn-sm" id="undo-btn" data-i18n-title="btn_undo" title="Undo" disabled>&#x21A9;</button>
@@ -806,6 +854,11 @@ dialog .dialog-actions {
       <div class="form-group">
         <label for="dev-name" data-i18n="label_name">Name</label>
         <input type="text" id="dev-name" required data-i18n-placeholder="ph_name" placeholder="e.g. Switch-01">
+      </div>
+
+      <div class="form-group">
+        <label for="dev-manufacturer" data-i18n="label_manufacturer">Manufacturer</label>
+        <input type="text" id="dev-manufacturer" data-i18n-placeholder="ph_manufacturer" placeholder="e.g. Cisco">
       </div>
 
       <div class="form-row">
@@ -883,10 +936,10 @@ dialog .dialog-actions {
 
       <!-- Bulk Section -->
       <div class="bulk-section">
-        <div class="bulk-toggle" id="bulk-toggle">
-          <span class="arrow" id="bulk-arrow">&#9654;</span>
+        <label class="form-checkbox-label bulk-toggle-label" id="bulk-toggle">
+          <input type="checkbox" id="bulk-checkbox">
           <span data-i18n="bulk_creation">Bulk Creation</span>
-        </div>
+        </label>
         <div class="bulk-content" id="bulk-content">
           <div class="form-row">
             <div class="form-group">
@@ -904,6 +957,13 @@ dialog .dialog-actions {
           <div class="form-group">
             <label for="bulk-start" data-i18n="bulk_start">Start Number / Letter</label>
             <input type="text" id="bulk-start" value="1" placeholder="1 or A">
+          </div>
+          <div class="form-group">
+            <label for="bulk-direction" data-i18n="bulk_direction">Stacking Direction</label>
+            <select id="bulk-direction">
+              <option value="bottom-to-top" data-i18n="bulk_dir_up">Bottom → Top (ascending)</option>
+              <option value="top-to-bottom" data-i18n="bulk_dir_down">Top → Bottom (descending)</option>
+            </select>
           </div>
           <div class="form-group">
             <label for="bulk-positions" data-i18n="bulk_positions">Specific Positions (optional)</label>
@@ -1021,7 +1081,7 @@ dialog .dialog-actions {
 
 <script>
 // ══════════════════════════════════════════════════════════════════════════════
-// Rack Builder v0.3.0 — Minimalist Single-File Edition
+// Rack Builder v0.4.0 — Minimalist Single-File Edition
 // All modules merged into one file for easy local usage.
 // ══════════════════════════════════════════════════════════════════════════════
 
@@ -1053,16 +1113,19 @@ function generateId() {
 function generateSequence(baseName, count, startFrom, mode) {
   const names = [];
   if (mode === 'alpha') {
-    let charCode = typeof startFrom === 'string'
-      ? startFrom.toUpperCase().charCodeAt(0)
-      : 64 + startFrom; // 1 -> A
+    let charCode;
+    if (typeof startFrom === 'string' && /^[a-zA-Z]$/.test(startFrom)) {
+      charCode = startFrom.toUpperCase().charCodeAt(0);
+    } else {
+      charCode = 65; // default to 'A'
+    }
     for (let i = 0; i < count; i++) {
-      names.push(`${baseName}-${String.fromCharCode(charCode + i)}`);
+      names.push(`${baseName}${String.fromCharCode(charCode + i)}`);
     }
   } else {
     const start = typeof startFrom === 'number' ? startFrom : parseInt(startFrom, 10) || 1;
     for (let i = 0; i < count; i++) {
-      names.push(`${baseName}-${start + i}`);
+      names.push(`${baseName}${start + i}`);
     }
   }
   return names;
@@ -1099,7 +1162,7 @@ function parsePositionList(input) {
 const translations = {
   en: {
     app_title: 'Rack Builder',
-    version: 'v0.3.0',
+    version: 'v0.4.0',
     btn_settings: 'Settings',
     btn_clear_devices: 'Clear Devices',
     btn_reset_all: 'Reset All',
@@ -1199,11 +1262,16 @@ const translations = {
     btn_clear_cache: 'Clear Cache',
     confirm_clear_cache: 'Clear all cached data? Your current project will be lost.',
     msg_unit_reserved: 'Position U{unit} selected',
+    label_manufacturer: 'Manufacturer',
+    ph_manufacturer: 'e.g. Cisco',
+    bulk_direction: 'Stacking Direction',
+    bulk_dir_up: 'Bottom → Top (ascending)',
+    bulk_dir_down: 'Top → Bottom (descending)',
     ph_comments: '',
   },
   de: {
     app_title: 'Rack Builder',
-    version: 'v0.3.0',
+    version: 'v0.4.0',
     btn_settings: 'Einstellungen',
     btn_clear_devices: 'Geräte löschen',
     btn_reset_all: 'Alles zurücksetzen',
@@ -1303,6 +1371,11 @@ const translations = {
     btn_clear_cache: 'Cache leeren',
     confirm_clear_cache: 'Alle zwischengespeicherten Daten löschen? Ihr aktuelles Projekt geht verloren.',
     msg_unit_reserved: 'Position U{unit} ausgewählt',
+    label_manufacturer: 'Hersteller',
+    ph_manufacturer: 'z.B. Cisco',
+    bulk_direction: 'Stapelrichtung',
+    bulk_dir_up: 'Unten → Oben (aufsteigend)',
+    bulk_dir_down: 'Oben → Unten (absteigend)',
     ph_comments: '',
   },
 };
@@ -1395,6 +1468,7 @@ function createDevice(overrides = {}, rackConfig = null) {
   return {
     id: generateId(),
     name: '',
+    manufacturer: '',
     deviceType: '',
     role: '',
     position: 1,
@@ -1472,6 +1546,18 @@ function findNextFreeSlot(devices, height, face, totalUnits, startFrom = 1, full
 }
 
 /**
+ * Find the next free slot searching downwards (from high U to low U).
+ */
+function findNextFreeSlotReverse(devices, height, face, totalUnits, startFrom = null, fullDepth = false) {
+  if (startFrom === null) startFrom = totalUnits - height + 1;
+  for (let pos = startFrom; pos >= 1; pos--) {
+    const result = canPlace(devices, pos, height, face, totalUnits, null, fullDepth);
+    if (result.ok) return pos;
+  }
+  return null;
+}
+
+/**
  * Get a set of all occupied unit numbers for a given face.
  * @param {Device[]} devices
  * @param {"front"|"rear"} face
@@ -1514,6 +1600,7 @@ function getRackUtilization(devices, totalUnits) {
 function toNetBoxJSON(devices, rackConfig) {
   return devices.map(d => ({
     name: d.name,
+    manufacturer: d.manufacturer || undefined,
     device_type: d.deviceType,
     role: d.role,
     site: rackConfig.site,
@@ -2047,8 +2134,7 @@ let editingDeviceId = null;
 
 function initDeviceForm() {
   const form = document.getElementById('device-form');
-  const bulkToggle = document.getElementById('bulk-toggle');
-  const bulkArrow = document.getElementById('bulk-arrow');
+  const bulkCheckbox = document.getElementById('bulk-checkbox');
   const bulkContent = document.getElementById('bulk-content');
   const deleteBtn = document.getElementById('form-delete-btn');
   const cancelBtn = document.getElementById('form-cancel-btn');
@@ -2068,10 +2154,10 @@ function initDeviceForm() {
     });
   });
 
-  // Bulk toggle
-  bulkToggle.addEventListener('click', () => {
-    const isOpen = bulkContent.classList.toggle('open');
-    bulkArrow.classList.toggle('open', isOpen);
+  // Bulk toggle via checkbox
+  bulkCheckbox.addEventListener('change', () => {
+    const isOpen = bulkCheckbox.checked;
+    bulkContent.classList.toggle('open', isOpen);
   });
 
   // Form submit
@@ -2105,6 +2191,7 @@ function initDeviceForm() {
 function getFormData() {
   return {
     name: document.getElementById('dev-name').value.trim(),
+    manufacturer: document.getElementById('dev-manufacturer').value.trim(),
     deviceType: document.getElementById('dev-type').value.trim(),
     role: document.getElementById('dev-role').value.trim(),
     height: parseInt(document.getElementById('dev-height').value) || 1,
@@ -2184,7 +2271,10 @@ function handleBulkCreate() {
   const startValue = document.getElementById('bulk-start').value.trim() || '1';
   const specificPositions = document.getElementById('bulk-positions').value.trim();
 
-  const names = generateSequence(data.name, qty, numbering === 'alpha' ? startValue : parseInt(startValue) || 1, numbering);
+  const startParam = numbering === 'alpha'
+    ? (/^[a-zA-Z]$/.test(startValue) ? startValue : 'A')
+    : (parseInt(startValue) || 1);
+  const names = generateSequence(data.name, qty, startParam, numbering);
 
   let devicesToAdd = [];
 
@@ -2206,17 +2296,34 @@ function handleBulkCreate() {
     // Sequential stacking mode
     const posValue = getPositionValue();
     const state = getState();
-    let currentPos = resolvePosition(posValue, data.height, data.face);
+    const bulkDirection = document.getElementById('bulk-direction').value;
 
-    if (currentPos === null) {
+    let startPos;
+    if (bulkDirection === 'top-to-bottom') {
+      // Start from the top of the rack
+      startPos = resolvePosition(posValue, data.height, data.face);
+      if (startPos === null || (posValue === '' || posValue.toLowerCase() === 'auto')) {
+        startPos = state.rackConfig.totalUnits - data.height + 1;
+      }
+    } else {
+      startPos = resolvePosition(posValue, data.height, data.face);
+    }
+
+    if (startPos === null) {
       showMessage(t('msg_no_start'), 'error');
       return;
     }
 
     // We need to simulate placement to find sequential positions
     const tempDevices = [...state.devices];
+    let currentPos = startPos;
     for (let i = 0; i < qty; i++) {
-      const slot = findNextFreeSlot(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
+      let slot;
+      if (bulkDirection === 'top-to-bottom') {
+        slot = findNextFreeSlotReverse(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
+      } else {
+        slot = findNextFreeSlot(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
+      }
       if (slot === null) {
         showMessage(t('msg_only_fit', { placed: i, total: qty }), 'error');
         return;
@@ -2229,7 +2336,7 @@ function handleBulkCreate() {
       };
       tempDevices.push(device);
       devicesToAdd.push({ ...data, name: names[i], position: slot });
-      currentPos = slot + data.height;
+      currentPos = bulkDirection === 'top-to-bottom' ? slot - data.height : slot + data.height;
     }
   }
 
@@ -2263,6 +2370,7 @@ function populateFormForEdit(device) {
 
   editingDeviceId = device.id;
   document.getElementById('dev-name').value = device.name;
+  document.getElementById('dev-manufacturer').value = device.manufacturer || '';
   document.getElementById('dev-type').value = device.deviceType;
   document.getElementById('dev-role').value = device.role;
   document.getElementById('dev-height').value = device.height;
@@ -2282,7 +2390,7 @@ function populateFormForEdit(device) {
 
   // Close bulk section when editing
   document.getElementById('bulk-content').classList.remove('open');
-  document.getElementById('bulk-arrow').classList.remove('open');
+  document.getElementById('bulk-checkbox').checked = false;
 }
 
 function resetForm() {
@@ -2645,10 +2753,11 @@ function saveProject() {
 
   const project = {
     _format: 'rackbuilder-project',
-    _version: '0.3.0',
+    _version: '0.4.0',
     rackConfig: state.rackConfig,
     devices: state.devices.map(d => ({
       name: d.name,
+      manufacturer: d.manufacturer,
       deviceType: d.deviceType,
       role: d.role,
       position: d.position,
@@ -2727,6 +2836,7 @@ function importJSON(e) {
 
       const devices = data.map(d => ({
         name: d.name || '',
+        manufacturer: d.manufacturer || '',
         deviceType: d.device_type || '',
         role: d.role || '',
         position: d.position || 1,

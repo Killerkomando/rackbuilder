@@ -1,7 +1,7 @@
 // Device form handling (add, edit, bulk creation)
 
 import { getState, dispatch, clearReservedUnits } from './state.js';
-import { canPlace, findNextFreeSlot } from './rack-model.js';
+import { canPlace, findNextFreeSlot, findNextFreeSlotReverse } from './rack-model.js';
 import { generateSequence, parsePositionList } from './utils.js';
 import { t } from './i18n.js';
 
@@ -9,8 +9,7 @@ let editingDeviceId = null;
 
 export function initDeviceForm() {
   const form = document.getElementById('device-form');
-  const bulkToggle = document.getElementById('bulk-toggle');
-  const bulkArrow = document.getElementById('bulk-arrow');
+  const bulkCheckbox = document.getElementById('bulk-checkbox');
   const bulkContent = document.getElementById('bulk-content');
   const deleteBtn = document.getElementById('form-delete-btn');
   const cancelBtn = document.getElementById('form-cancel-btn');
@@ -30,10 +29,10 @@ export function initDeviceForm() {
     });
   });
 
-  // Bulk toggle
-  bulkToggle.addEventListener('click', () => {
-    const isOpen = bulkContent.classList.toggle('open');
-    bulkArrow.classList.toggle('open', isOpen);
+  // Bulk toggle via checkbox
+  bulkCheckbox.addEventListener('change', () => {
+    const isOpen = bulkCheckbox.checked;
+    bulkContent.classList.toggle('open', isOpen);
   });
 
   // Form submit
@@ -67,6 +66,7 @@ export function initDeviceForm() {
 function getFormData() {
   return {
     name: document.getElementById('dev-name').value.trim(),
+    manufacturer: document.getElementById('dev-manufacturer').value.trim(),
     deviceType: document.getElementById('dev-type').value.trim(),
     role: document.getElementById('dev-role').value.trim(),
     height: parseInt(document.getElementById('dev-height').value) || 1,
@@ -146,7 +146,10 @@ function handleBulkCreate() {
   const startValue = document.getElementById('bulk-start').value.trim() || '1';
   const specificPositions = document.getElementById('bulk-positions').value.trim();
 
-  const names = generateSequence(data.name, qty, numbering === 'alpha' ? startValue : parseInt(startValue) || 1, numbering);
+  const startParam = numbering === 'alpha'
+    ? (/^[a-zA-Z]$/.test(startValue) ? startValue : 'A')
+    : (parseInt(startValue) || 1);
+  const names = generateSequence(data.name, qty, startParam, numbering);
 
   let devicesToAdd = [];
 
@@ -168,17 +171,34 @@ function handleBulkCreate() {
     // Sequential stacking mode
     const posValue = getPositionValue();
     const state = getState();
-    let currentPos = resolvePosition(posValue, data.height, data.face);
+    const bulkDirection = document.getElementById('bulk-direction').value;
 
-    if (currentPos === null) {
+    let startPos;
+    if (bulkDirection === 'top-to-bottom') {
+      // Start from the top of the rack
+      startPos = resolvePosition(posValue, data.height, data.face);
+      if (startPos === null || (posValue === '' || posValue.toLowerCase() === 'auto')) {
+        startPos = state.rackConfig.totalUnits - data.height + 1;
+      }
+    } else {
+      startPos = resolvePosition(posValue, data.height, data.face);
+    }
+
+    if (startPos === null) {
       showMessage(t('msg_no_start'), 'error');
       return;
     }
 
     // We need to simulate placement to find sequential positions
     const tempDevices = [...state.devices];
+    let currentPos = startPos;
     for (let i = 0; i < qty; i++) {
-      const slot = findNextFreeSlot(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
+      let slot;
+      if (bulkDirection === 'top-to-bottom') {
+        slot = findNextFreeSlotReverse(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
+      } else {
+        slot = findNextFreeSlot(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
+      }
       if (slot === null) {
         showMessage(t('msg_only_fit', { placed: i, total: qty }), 'error');
         return;
@@ -191,7 +211,7 @@ function handleBulkCreate() {
       };
       tempDevices.push(device);
       devicesToAdd.push({ ...data, name: names[i], position: slot });
-      currentPos = slot + data.height;
+      currentPos = bulkDirection === 'top-to-bottom' ? slot - data.height : slot + data.height;
     }
   }
 
@@ -225,6 +245,7 @@ export function populateFormForEdit(device) {
 
   editingDeviceId = device.id;
   document.getElementById('dev-name').value = device.name;
+  document.getElementById('dev-manufacturer').value = device.manufacturer || '';
   document.getElementById('dev-type').value = device.deviceType;
   document.getElementById('dev-role').value = device.role;
   document.getElementById('dev-height').value = device.height;
@@ -244,7 +265,7 @@ export function populateFormForEdit(device) {
 
   // Close bulk section when editing
   document.getElementById('bulk-content').classList.remove('open');
-  document.getElementById('bulk-arrow').classList.remove('open');
+  document.getElementById('bulk-checkbox').checked = false;
 }
 
 function resetForm() {

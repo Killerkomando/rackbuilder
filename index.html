@@ -14,7 +14,7 @@
   <h1>
     <span class="rack-icon">&#9638;</span>
     <span data-i18n="app_title">Rack Builder</span>
-    <span class="app-version" data-i18n="version">v0.3.0</span>
+    <span class="app-version" data-i18n="version">v0.4.0</span>
   </h1>
   <div class="header-actions">
     <button class="btn btn-secondary btn-sm" id="undo-btn" data-i18n-title="btn_undo" title="Undo" disabled>&#x21A9;</button>
@@ -36,6 +36,11 @@
       <div class="form-group">
         <label for="dev-name" data-i18n="label_name">Name</label>
         <input type="text" id="dev-name" required data-i18n-placeholder="ph_name" placeholder="e.g. Switch-01">
+      </div>
+
+      <div class="form-group">
+        <label for="dev-manufacturer" data-i18n="label_manufacturer">Manufacturer</label>
+        <input type="text" id="dev-manufacturer" data-i18n-placeholder="ph_manufacturer" placeholder="e.g. Cisco">
       </div>
 
       <div class="form-row">
@@ -113,10 +118,10 @@
 
       <!-- Bulk Section -->
       <div class="bulk-section">
-        <div class="bulk-toggle" id="bulk-toggle">
-          <span class="arrow" id="bulk-arrow">&#9654;</span>
+        <label class="form-checkbox-label bulk-toggle-label" id="bulk-toggle">
+          <input type="checkbox" id="bulk-checkbox">
           <span data-i18n="bulk_creation">Bulk Creation</span>
-        </div>
+        </label>
         <div class="bulk-content" id="bulk-content">
           <div class="form-row">
             <div class="form-group">
@@ -134,6 +139,13 @@
           <div class="form-group">
             <label for="bulk-start" data-i18n="bulk_start">Start Number / Letter</label>
             <input type="text" id="bulk-start" value="1" placeholder="1 or A">
+          </div>
+          <div class="form-group">
+            <label for="bulk-direction" data-i18n="bulk_direction">Stacking Direction</label>
+            <select id="bulk-direction">
+              <option value="bottom-to-top" data-i18n="bulk_dir_up">Bottom → Top (ascending)</option>
+              <option value="top-to-bottom" data-i18n="bulk_dir_down">Top → Bottom (descending)</option>
+            </select>
           </div>
           <div class="form-group">
             <label for="bulk-positions" data-i18n="bulk_positions">Specific Positions (optional)</label>

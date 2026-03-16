@@ -3,7 +3,7 @@
 const translations = {
   en: {
     app_title: 'Rack Builder',
-    version: 'v0.3.0',
+    version: 'v0.4.0',
     btn_settings: 'Settings',
     btn_clear_devices: 'Clear Devices',
     btn_reset_all: 'Reset All',
@@ -103,11 +103,16 @@ const translations = {
     btn_clear_cache: 'Clear Cache',
     confirm_clear_cache: 'Clear all cached data? Your current project will be lost.',
     msg_unit_reserved: 'Position U{unit} selected',
+    label_manufacturer: 'Manufacturer',
+    ph_manufacturer: 'e.g. Cisco',
+    bulk_direction: 'Stacking Direction',
+    bulk_dir_up: 'Bottom → Top (ascending)',
+    bulk_dir_down: 'Top → Bottom (descending)',
     ph_comments: '',
   },
   de: {
     app_title: 'Rack Builder',
-    version: 'v0.3.0',
+    version: 'v0.4.0',
     btn_settings: 'Einstellungen',
     btn_clear_devices: 'Geräte löschen',
     btn_reset_all: 'Alles zurücksetzen',
@@ -207,6 +212,11 @@ const translations = {
     btn_clear_cache: 'Cache leeren',
     confirm_clear_cache: 'Alle zwischengespeicherten Daten löschen? Ihr aktuelles Projekt geht verloren.',
     msg_unit_reserved: 'Position U{unit} ausgewählt',
+    label_manufacturer: 'Hersteller',
+    ph_manufacturer: 'z.B. Cisco',
+    bulk_direction: 'Stapelrichtung',
+    bulk_dir_up: 'Unten → Oben (aufsteigend)',
+    bulk_dir_down: 'Oben → Unten (absteigend)',
     ph_comments: '',
   },
 };
