@@ -25,16 +25,19 @@ export function generateId() {
 export function generateSequence(baseName, count, startFrom, mode) {
   const names = [];
   if (mode === 'alpha') {
-    let charCode = typeof startFrom === 'string'
-      ? startFrom.toUpperCase().charCodeAt(0)
-      : 64 + startFrom; // 1 -> A
+    let charCode;
+    if (typeof startFrom === 'string' && /^[a-zA-Z]$/.test(startFrom)) {
+      charCode = startFrom.toUpperCase().charCodeAt(0);
+    } else {
+      charCode = 65; // default to 'A'
+    }
     for (let i = 0; i < count; i++) {
-      names.push(`${baseName}-${String.fromCharCode(charCode + i)}`);
+      names.push(`${baseName}${String.fromCharCode(charCode + i)}`);
     }
   } else {
     const start = typeof startFrom === 'number' ? startFrom : parseInt(startFrom, 10) || 1;
     for (let i = 0; i < count; i++) {
-      names.push(`${baseName}-${start + i}`);
+      names.push(`${baseName}${start + i}`);
     }
   }
   return names;

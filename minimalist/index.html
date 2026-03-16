@@ -383,7 +383,7 @@ body {
   margin-bottom: 4px;
 }
 
-.form-group input,
+.form-group input:not([type="radio"]):not([type="checkbox"]):not([type="color"]),
 .form-group select,
 .form-group textarea {
   width: 100%;
@@ -396,7 +396,7 @@ body {
   font-family: inherit;
 }
 
-.form-group input:focus,
+.form-group input:not([type="radio"]):not([type="checkbox"]):not([type="color"]):focus,
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
@@ -418,35 +418,154 @@ body {
   flex: 1;
 }
 
+/* Modern radio buttons */
 .form-radio-group {
   display: flex;
-  gap: 8px;
+  gap: 12px;
 }
 
 .form-radio-group label {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   cursor: pointer;
   font-size: 13px;
   color: var(--color-text);
+  margin-bottom: 0;
 }
 
 .form-radio-group input[type="radio"] {
-  width: auto;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--bg-primary);
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.15s, background 0.15s;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
 }
 
+.form-radio-group input[type="radio"]:checked {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+.form-radio-group input[type="radio"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.form-radio-group input[type="radio"]:hover {
+  border-color: var(--color-accent);
+}
+
+/* Modern checkboxes — iOS-style toggle switch */
 .form-checkbox-label {
-  display: flex;
+  display: inline-flex !important;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   font-size: 13px;
   cursor: pointer;
   color: var(--color-text);
 }
 
 .form-checkbox-label input[type="checkbox"] {
-  width: auto;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 36px;
+  height: 20px;
+  min-width: 36px;
+  min-height: 20px;
+  border: none;
+  border-radius: 10px;
+  background: var(--color-border);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.form-checkbox-label input[type="checkbox"]::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.form-checkbox-label input[type="checkbox"]:checked {
+  background: var(--color-accent);
+}
+
+.form-checkbox-label input[type="checkbox"]:checked::after {
+  transform: translateX(16px);
+}
+
+.form-checkbox-label input[type="checkbox"]:hover {
+  background: #475569;
+}
+
+.form-checkbox-label input[type="checkbox"]:checked:hover {
+  background: #4f46e5;
+}
+
+/* Modern color picker */
+.form-group input[type="color"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 36px;
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--bg-primary);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.form-group input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.form-group input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 3px;
+}
+
+.form-group input[type="color"]::-moz-color-swatch {
+  border: none;
+  border-radius: 3px;
+}
+
+.form-group input[type="color"]:hover {
+  border-color: var(--color-accent);
+}
+
+.form-group input[type="color"]:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
 }
 
 /* Buttons */
@@ -548,35 +667,25 @@ body {
   margin-top: 12px;
 }
 
-.bulk-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
+.bulk-toggle-label {
   font-size: 13px;
-  color: var(--color-text-muted);
+  font-weight: 500;
+  color: var(--color-text);
   margin-bottom: 8px;
 }
 
-.bulk-toggle:hover {
-  color: var(--color-text);
-}
-
-.bulk-toggle .arrow {
-  transition: transform 0.2s;
-  font-size: 10px;
-}
-
-.bulk-toggle .arrow.open {
-  transform: rotate(90deg);
-}
-
 .bulk-content {
-  display: none;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.25s ease, margin-top 0.3s ease;
+  margin-top: 0;
 }
 
 .bulk-content.open {
-  display: block;
+  max-height: 500px;
+  opacity: 1;
+  margin-top: 10px;
 }
 
 /* Device list */
@@ -784,7 +893,7 @@ dialog .dialog-actions {
   <h1>
     <span class="rack-icon">&#9638;</span>
     <span data-i18n="app_title">Rack Builder</span>
-    <span class="app-version" data-i18n="version">v0.3.0</span>
+    <span class="app-version" data-i18n="version">v0.4.0</span>
   </h1>
   <div class="header-actions">
     <button class="btn btn-secondary btn-sm" id="undo-btn" data-i18n-title="btn_undo" title="Undo" disabled>&#x21A9;</button>
@@ -808,14 +917,19 @@ dialog .dialog-actions {
         <input type="text" id="dev-name" required data-i18n-placeholder="ph_name" placeholder="e.g. Switch-01">
       </div>
 
+      <div class="form-group">
+        <label for="dev-manufacturer" data-i18n="label_manufacturer">Manufacturer</label>
+        <input type="text" id="dev-manufacturer" required data-i18n-placeholder="ph_manufacturer" placeholder="e.g. Cisco">
+      </div>
+
       <div class="form-row">
         <div class="form-group">
           <label for="dev-type" data-i18n="label_device_type">Device Type</label>
-          <input type="text" id="dev-type" data-i18n-placeholder="ph_type" placeholder="e.g. catalyst-9300">
+          <input type="text" id="dev-type" required data-i18n-placeholder="ph_type" placeholder="e.g. catalyst-9300">
         </div>
         <div class="form-group">
           <label for="dev-role" data-i18n="label_role">Role</label>
-          <input type="text" id="dev-role" data-i18n-placeholder="ph_role" placeholder="e.g. access-switch">
+          <input type="text" id="dev-role" required data-i18n-placeholder="ph_role" placeholder="e.g. access-switch">
         </div>
       </div>
 
@@ -883,10 +997,10 @@ dialog .dialog-actions {
 
       <!-- Bulk Section -->
       <div class="bulk-section">
-        <div class="bulk-toggle" id="bulk-toggle">
-          <span class="arrow" id="bulk-arrow">&#9654;</span>
+        <label class="form-checkbox-label bulk-toggle-label" id="bulk-toggle">
+          <input type="checkbox" id="bulk-checkbox">
           <span data-i18n="bulk_creation">Bulk Creation</span>
-        </div>
+        </label>
         <div class="bulk-content" id="bulk-content">
           <div class="form-row">
             <div class="form-group">
@@ -904,6 +1018,13 @@ dialog .dialog-actions {
           <div class="form-group">
             <label for="bulk-start" data-i18n="bulk_start">Start Number / Letter</label>
             <input type="text" id="bulk-start" value="1" placeholder="1 or A">
+          </div>
+          <div class="form-group">
+            <label for="bulk-direction" data-i18n="bulk_direction">Stacking Direction</label>
+            <select id="bulk-direction">
+              <option value="bottom-to-top" data-i18n="bulk_dir_up">Bottom → Top (ascending)</option>
+              <option value="top-to-bottom" data-i18n="bulk_dir_down">Top → Bottom (descending)</option>
+            </select>
           </div>
           <div class="form-group">
             <label for="bulk-positions" data-i18n="bulk_positions">Specific Positions (optional)</label>
@@ -1020,10 +1141,7 @@ dialog .dialog-actions {
 </dialog>
 
 <script>
-// ══════════════════════════════════════════════════════════════════════════════
-// Rack Builder v0.3.0 — Minimalist Single-File Edition
-// All modules merged into one file for easy local usage.
-// ══════════════════════════════════════════════════════════════════════════════
+// Rack Builder v0.4.0 — Minimalist Single-File Edition
 
 // ─── utils.js ────────────────────────────────────────────────────────────────
 // Utility helpers for Rack Builder
@@ -1053,16 +1171,19 @@ function generateId() {
 function generateSequence(baseName, count, startFrom, mode) {
   const names = [];
   if (mode === 'alpha') {
-    let charCode = typeof startFrom === 'string'
-      ? startFrom.toUpperCase().charCodeAt(0)
-      : 64 + startFrom; // 1 -> A
+    let charCode;
+    if (typeof startFrom === 'string' && /^[a-zA-Z]$/.test(startFrom)) {
+      charCode = startFrom.toUpperCase().charCodeAt(0);
+    } else {
+      charCode = 65; // default to 'A'
+    }
     for (let i = 0; i < count; i++) {
-      names.push(`${baseName}-${String.fromCharCode(charCode + i)}`);
+      names.push(`${baseName}${String.fromCharCode(charCode + i)}`);
     }
   } else {
     const start = typeof startFrom === 'number' ? startFrom : parseInt(startFrom, 10) || 1;
     for (let i = 0; i < count; i++) {
-      names.push(`${baseName}-${start + i}`);
+      names.push(`${baseName}${start + i}`);
     }
   }
   return names;
@@ -1092,14 +1213,13 @@ function parsePositionList(input) {
     .filter(n => !isNaN(n) && n > 0);
 }
 
-
 // ─── i18n.js ─────────────────────────────────────────────────────────────────
 // Internationalization (EN / DE)
 
 const translations = {
   en: {
     app_title: 'Rack Builder',
-    version: 'v0.3.0',
+    version: 'v0.4.0',
     btn_settings: 'Settings',
     btn_clear_devices: 'Clear Devices',
     btn_reset_all: 'Reset All',
@@ -1131,9 +1251,9 @@ const translations = {
     btn_cancel_edit: 'Cancel Edit',
     bulk_creation: 'Bulk Creation',
     bulk_quantity: 'Quantity',
-    bulk_numbering: 'Numbering',
+    bulk_numbering: 'Enumeration Type',
     bulk_numeric: 'Numeric (1, 2, 3…)',
-    bulk_alpha: 'Alpha (A, B, C…)',
+    bulk_alpha: 'Alphabetic (A, B, C…)',
     bulk_start: 'Start Number / Letter',
     bulk_positions: 'Specific Positions (optional)',
     bulk_info: 'Leave "Specific Positions" empty for sequential stacking from the start position.',
@@ -1199,11 +1319,16 @@ const translations = {
     btn_clear_cache: 'Clear Cache',
     confirm_clear_cache: 'Clear all cached data? Your current project will be lost.',
     msg_unit_reserved: 'Position U{unit} selected',
+    label_manufacturer: 'Manufacturer',
+    ph_manufacturer: 'e.g. Cisco',
+    bulk_direction: 'Stacking Direction',
+    bulk_dir_up: 'Bottom → Top (ascending)',
+    bulk_dir_down: 'Top → Bottom (descending)',
     ph_comments: '',
   },
   de: {
     app_title: 'Rack Builder',
-    version: 'v0.3.0',
+    version: 'v0.4.0',
     btn_settings: 'Einstellungen',
     btn_clear_devices: 'Geräte löschen',
     btn_reset_all: 'Alles zurücksetzen',
@@ -1235,7 +1360,7 @@ const translations = {
     btn_cancel_edit: 'Bearbeitung abbrechen',
     bulk_creation: 'Massenerstellung',
     bulk_quantity: 'Anzahl',
-    bulk_numbering: 'Nummerierung',
+    bulk_numbering: 'Aufzählung Art',
     bulk_numeric: 'Numerisch (1, 2, 3…)',
     bulk_alpha: 'Alphabetisch (A, B, C…)',
     bulk_start: 'Startnummer / -buchstabe',
@@ -1303,6 +1428,11 @@ const translations = {
     btn_clear_cache: 'Cache leeren',
     confirm_clear_cache: 'Alle zwischengespeicherten Daten löschen? Ihr aktuelles Projekt geht verloren.',
     msg_unit_reserved: 'Position U{unit} ausgewählt',
+    label_manufacturer: 'Hersteller',
+    ph_manufacturer: 'z.B. Cisco',
+    bulk_direction: 'Stapelrichtung',
+    bulk_dir_up: 'Unten → Oben (aufsteigend)',
+    bulk_dir_down: 'Oben → Unten (absteigend)',
     ph_comments: '',
   },
 };
@@ -1349,7 +1479,6 @@ function applyTranslations() {
   if (btn) btn.textContent = currentLang.toUpperCase();
 }
 
-
 // ─── rack-model.js ───────────────────────────────────────────────────────────
 // Rack data model with collision detection and boundary checks
 
@@ -1395,6 +1524,7 @@ function createDevice(overrides = {}, rackConfig = null) {
   return {
     id: generateId(),
     name: '',
+    manufacturer: '',
     deviceType: '',
     role: '',
     position: 1,
@@ -1472,6 +1602,18 @@ function findNextFreeSlot(devices, height, face, totalUnits, startFrom = 1, full
 }
 
 /**
+ * Find the next free slot searching downwards (from high U to low U).
+ */
+function findNextFreeSlotReverse(devices, height, face, totalUnits, startFrom = null, fullDepth = false) {
+  if (startFrom === null) startFrom = totalUnits - height + 1;
+  for (let pos = startFrom; pos >= 1; pos--) {
+    const result = canPlace(devices, pos, height, face, totalUnits, null, fullDepth);
+    if (result.ok) return pos;
+  }
+  return null;
+}
+
+/**
  * Get a set of all occupied unit numbers for a given face.
  * @param {Device[]} devices
  * @param {"front"|"rear"} face
@@ -1514,6 +1656,7 @@ function getRackUtilization(devices, totalUnits) {
 function toNetBoxJSON(devices, rackConfig) {
   return devices.map(d => ({
     name: d.name,
+    manufacturer: d.manufacturer,
     device_type: d.deviceType,
     role: d.role,
     site: rackConfig.site,
@@ -1531,7 +1674,6 @@ function toNetBoxJSON(devices, rackConfig) {
     return Object.fromEntries(Object.entries(obj).filter(([, v]) => v !== undefined));
   });
 }
-
 
 // ─── state.js ────────────────────────────────────────────────────────────────
 // Central state store with pub/sub and localStorage persistence
@@ -1812,7 +1954,6 @@ function dispatch(action, payload) {
   }
 }
 
-
 // ─── rack-view.js ────────────────────────────────────────────────────────────
 // Rack visualization renderer
 
@@ -2035,7 +2176,6 @@ function getPositionPixels(position, height, totalUnits, numberingDirection) {
   };
 }
 
-
 // ─── device-form.js ──────────────────────────────────────────────────────────
 // Device form handling (add, edit, bulk creation)
 
@@ -2047,8 +2187,7 @@ let editingDeviceId = null;
 
 function initDeviceForm() {
   const form = document.getElementById('device-form');
-  const bulkToggle = document.getElementById('bulk-toggle');
-  const bulkArrow = document.getElementById('bulk-arrow');
+  const bulkCheckbox = document.getElementById('bulk-checkbox');
   const bulkContent = document.getElementById('bulk-content');
   const deleteBtn = document.getElementById('form-delete-btn');
   const cancelBtn = document.getElementById('form-cancel-btn');
@@ -2068,10 +2207,17 @@ function initDeviceForm() {
     });
   });
 
-  // Bulk toggle
-  bulkToggle.addEventListener('click', () => {
-    const isOpen = bulkContent.classList.toggle('open');
-    bulkArrow.classList.toggle('open', isOpen);
+  // Bulk toggle via checkbox
+  bulkCheckbox.addEventListener('change', () => {
+    const isOpen = bulkCheckbox.checked;
+    bulkContent.classList.toggle('open', isOpen);
+  });
+
+  // Auto-switch start value when enumeration type changes
+  const bulkNumbering = document.getElementById('bulk-numbering');
+  const bulkStart = document.getElementById('bulk-start');
+  bulkNumbering.addEventListener('change', () => {
+    bulkStart.value = bulkNumbering.value === 'alpha' ? 'A' : '1';
   });
 
   // Form submit
@@ -2105,6 +2251,7 @@ function initDeviceForm() {
 function getFormData() {
   return {
     name: document.getElementById('dev-name').value.trim(),
+    manufacturer: document.getElementById('dev-manufacturer').value.trim(),
     deviceType: document.getElementById('dev-type').value.trim(),
     role: document.getElementById('dev-role').value.trim(),
     height: parseInt(document.getElementById('dev-height').value) || 1,
@@ -2184,13 +2331,23 @@ function handleBulkCreate() {
   const startValue = document.getElementById('bulk-start').value.trim() || '1';
   const specificPositions = document.getElementById('bulk-positions').value.trim();
 
-  const names = generateSequence(data.name, qty, numbering === 'alpha' ? startValue : parseInt(startValue) || 1, numbering);
+  const startParam = numbering === 'alpha'
+    ? (/^[a-zA-Z]$/.test(startValue) ? startValue : 'A')
+    : (parseInt(startValue) || 1);
+  const names = generateSequence(data.name, qty, startParam, numbering);
 
   let devicesToAdd = [];
 
   if (specificPositions) {
     // Specific positions mode
+    const bulkDirection = document.getElementById('bulk-direction').value;
     const positions = parsePositionList(specificPositions);
+    // Sort positions based on stacking direction so names match order
+    if (bulkDirection === 'top-to-bottom') {
+      positions.sort((a, b) => b - a); // highest first
+    } else {
+      positions.sort((a, b) => a - b); // lowest first
+    }
     if (positions.length < qty) {
       showMessage(t('msg_not_enough_pos', { specified: positions.length, total: qty }), 'error');
       return;
@@ -2206,17 +2363,39 @@ function handleBulkCreate() {
     // Sequential stacking mode
     const posValue = getPositionValue();
     const state = getState();
-    let currentPos = resolvePosition(posValue, data.height, data.face);
+    const bulkDirection = document.getElementById('bulk-direction').value;
+    const isTopDown = bulkDirection === 'top-to-bottom';
+    const isAuto = posValue === '' || posValue.toLowerCase() === 'auto';
 
-    if (currentPos === null) {
+    let startPos;
+    if (isAuto) {
+      if (isTopDown) {
+        // Auto + top-down: start from the top of the rack
+        startPos = findNextFreeSlotReverse(state.devices, data.height, data.face, state.rackConfig.totalUnits, null, data.fullDepth);
+      } else {
+        // Auto + bottom-up: start from the bottom
+        startPos = findNextFreeSlot(state.devices, data.height, data.face, state.rackConfig.totalUnits, 1, data.fullDepth);
+      }
+    } else {
+      startPos = parseInt(posValue);
+      if (isNaN(startPos)) startPos = null;
+    }
+
+    if (startPos === null) {
       showMessage(t('msg_no_start'), 'error');
       return;
     }
 
-    // We need to simulate placement to find sequential positions
+    // Simulate placement to find sequential positions
     const tempDevices = [...state.devices];
+    let currentPos = startPos;
     for (let i = 0; i < qty; i++) {
-      const slot = findNextFreeSlot(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
+      let slot;
+      if (isTopDown) {
+        slot = findNextFreeSlotReverse(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
+      } else {
+        slot = findNextFreeSlot(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
+      }
       if (slot === null) {
         showMessage(t('msg_only_fit', { placed: i, total: qty }), 'error');
         return;
@@ -2229,7 +2408,7 @@ function handleBulkCreate() {
       };
       tempDevices.push(device);
       devicesToAdd.push({ ...data, name: names[i], position: slot });
-      currentPos = slot + data.height;
+      currentPos = isTopDown ? slot - data.height : slot + data.height;
     }
   }
 
@@ -2248,6 +2427,15 @@ function handleBulkCreate() {
 
     document.getElementById('dev-name').value = '';
     document.getElementById('dev-position').value = 'auto';
+    // Reset bulk fields
+    document.getElementById('bulk-qty').value = '2';
+    document.getElementById('bulk-numbering').value = 'numeric';
+    document.getElementById('bulk-start').value = '1';
+    document.getElementById('bulk-direction').value = 'bottom-to-top';
+    document.getElementById('bulk-positions').value = '';
+    // Close bulk section and uncheck checkbox
+    document.getElementById('bulk-content').classList.remove('open');
+    document.getElementById('bulk-checkbox').checked = false;
     clearReservedUnits();
   }
 }
@@ -2257,12 +2445,16 @@ function handleBulkCreate() {
  */
 function populateFormForEdit(device) {
   if (!device) {
-    resetForm();
+    // Only reset if we were in edit mode, not on every state change
+    if (editingDeviceId) {
+      resetForm();
+    }
     return;
   }
 
   editingDeviceId = device.id;
   document.getElementById('dev-name').value = device.name;
+  document.getElementById('dev-manufacturer').value = device.manufacturer || '';
   document.getElementById('dev-type').value = device.deviceType;
   document.getElementById('dev-role').value = device.role;
   document.getElementById('dev-height').value = device.height;
@@ -2282,7 +2474,7 @@ function populateFormForEdit(device) {
 
   // Close bulk section when editing
   document.getElementById('bulk-content').classList.remove('open');
-  document.getElementById('bulk-arrow').classList.remove('open');
+  document.getElementById('bulk-checkbox').checked = false;
 }
 
 function resetForm() {
@@ -2316,7 +2508,6 @@ function showMessage(text, type) {
     }, 3000);
   }
 }
-
 
 // ─── drag-drop.js ────────────────────────────────────────────────────────────
 // Drag and drop handling for repositioning devices in the rack
@@ -2504,7 +2695,6 @@ function resetDragState() {
   rafPending = false;
 }
 
-
 // ─── export.js ───────────────────────────────────────────────────────────────
 // NetBox JSON export + YAML + CSV + Project save/load + download/clipboard
 
@@ -2645,10 +2835,11 @@ function saveProject() {
 
   const project = {
     _format: 'rackbuilder-project',
-    _version: '0.3.0',
+    _version: '0.4.0',
     rackConfig: state.rackConfig,
     devices: state.devices.map(d => ({
       name: d.name,
+      manufacturer: d.manufacturer,
       deviceType: d.deviceType,
       role: d.role,
       position: d.position,
@@ -2727,6 +2918,7 @@ function importJSON(e) {
 
       const devices = data.map(d => ({
         name: d.name || '',
+        manufacturer: d.manufacturer || '',
         deviceType: d.device_type || '',
         role: d.role || '',
         position: d.position || 1,
@@ -2765,7 +2957,6 @@ function triggerDownload(content, filename, mimeType) {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
-
 
 // ─── app.js ──────────────────────────────────────────────────────────────────
 // Rack Builder — Main application bootstrap
@@ -3104,6 +3295,7 @@ function syncReservedUnitsToForm() {
 
 function initBulkPositionHighlight() {
   const bulkPositionsInput = document.getElementById('bulk-positions');
+  const bulkQtyInput = document.getElementById('bulk-qty');
   bulkPositionsInput.addEventListener('input', () => {
     const value = bulkPositionsInput.value.trim();
     if (!value) {
@@ -3111,6 +3303,10 @@ function initBulkPositionHighlight() {
       return;
     }
     const positions = parsePositionList(value);
+    // Auto-update quantity to match number of positions
+    if (positions.length > 0) {
+      bulkQtyInput.value = positions.length;
+    }
     const face = document.querySelector('input[name="dev-face"]:checked')?.value || 'front';
     setReservedUnits(positions.map(unit => ({ unit, face })));
   });
