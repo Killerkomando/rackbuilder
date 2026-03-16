@@ -35,6 +35,13 @@ export function initDeviceForm() {
     bulkContent.classList.toggle('open', isOpen);
   });
 
+  // Auto-switch start value when enumeration type changes
+  const bulkNumbering = document.getElementById('bulk-numbering');
+  const bulkStart = document.getElementById('bulk-start');
+  bulkNumbering.addEventListener('change', () => {
+    bulkStart.value = bulkNumbering.value === 'alpha' ? 'A' : '1';
+  });
+
   // Form submit
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -172,16 +179,21 @@ function handleBulkCreate() {
     const posValue = getPositionValue();
     const state = getState();
     const bulkDirection = document.getElementById('bulk-direction').value;
+    const isTopDown = bulkDirection === 'top-to-bottom';
+    const isAuto = posValue === '' || posValue.toLowerCase() === 'auto';
 
     let startPos;
-    if (bulkDirection === 'top-to-bottom') {
-      // Start from the top of the rack
-      startPos = resolvePosition(posValue, data.height, data.face);
-      if (startPos === null || (posValue === '' || posValue.toLowerCase() === 'auto')) {
-        startPos = state.rackConfig.totalUnits - data.height + 1;
+    if (isAuto) {
+      if (isTopDown) {
+        // Auto + top-down: start from the top of the rack
+        startPos = findNextFreeSlotReverse(state.devices, data.height, data.face, state.rackConfig.totalUnits, null, data.fullDepth);
+      } else {
+        // Auto + bottom-up: start from the bottom
+        startPos = findNextFreeSlot(state.devices, data.height, data.face, state.rackConfig.totalUnits, 1, data.fullDepth);
       }
     } else {
-      startPos = resolvePosition(posValue, data.height, data.face);
+      startPos = parseInt(posValue);
+      if (isNaN(startPos)) startPos = null;
     }
 
     if (startPos === null) {
@@ -189,12 +201,12 @@ function handleBulkCreate() {
       return;
     }
 
-    // We need to simulate placement to find sequential positions
+    // Simulate placement to find sequential positions
     const tempDevices = [...state.devices];
     let currentPos = startPos;
     for (let i = 0; i < qty; i++) {
       let slot;
-      if (bulkDirection === 'top-to-bottom') {
+      if (isTopDown) {
         slot = findNextFreeSlotReverse(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
       } else {
         slot = findNextFreeSlot(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
@@ -211,7 +223,7 @@ function handleBulkCreate() {
       };
       tempDevices.push(device);
       devicesToAdd.push({ ...data, name: names[i], position: slot });
-      currentPos = bulkDirection === 'top-to-bottom' ? slot - data.height : slot + data.height;
+      currentPos = isTopDown ? slot - data.height : slot + data.height;
     }
   }
 
@@ -230,6 +242,9 @@ function handleBulkCreate() {
 
     document.getElementById('dev-name').value = '';
     document.getElementById('dev-position').value = 'auto';
+    // Close bulk section and uncheck checkbox
+    document.getElementById('bulk-content').classList.remove('open');
+    document.getElementById('bulk-checkbox').checked = false;
     clearReservedUnits();
   }
 }
@@ -239,7 +254,10 @@ function handleBulkCreate() {
  */
 export function populateFormForEdit(device) {
   if (!device) {
-    resetForm();
+    // Only reset if we were in edit mode, not on every state change
+    if (editingDeviceId) {
+      resetForm();
+    }
     return;
   }
 

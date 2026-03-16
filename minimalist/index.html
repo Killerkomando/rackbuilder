@@ -383,7 +383,7 @@ body {
   margin-bottom: 4px;
 }
 
-.form-group input,
+.form-group input:not([type="radio"]):not([type="checkbox"]):not([type="color"]),
 .form-group select,
 .form-group textarea {
   width: 100%;
@@ -396,7 +396,7 @@ body {
   font-family: inherit;
 }
 
-.form-group input:focus,
+.form-group input:not([type="radio"]):not([type="checkbox"]):not([type="color"]):focus,
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
@@ -421,7 +421,7 @@ body {
 /* Modern radio buttons */
 .form-radio-group {
   display: flex;
-  gap: 8px;
+  gap: 12px;
 }
 
 .form-radio-group label {
@@ -431,13 +431,16 @@ body {
   cursor: pointer;
   font-size: 13px;
   color: var(--color-text);
+  margin-bottom: 0;
 }
 
 .form-radio-group input[type="radio"] {
   -webkit-appearance: none;
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
   border: 2px solid var(--color-border);
   border-radius: 50%;
   background: var(--bg-primary);
@@ -445,6 +448,8 @@ body {
   position: relative;
   transition: border-color 0.15s, background 0.15s;
   flex-shrink: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .form-radio-group input[type="radio"]:checked {
@@ -458,8 +463,8 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: #fff;
 }
@@ -470,7 +475,7 @@ body {
 
 /* Modern checkboxes */
 .form-checkbox-label {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   font-size: 13px;
@@ -481,8 +486,10 @@ body {
 .form-checkbox-label input[type="checkbox"] {
   -webkit-appearance: none;
   appearance: none;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
   border: 2px solid var(--color-border);
   border-radius: 4px;
   background: var(--bg-primary);
@@ -490,6 +497,8 @@ body {
   position: relative;
   transition: border-color 0.15s, background 0.15s;
   flex-shrink: 0;
+  margin: 0;
+  padding: 0;
 }
 
 .form-checkbox-label input[type="checkbox"]:checked {
@@ -500,10 +509,10 @@ body {
 .form-checkbox-label input[type="checkbox"]:checked::after {
   content: '';
   position: absolute;
-  top: 2px;
-  left: 5px;
+  top: 1px;
+  left: 4px;
   width: 5px;
-  height: 9px;
+  height: 8px;
   border: solid #fff;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
@@ -858,17 +867,17 @@ dialog .dialog-actions {
 
       <div class="form-group">
         <label for="dev-manufacturer" data-i18n="label_manufacturer">Manufacturer</label>
-        <input type="text" id="dev-manufacturer" data-i18n-placeholder="ph_manufacturer" placeholder="e.g. Cisco">
+        <input type="text" id="dev-manufacturer" required data-i18n-placeholder="ph_manufacturer" placeholder="e.g. Cisco">
       </div>
 
       <div class="form-row">
         <div class="form-group">
           <label for="dev-type" data-i18n="label_device_type">Device Type</label>
-          <input type="text" id="dev-type" data-i18n-placeholder="ph_type" placeholder="e.g. catalyst-9300">
+          <input type="text" id="dev-type" required data-i18n-placeholder="ph_type" placeholder="e.g. catalyst-9300">
         </div>
         <div class="form-group">
           <label for="dev-role" data-i18n="label_role">Role</label>
-          <input type="text" id="dev-role" data-i18n-placeholder="ph_role" placeholder="e.g. access-switch">
+          <input type="text" id="dev-role" required data-i18n-placeholder="ph_role" placeholder="e.g. access-switch">
         </div>
       </div>
 
@@ -1080,10 +1089,7 @@ dialog .dialog-actions {
 </dialog>
 
 <script>
-// ══════════════════════════════════════════════════════════════════════════════
 // Rack Builder v0.4.0 — Minimalist Single-File Edition
-// All modules merged into one file for easy local usage.
-// ══════════════════════════════════════════════════════════════════════════════
 
 // ─── utils.js ────────────────────────────────────────────────────────────────
 // Utility helpers for Rack Builder
@@ -1194,9 +1200,9 @@ const translations = {
     btn_cancel_edit: 'Cancel Edit',
     bulk_creation: 'Bulk Creation',
     bulk_quantity: 'Quantity',
-    bulk_numbering: 'Numbering',
+    bulk_numbering: 'Enumeration Type',
     bulk_numeric: 'Numeric (1, 2, 3…)',
-    bulk_alpha: 'Alpha (A, B, C…)',
+    bulk_alpha: 'Alphabetic (A, B, C…)',
     bulk_start: 'Start Number / Letter',
     bulk_positions: 'Specific Positions (optional)',
     bulk_info: 'Leave "Specific Positions" empty for sequential stacking from the start position.',
@@ -1303,7 +1309,7 @@ const translations = {
     btn_cancel_edit: 'Bearbeitung abbrechen',
     bulk_creation: 'Massenerstellung',
     bulk_quantity: 'Anzahl',
-    bulk_numbering: 'Nummerierung',
+    bulk_numbering: 'Aufzählung Art',
     bulk_numeric: 'Numerisch (1, 2, 3…)',
     bulk_alpha: 'Alphabetisch (A, B, C…)',
     bulk_start: 'Startnummer / -buchstabe',
@@ -2160,6 +2166,13 @@ function initDeviceForm() {
     bulkContent.classList.toggle('open', isOpen);
   });
 
+  // Auto-switch start value when enumeration type changes
+  const bulkNumbering = document.getElementById('bulk-numbering');
+  const bulkStart = document.getElementById('bulk-start');
+  bulkNumbering.addEventListener('change', () => {
+    bulkStart.value = bulkNumbering.value === 'alpha' ? 'A' : '1';
+  });
+
   // Form submit
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -2297,16 +2310,21 @@ function handleBulkCreate() {
     const posValue = getPositionValue();
     const state = getState();
     const bulkDirection = document.getElementById('bulk-direction').value;
+    const isTopDown = bulkDirection === 'top-to-bottom';
+    const isAuto = posValue === '' || posValue.toLowerCase() === 'auto';
 
     let startPos;
-    if (bulkDirection === 'top-to-bottom') {
-      // Start from the top of the rack
-      startPos = resolvePosition(posValue, data.height, data.face);
-      if (startPos === null || (posValue === '' || posValue.toLowerCase() === 'auto')) {
-        startPos = state.rackConfig.totalUnits - data.height + 1;
+    if (isAuto) {
+      if (isTopDown) {
+        // Auto + top-down: start from the top of the rack
+        startPos = findNextFreeSlotReverse(state.devices, data.height, data.face, state.rackConfig.totalUnits, null, data.fullDepth);
+      } else {
+        // Auto + bottom-up: start from the bottom
+        startPos = findNextFreeSlot(state.devices, data.height, data.face, state.rackConfig.totalUnits, 1, data.fullDepth);
       }
     } else {
-      startPos = resolvePosition(posValue, data.height, data.face);
+      startPos = parseInt(posValue);
+      if (isNaN(startPos)) startPos = null;
     }
 
     if (startPos === null) {
@@ -2314,12 +2332,12 @@ function handleBulkCreate() {
       return;
     }
 
-    // We need to simulate placement to find sequential positions
+    // Simulate placement to find sequential positions
     const tempDevices = [...state.devices];
     let currentPos = startPos;
     for (let i = 0; i < qty; i++) {
       let slot;
-      if (bulkDirection === 'top-to-bottom') {
+      if (isTopDown) {
         slot = findNextFreeSlotReverse(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
       } else {
         slot = findNextFreeSlot(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
@@ -2336,7 +2354,7 @@ function handleBulkCreate() {
       };
       tempDevices.push(device);
       devicesToAdd.push({ ...data, name: names[i], position: slot });
-      currentPos = bulkDirection === 'top-to-bottom' ? slot - data.height : slot + data.height;
+      currentPos = isTopDown ? slot - data.height : slot + data.height;
     }
   }
 
@@ -2355,6 +2373,9 @@ function handleBulkCreate() {
 
     document.getElementById('dev-name').value = '';
     document.getElementById('dev-position').value = 'auto';
+    // Close bulk section and uncheck checkbox
+    document.getElementById('bulk-content').classList.remove('open');
+    document.getElementById('bulk-checkbox').checked = false;
     clearReservedUnits();
   }
 }
@@ -2364,7 +2385,10 @@ function handleBulkCreate() {
  */
 function populateFormForEdit(device) {
   if (!device) {
-    resetForm();
+    // Only reset if we were in edit mode, not on every state change
+    if (editingDeviceId) {
+      resetForm();
+    }
     return;
   }
 
