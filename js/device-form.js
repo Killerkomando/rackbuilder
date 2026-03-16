@@ -252,7 +252,6 @@ function resetForm() {
   document.getElementById('device-form').reset();
   document.getElementById('dev-position').value = 'auto';
   document.getElementById('dev-full-depth').checked = false;
-  clearReservedUnits();
   document.getElementById('dev-color').value = getState().rackConfig.frontColor || '#3b82f6';
   document.getElementById('form-title').textContent = t('add_device');
   document.getElementById('form-submit-btn').textContent = t('btn_add');
