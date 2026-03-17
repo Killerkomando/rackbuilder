@@ -1,4 +1,4 @@
-# Rack Builder v0.5.0
+# Rack Builder v0.5.1
 
 Visual rack planning tool for creating NetBox-compatible JSON imports. Plan your server rack layouts with drag & drop, collision detection, and bulk device creation — then export directly as JSON, YAML, or CSV.
 
