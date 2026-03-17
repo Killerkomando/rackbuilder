@@ -324,19 +324,20 @@ function updateStats(state) {
 // ─── Live JSON Preview ──────────────────────────────────────────────────────
 
 function initJsonPreview() {
-  document.getElementById('json-preview-toggle').addEventListener('click', () => {
-    const el = document.getElementById('json-preview');
-    const isHidden = el.style.display === 'none' || !el.style.display;
-    el.style.display = isHidden ? 'block' : 'none';
-    if (isHidden) {
-      updateJsonPreview(getState());
-    }
-  });
+  const details = document.getElementById('json-preview-toggle')?.closest('details');
+  if (details) {
+    details.addEventListener('toggle', () => {
+      if (details.open) {
+        updateJsonPreview(getState());
+      }
+    });
+  }
 }
 
 function updateJsonPreview(state) {
   const el = document.getElementById('json-preview');
-  if (!el || el.style.display === 'none') return;
+  const details = el?.closest('details');
+  if (!el || (details && !details.open)) return;
   // In multi-rack mode, show all devices from all racks
   if (state.multiRackEnabled && state.racks.length > 0) {
     const allData = [];
