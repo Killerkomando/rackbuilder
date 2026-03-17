@@ -24,11 +24,23 @@ export function initExport() {
 
 function getExportData() {
   const state = getState();
+  if (state.multiRackEnabled && state.racks.length > 0) {
+    const allData = [];
+    for (const rack of state.racks) {
+      const devs = state.devices.filter(d => d.rackId === rack.id);
+      allData.push(...toNetBoxJSON(devs, rack));
+    }
+    return allData;
+  }
   return toNetBoxJSON(state.devices, state.rackConfig);
 }
 
 function getRackName() {
-  return getState().rackConfig.name;
+  const state = getState();
+  if (state.multiRackEnabled && state.racks.length > 0) {
+    return state.rackConfig.site || state.racks[0].name || 'multi-rack';
+  }
+  return state.rackConfig.name;
 }
 
 // ─── NetBox JSON ────────────────────────────────────────────────────────────
@@ -136,24 +148,31 @@ function saveProject() {
   const state = getState();
   if (!state.devices.length) { alert(t('msg_no_export')); return; }
 
+  const mapDevice = d => ({
+    name: d.name,
+    manufacturer: d.manufacturer,
+    deviceType: d.deviceType,
+    role: d.role,
+    position: d.position,
+    height: d.height,
+    face: d.face,
+    status: d.status,
+    serial: d.serial,
+    assetTag: d.assetTag,
+    fullDepth: d.fullDepth,
+    comments: d.comments,
+    _color: d._color,
+    ...(d.rackId ? { rackId: d.rackId } : {}),
+  });
+
   const project = {
     _format: 'rackbuilder-project',
-    _version: '0.4.0',
+    _version: '0.5.0',
     rackConfig: state.rackConfig,
-    devices: state.devices.map(d => ({
-      name: d.name,
-      manufacturer: d.manufacturer,
-      deviceType: d.deviceType,
-      role: d.role,
-      position: d.position,
-      height: d.height,
-      face: d.face,
-      status: d.status,
-      serial: d.serial,
-      assetTag: d.assetTag,
-      comments: d.comments,
-      _color: d._color,
-    })),
+    multiRackEnabled: state.multiRackEnabled,
+    racks: state.racks,
+    activeRackId: state.activeRackId,
+    devices: state.devices.map(mapDevice),
   };
 
   triggerDownload(
@@ -173,19 +192,16 @@ function loadProject(e) {
       const data = JSON.parse(event.target.result);
 
       if (data._format === 'rackbuilder-project') {
-        // Internal project format — load rack config + devices with height
-        if (data.rackConfig) {
-          dispatch('UPDATE_RACK_CONFIG', data.rackConfig);
-        }
-        // Clear existing devices first
-        dispatch('CLEAR_DEVICES');
-        if (Array.isArray(data.devices) && data.devices.length) {
-          const result = dispatch('BULK_ADD_DEVICES', { devices: data.devices });
-          if (result.ok) {
-            const placed = result.results.filter(r => r.ok).length;
-            alert(t('msg_import_success', { placed, total: data.devices.length }));
-          }
-        }
+        // Internal project format — load full state
+        dispatch('LOAD_STATE', {
+          rackConfig: data.rackConfig || {},
+          devices: data.devices || [],
+          multiRackEnabled: data.multiRackEnabled || false,
+          racks: data.racks || [],
+          activeRackId: data.activeRackId || null,
+        });
+        const placed = (data.devices || []).length;
+        alert(t('msg_import_success', { placed, total: placed }));
       } else {
         alert(t('msg_import_invalid'));
       }
@@ -225,11 +241,12 @@ function importJSON(e) {
         deviceType: d.device_type || '',
         role: d.role || '',
         position: d.position || 1,
-        height: 1,
+        height: d.u_height || d.height || 1,
         face: d.face || 'front',
         status: d.status || 'planned',
         serial: d.serial || '',
         assetTag: d.asset_tag || '',
+        fullDepth: d.full_depth || false,
         comments: d.comments || '',
         _color: d.face === 'rear' ? '#f97316' : '#3b82f6',
       }));

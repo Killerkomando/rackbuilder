@@ -1,6 +1,6 @@
 // Drag and drop handling for repositioning devices in the rack
 
-import { getState, dispatch } from './state.js';
+import { getState, dispatch, getActiveRackConfig, getActiveDevices } from './state.js';
 import { canPlace } from './rack-model.js';
 import { getUnitFromY, getPositionPixels } from './rack-view.js';
 
@@ -41,7 +41,8 @@ function handleDragStart(e) {
   const face = block.closest('.rack-face');
   const faceRect = face.getBoundingClientRect();
   const relY = e.clientY - faceRect.top;
-  const clickedUnit = getUnitFromY(relY, state.rackConfig.totalUnits, state.rackConfig.numberingDirection);
+  const cfg = getActiveRackConfig(state);
+  const clickedUnit = getUnitFromY(relY, cfg.totalUnits, cfg.numberingDirection);
   dragGrabOffset = clickedUnit - device.position;
 
   block.classList.add('dragging');
@@ -83,7 +84,9 @@ function updateDragHighlights(clientY, target) {
   const faceRect = face.getBoundingClientRect();
   const relY = clientY - faceRect.top;
   const state = getState();
-  const hoveredUnit = getUnitFromY(relY, state.rackConfig.totalUnits, state.rackConfig.numberingDirection);
+  const cfg = getActiveRackConfig(state);
+  const activeDevs = getActiveDevices(state);
+  const hoveredUnit = getUnitFromY(relY, cfg.totalUnits, cfg.numberingDirection);
   const targetPosition = hoveredUnit - dragGrabOffset;
 
   // Skip if position hasn't changed
@@ -99,8 +102,8 @@ function updateDragHighlights(clientY, target) {
 
   // Check placement validity
   const result = canPlace(
-    state.devices, targetPosition, dragDeviceHeight,
-    faceType, state.rackConfig.totalUnits, dragDeviceId, dragDeviceFullDepth
+    activeDevs, targetPosition, dragDeviceHeight,
+    faceType, cfg.totalUnits, dragDeviceId, dragDeviceFullDepth
   );
 
   // Highlight target cells
@@ -116,12 +119,11 @@ function updateDragHighlights(clientY, target) {
 
   // Position snap guide
   if (snapGuide) {
-    // Ensure snap guide is in the correct face
     if (snapGuide.parentElement !== face) {
       if (snapGuide.parentElement) snapGuide.remove();
       face.appendChild(snapGuide);
     }
-    const px = getPositionPixels(targetPosition, dragDeviceHeight, state.rackConfig.totalUnits, state.rackConfig.numberingDirection);
+    const px = getPositionPixels(targetPosition, dragDeviceHeight, cfg.totalUnits, cfg.numberingDirection);
     snapGuide.style.top = `${px.top}px`;
     snapGuide.style.height = `${px.height}px`;
     snapGuide.classList.toggle('invalid', !result.ok);
@@ -141,11 +143,12 @@ function handleDrop(e) {
   const faceRect = face.getBoundingClientRect();
   const relY = e.clientY - faceRect.top;
   const state = getState();
-  const hoveredUnit = getUnitFromY(relY, state.rackConfig.totalUnits, state.rackConfig.numberingDirection);
+  const cfg = getActiveRackConfig(state);
+  const hoveredUnit = getUnitFromY(relY, cfg.totalUnits, cfg.numberingDirection);
   let targetPosition = hoveredUnit - dragGrabOffset;
 
   // Clamp to valid range
-  targetPosition = Math.max(1, Math.min(state.rackConfig.totalUnits - dragDeviceHeight + 1, targetPosition));
+  targetPosition = Math.max(1, Math.min(cfg.totalUnits - dragDeviceHeight + 1, targetPosition));
 
   if (!Number.isInteger(targetPosition)) return;
 

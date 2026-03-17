@@ -755,7 +755,7 @@ dialog {
   border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 24px;
-  max-width: 400px;
+  max-width: 540px;
   width: 90%;
   position: fixed;
   top: 50%;
@@ -831,6 +831,115 @@ dialog .dialog-actions {
 
 .storage-bar-fill.critical {
   background: var(--color-warning);
+}
+
+/* Rack Tabs (Multi-Rack) */
+#rack-tabs {
+  display: none;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.rack-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  font-family: inherit;
+  color: var(--color-text);
+}
+
+.rack-tab:hover {
+  background: #475569;
+}
+
+.rack-tab.active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+
+.rack-tab-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.rack-tab-info {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* Multi-rack settings rows */
+.rack-config-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.rack-row-num {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  min-width: 24px;
+  text-align: right;
+}
+
+.rack-config-row input[type="text"] {
+  flex: 1;
+  padding: 7px 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.rack-config-row input[type="number"] {
+  width: 70px;
+  padding: 7px 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.rack-config-row input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+}
+
+.rack-row-label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.rack-row-direction {
+  padding: 7px 6px;
+  background: var(--bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.rack-row-direction:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
 }
 
 /* Scrollbar */
