@@ -1,6 +1,6 @@
 // Rack visualization renderer
 
-import { getState, dispatch, getReservedUnits, setReservedUnits } from './state.js';
+import { getState, dispatch, getReservedUnits, setReservedUnits, getActiveRackConfig, getActiveDevices } from './state.js';
 import { t } from './i18n.js';
 
 // Cached unit height — recalculated on each render
@@ -28,7 +28,9 @@ export function getUnitHeight() {
  */
 export function renderRack(state) {
   const container = document.getElementById('rack-view');
-  const { rackConfig, devices, selectedDeviceId } = state;
+  const rackConfig = getActiveRackConfig(state);
+  const devices = getActiveDevices(state);
+  const { selectedDeviceId } = state;
   const { totalUnits, numberingDirection } = rackConfig;
 
   // Dynamic unit height

@@ -1,6 +1,6 @@
 // Device form handling (add, edit, bulk creation)
 
-import { getState, dispatch, clearReservedUnits } from './state.js';
+import { getState, dispatch, clearReservedUnits, getActiveRackConfig, getActiveDevices } from './state.js';
 import { canPlace, findNextFreeSlot, findNextFreeSlotReverse } from './rack-model.js';
 import { generateSequence, parsePositionList } from './utils.js';
 import { t } from './i18n.js';
@@ -20,7 +20,7 @@ export function initDeviceForm() {
   faceRadios.forEach(radio => {
     radio.addEventListener('change', () => {
       if (!editingDeviceId) {
-        const cfg = getState().rackConfig;
+        const cfg = getActiveRackConfig();
         const colorInput = document.getElementById('dev-color');
         colorInput.value = radio.value === 'rear'
           ? (cfg.rearColor || '#f97316')
@@ -93,9 +93,11 @@ function getPositionValue() {
 
 function resolvePosition(posValue, height, face) {
   const state = getState();
+  const cfg = getActiveRackConfig(state);
+  const devices = getActiveDevices(state);
   if (posValue === '' || posValue.toLowerCase() === 'auto') {
     const fullDepth = document.getElementById('dev-full-depth').checked;
-    return findNextFreeSlot(state.devices, height, face, state.rackConfig.totalUnits, 1, fullDepth);
+    return findNextFreeSlot(devices, height, face, cfg.totalUnits, 1, fullDepth);
   }
   const pos = parseInt(posValue);
   return isNaN(pos) ? null : pos;
@@ -185,6 +187,8 @@ function handleBulkCreate() {
     // Sequential stacking mode
     const posValue = getPositionValue();
     const state = getState();
+    const cfg = getActiveRackConfig(state);
+    const activeDevs = getActiveDevices(state);
     const bulkDirection = document.getElementById('bulk-direction').value;
     const isTopDown = bulkDirection === 'top-to-bottom';
     const isAuto = posValue === '' || posValue.toLowerCase() === 'auto';
@@ -192,11 +196,9 @@ function handleBulkCreate() {
     let startPos;
     if (isAuto) {
       if (isTopDown) {
-        // Auto + top-down: start from the top of the rack
-        startPos = findNextFreeSlotReverse(state.devices, data.height, data.face, state.rackConfig.totalUnits, null, data.fullDepth);
+        startPos = findNextFreeSlotReverse(activeDevs, data.height, data.face, cfg.totalUnits, null, data.fullDepth);
       } else {
-        // Auto + bottom-up: start from the bottom
-        startPos = findNextFreeSlot(state.devices, data.height, data.face, state.rackConfig.totalUnits, 1, data.fullDepth);
+        startPos = findNextFreeSlot(activeDevs, data.height, data.face, cfg.totalUnits, 1, data.fullDepth);
       }
     } else {
       startPos = parseInt(posValue);
@@ -209,14 +211,14 @@ function handleBulkCreate() {
     }
 
     // Simulate placement to find sequential positions
-    const tempDevices = [...state.devices];
+    const tempDevices = [...activeDevs];
     let currentPos = startPos;
     for (let i = 0; i < qty; i++) {
       let slot;
       if (isTopDown) {
-        slot = findNextFreeSlotReverse(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
+        slot = findNextFreeSlotReverse(tempDevices, data.height, data.face, cfg.totalUnits, currentPos, data.fullDepth);
       } else {
-        slot = findNextFreeSlot(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
+        slot = findNextFreeSlot(tempDevices, data.height, data.face, cfg.totalUnits, currentPos, data.fullDepth);
       }
       if (slot === null) {
         showMessage(t('msg_only_fit', { placed: i, total: qty }), 'error');
@@ -304,7 +306,7 @@ function resetForm() {
   document.getElementById('device-form').reset();
   document.getElementById('dev-position').value = 'auto';
   document.getElementById('dev-full-depth').checked = false;
-  document.getElementById('dev-color').value = getState().rackConfig.frontColor || '#3b82f6';
+  document.getElementById('dev-color').value = getActiveRackConfig().frontColor || '#3b82f6';
   document.getElementById('form-title').textContent = t('add_device');
   document.getElementById('form-submit-btn').textContent = t('btn_add');
   document.getElementById('form-delete-btn').style.display = 'none';

@@ -108,6 +108,8 @@ const translations = {
     bulk_direction: 'Stacking Direction',
     bulk_dir_up: 'Bottom → Top (ascending)',
     bulk_dir_down: 'Top → Bottom (descending)',
+    setting_multi_rack: 'Multi-Rack Mode',
+    setting_rack_count: 'Number of Racks',
     ph_comments: '',
   },
   de: {
@@ -217,6 +219,8 @@ const translations = {
     bulk_direction: 'Stapelrichtung',
     bulk_dir_up: 'Unten → Oben (aufsteigend)',
     bulk_dir_down: 'Oben → Unten (absteigend)',
+    setting_multi_rack: 'Multi-Rack-Modus',
+    setting_rack_count: 'Anzahl der Racks',
     ph_comments: '',
   },
 };

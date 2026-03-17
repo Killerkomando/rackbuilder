@@ -1,8 +1,8 @@
 // Rack Builder — Main application bootstrap
 
-import { getState, subscribe, dispatch, undo, redo, canUndo, canRedo, getReservedUnits, setReservedUnits, clearReservedUnits } from './state.js';
+import { getState, subscribe, dispatch, undo, redo, canUndo, canRedo, getReservedUnits, setReservedUnits, clearReservedUnits, getActiveRackConfig, getActiveDevices } from './state.js';
 import { renderRack } from './rack-view.js';
-import { getLocalStorageUsage, parsePositionList } from './utils.js';
+import { getLocalStorageUsage, parsePositionList, generateId } from './utils.js';
 import { getRackUtilization, toNetBoxJSON } from './rack-model.js';
 import { initDeviceForm, populateFormForEdit } from './device-form.js';
 import { initDragDrop } from './drag-drop.js';
@@ -21,6 +21,7 @@ function init() {
 
   // Subscribe to state changes
   subscribe((state) => {
+    renderRackTabs(state);
     renderRack(state);
     renderDeviceList(state);
     handleSelection(state);
@@ -92,7 +93,8 @@ function initLang() {
 function renderDeviceList(state) {
   const container = document.getElementById('device-list');
   const countEl = document.getElementById('device-count');
-  const { devices, selectedDeviceId } = state;
+  const devices = getActiveDevices(state);
+  const { selectedDeviceId } = state;
 
   countEl.textContent = devices.length;
 
@@ -145,16 +147,64 @@ function handleSelection(state) {
 function initSettings() {
   const modal = document.getElementById('settings-modal');
   const form = document.getElementById('settings-form');
+  const multiRackCheckbox = document.getElementById('setting-multi-rack');
+  const singleRackFields = document.getElementById('single-rack-fields');
+  const multiRackFields = document.getElementById('multi-rack-fields');
+  const rackCountInput = document.getElementById('setting-rack-count');
+
+  function toggleMultiRackUI(enabled) {
+    singleRackFields.style.display = enabled ? 'none' : 'block';
+    multiRackFields.style.display = enabled ? 'block' : 'none';
+    if (enabled) renderRackRows();
+  }
+
+  function renderRackRows() {
+    const count = parseInt(rackCountInput.value) || 1;
+    const container = document.getElementById('rack-rows');
+    const state = getState();
+    const existingRacks = state.racks || [];
+    let html = '';
+    for (let i = 0; i < count; i++) {
+      const rack = existingRacks[i] || {};
+      html += `<div class="rack-config-row">
+        <span class="rack-row-num">${i + 1}.</span>
+        <input type="text" class="rack-row-name" value="${rack.name || `Rack-${String(i + 1).padStart(2, '0')}`}" placeholder="${t('setting_name')}" required>
+        <input type="number" class="rack-row-units" value="${rack.totalUnits || 42}" min="1" max="60" required>
+        <span class="rack-row-label">U</span>
+      </div>`;
+    }
+    container.innerHTML = html;
+  }
+
+  multiRackCheckbox.addEventListener('change', () => {
+    toggleMultiRackUI(multiRackCheckbox.checked);
+  });
+
+  rackCountInput.addEventListener('input', renderRackRows);
 
   document.getElementById('settings-btn').addEventListener('click', () => {
-    const { rackConfig } = getState();
-    document.getElementById('setting-name').value = rackConfig.name;
-    document.getElementById('setting-units').value = rackConfig.totalUnits;
-    document.getElementById('setting-direction').value = rackConfig.numberingDirection;
-    document.getElementById('setting-site').value = rackConfig.site;
-    document.getElementById('setting-location').value = rackConfig.location;
-    document.getElementById('setting-front-color').value = rackConfig.frontColor || '#3b82f6';
-    document.getElementById('setting-rear-color').value = rackConfig.rearColor || '#f97316';
+    const state = getState();
+    const cfg = state.rackConfig;
+
+    // Common fields
+    document.getElementById('setting-site').value = cfg.site;
+    document.getElementById('setting-location').value = cfg.location;
+
+    // Multi-rack state
+    multiRackCheckbox.checked = state.multiRackEnabled;
+    rackCountInput.value = state.multiRackEnabled ? state.racks.length : 2;
+
+    if (state.multiRackEnabled) {
+      toggleMultiRackUI(true);
+    } else {
+      // Single rack fields
+      document.getElementById('setting-name').value = cfg.name;
+      document.getElementById('setting-units').value = cfg.totalUnits;
+      document.getElementById('setting-direction').value = cfg.numberingDirection;
+      document.getElementById('setting-front-color').value = cfg.frontColor || '#3b82f6';
+      document.getElementById('setting-rear-color').value = cfg.rearColor || '#f97316';
+      toggleMultiRackUI(false);
+    }
     modal.showModal();
   });
 
@@ -164,15 +214,42 @@ function initSettings() {
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    dispatch('UPDATE_RACK_CONFIG', {
-      name: document.getElementById('setting-name').value.trim(),
-      totalUnits: parseInt(document.getElementById('setting-units').value) || 42,
-      numberingDirection: document.getElementById('setting-direction').value,
-      site: document.getElementById('setting-site').value.trim(),
-      location: document.getElementById('setting-location').value.trim(),
-      frontColor: document.getElementById('setting-front-color').value,
-      rearColor: document.getElementById('setting-rear-color').value,
-    });
+    const site = document.getElementById('setting-site').value.trim();
+    const location = document.getElementById('setting-location').value.trim();
+
+    if (multiRackCheckbox.checked) {
+      // Multi-rack mode
+      const rows = document.querySelectorAll('.rack-config-row');
+      const state = getState();
+      const existingRacks = state.racks || [];
+      const racks = [];
+      rows.forEach((row, i) => {
+        const existing = existingRacks[i] || {};
+        racks.push({
+          id: existing.id || undefined,
+          name: row.querySelector('.rack-row-name').value.trim(),
+          totalUnits: parseInt(row.querySelector('.rack-row-units').value) || 42,
+          numberingDirection: existing.numberingDirection || 'bottom-to-top',
+          frontColor: existing.frontColor || '#3b82f6',
+          rearColor: existing.rearColor || '#f97316',
+          site,
+          location,
+        });
+      });
+      dispatch('SET_MULTI_RACK', { enabled: true, racks, site, location });
+    } else {
+      // Single rack mode
+      dispatch('SET_MULTI_RACK', { enabled: false, racks: [], site, location });
+      dispatch('UPDATE_RACK_CONFIG', {
+        name: document.getElementById('setting-name').value.trim(),
+        totalUnits: parseInt(document.getElementById('setting-units').value) || 42,
+        numberingDirection: document.getElementById('setting-direction').value,
+        site,
+        location,
+        frontColor: document.getElementById('setting-front-color').value,
+        rearColor: document.getElementById('setting-rear-color').value,
+      });
+    }
     modal.close();
   });
 }
@@ -230,7 +307,9 @@ function initClearButton() {
 // ─── Live Statistics ────────────────────────────────────────────────────────
 
 function updateStats(state) {
-  const stats = getRackUtilization(state.devices, state.rackConfig.totalUnits);
+  const cfg = getActiveRackConfig(state);
+  const devices = getActiveDevices(state);
+  const stats = getRackUtilization(devices, cfg.totalUnits);
   const el = document.getElementById('rack-stats');
   if (el) {
     el.textContent = `${stats.totalPercent}% ${t('stat_used')} (F: ${stats.frontPercent}% | R: ${stats.rearPercent}%)`;
@@ -253,8 +332,18 @@ function initJsonPreview() {
 function updateJsonPreview(state) {
   const el = document.getElementById('json-preview');
   if (!el || el.style.display === 'none') return;
-  const data = toNetBoxJSON(state.devices, state.rackConfig);
-  el.textContent = JSON.stringify(data, null, 2);
+  // In multi-rack mode, show all devices from all racks
+  if (state.multiRackEnabled && state.racks.length > 0) {
+    const allData = [];
+    for (const rack of state.racks) {
+      const devs = state.devices.filter(d => d.rackId === rack.id);
+      allData.push(...toNetBoxJSON(devs, rack));
+    }
+    el.textContent = JSON.stringify(allData, null, 2);
+  } else {
+    const data = toNetBoxJSON(state.devices, state.rackConfig);
+    el.textContent = JSON.stringify(data, null, 2);
+  }
 }
 
 // ─── Storage indicator ──────────────────────────────────────────────────────
@@ -352,6 +441,36 @@ function initBulkPositionHighlight() {
     }
     const face = document.querySelector('input[name="dev-face"]:checked')?.value || 'front';
     setReservedUnits(positions.map(unit => ({ unit, face })));
+  });
+}
+
+// ─── Rack Tabs (Multi-Rack) ──────────────────────────────────────────────────
+
+function renderRackTabs(state) {
+  const container = document.getElementById('rack-tabs');
+  if (!container) return;
+
+  if (!state.multiRackEnabled || state.racks.length === 0) {
+    container.innerHTML = '';
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'flex';
+  container.innerHTML = state.racks.map(rack => {
+    const devs = state.devices.filter(d => d.rackId === rack.id);
+    const stats = getRackUtilization(devs, rack.totalUnits);
+    const isActive = rack.id === state.activeRackId;
+    return `<button class="rack-tab${isActive ? ' active' : ''}" data-rack-id="${rack.id}">
+      <span class="rack-tab-name">${rack.name}</span>
+      <span class="rack-tab-info">${rack.totalUnits}U · ${stats.totalPercent}%</span>
+    </button>`;
+  }).join('');
+
+  container.querySelectorAll('.rack-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      dispatch('SET_ACTIVE_RACK', tab.dataset.rackId);
+    });
   });
 }
 

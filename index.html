@@ -161,6 +161,7 @@
 
   <!-- Center: Rack Visualization -->
   <section class="rack-container">
+    <div id="rack-tabs"></div>
     <div class="rack-controls">
       <span class="rack-name" id="rack-name-display">Rack-01</span>
       <span class="rack-info" id="rack-info"></span>
@@ -221,21 +222,15 @@
 <dialog id="settings-modal">
   <h2 data-i18n="settings_title">Rack Settings</h2>
   <form id="settings-form">
+    <!-- Multi-Rack Toggle -->
     <div class="form-group">
-      <label for="setting-name" data-i18n="setting_name">Rack Name</label>
-      <input type="text" id="setting-name" required>
+      <label class="form-checkbox-label">
+        <input type="checkbox" id="setting-multi-rack">
+        <span data-i18n="setting_multi_rack">Multi-Rack Mode</span>
+      </label>
     </div>
-    <div class="form-group">
-      <label for="setting-units" data-i18n="setting_units">Total Units (U)</label>
-      <input type="number" id="setting-units" min="1" max="60" required>
-    </div>
-    <div class="form-group">
-      <label for="setting-direction" data-i18n="setting_direction">Numbering Direction</label>
-      <select id="setting-direction">
-        <option value="bottom-to-top" data-i18n="dir_bottom">U1 at Bottom</option>
-        <option value="top-to-bottom" data-i18n="dir_top">U1 at Top</option>
-      </select>
-    </div>
+
+    <!-- Shared fields (site, location) -->
     <div class="form-group">
       <label for="setting-site" data-i18n="setting_site">Site (for export)</label>
       <input type="text" id="setting-site" data-i18n-placeholder="ph_site" placeholder="e.g. dc1">
@@ -244,16 +239,45 @@
       <label for="setting-location" data-i18n="setting_location">Location (for export)</label>
       <input type="text" id="setting-location" data-i18n-placeholder="ph_location" placeholder="e.g. hall-a">
     </div>
-    <div class="form-row">
+
+    <!-- Single-rack fields -->
+    <div id="single-rack-fields">
       <div class="form-group">
-        <label for="setting-front-color" data-i18n="setting_front_color">Front Color</label>
-        <input type="color" id="setting-front-color" value="#3b82f6">
+        <label for="setting-name" data-i18n="setting_name">Rack Name</label>
+        <input type="text" id="setting-name" required>
       </div>
       <div class="form-group">
-        <label for="setting-rear-color" data-i18n="setting_rear_color">Rear Color</label>
-        <input type="color" id="setting-rear-color" value="#f97316">
+        <label for="setting-units" data-i18n="setting_units">Total Units (U)</label>
+        <input type="number" id="setting-units" min="1" max="60" required>
+      </div>
+      <div class="form-group">
+        <label for="setting-direction" data-i18n="setting_direction">Numbering Direction</label>
+        <select id="setting-direction">
+          <option value="bottom-to-top" data-i18n="dir_bottom">U1 at Bottom</option>
+          <option value="top-to-bottom" data-i18n="dir_top">U1 at Top</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="setting-front-color" data-i18n="setting_front_color">Front Color</label>
+          <input type="color" id="setting-front-color" value="#3b82f6">
+        </div>
+        <div class="form-group">
+          <label for="setting-rear-color" data-i18n="setting_rear_color">Rear Color</label>
+          <input type="color" id="setting-rear-color" value="#f97316">
+        </div>
       </div>
     </div>
+
+    <!-- Multi-rack fields -->
+    <div id="multi-rack-fields" style="display:none;">
+      <div class="form-group">
+        <label for="setting-rack-count" data-i18n="setting_rack_count">Number of Racks</label>
+        <input type="number" id="setting-rack-count" min="1" max="20" value="2">
+      </div>
+      <div id="rack-rows"></div>
+    </div>
+
     <div class="dialog-actions">
       <button type="button" class="btn btn-secondary" id="settings-cancel" data-i18n="btn_dialog_cancel">Cancel</button>
       <button type="submit" class="btn btn-primary" data-i18n="btn_save">Save</button>
