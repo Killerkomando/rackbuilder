@@ -182,7 +182,6 @@ export function toNetBoxJSON(devices, rackConfig) {
     location: rackConfig.location || undefined,
     rack: rackConfig.name,
     position: d.position,
-    u_height: d.height,
     face: d.face,
     status: d.status,
     serial: d.serial || undefined,
