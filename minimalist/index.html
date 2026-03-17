@@ -688,6 +688,13 @@ body {
   margin-top: 10px;
 }
 
+/* submit-section */
+.submit-section {
+  border-top: 1px solid var(--color-border);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
 /* Device list */
 .device-list {
   margin-top: 16px;
@@ -997,8 +1004,6 @@ dialog .dialog-actions {
   </style>
 </head>
 <body>
-
-
 <header class="app-header">
   <h1>
     <span class="rack-icon">&#9638;</span>
@@ -1072,8 +1077,8 @@ dialog .dialog-actions {
       <div class="form-group">
         <label for="dev-status" data-i18n="label_status">Status</label>
         <select id="dev-status">
-          <option value="planned" data-i18n="status_planned">Planned</option>
           <option value="active" data-i18n="status_active">Active</option>
+          <option value="planned" data-i18n="status_planned">Planned</option>
           <option value="staged" data-i18n="status_staged">Staged</option>
           <option value="failed" data-i18n="status_failed">Failed</option>
           <option value="decommissioning" data-i18n="status_decommissioning">Decommissioning</option>
@@ -1100,10 +1105,6 @@ dialog .dialog-actions {
         <label for="dev-comments" data-i18n="label_comments">Comments</label>
         <textarea id="dev-comments"></textarea>
       </div>
-
-      <button type="submit" class="btn btn-primary btn-block" id="form-submit-btn" data-i18n="btn_add">Add Device</button>
-      <button type="button" class="btn btn-danger btn-block" id="form-delete-btn" data-i18n="btn_delete" style="display:none; margin-top:6px;">Delete Device</button>
-      <button type="button" class="btn btn-secondary btn-block" id="form-cancel-btn" data-i18n="btn_cancel_edit" style="display:none; margin-top:6px;">Cancel Edit</button>
 
       <!-- Bulk Section -->
       <div class="bulk-section">
@@ -1144,6 +1145,12 @@ dialog .dialog-actions {
             Leave "Specific Positions" empty for sequential stacking from the start position.
           </div>
         </div>
+      </div>
+
+      <div class="submit-section">
+        <button type="submit" class="btn btn-primary btn-block" id="form-submit-btn" data-i18n="btn_add">Add Device</button>
+        <button type="button" class="btn btn-danger btn-block" id="form-delete-btn" data-i18n="btn_delete" style="display:none; margin-top:6px;">Delete Device</button>
+        <button type="button" class="btn btn-secondary btn-block" id="form-cancel-btn" data-i18n="btn_cancel_edit" style="display:none; margin-top:6px;">Cancel Edit</button>
       </div>
     </form>
   </aside>
@@ -1273,6 +1280,7 @@ dialog .dialog-actions {
     </div>
   </form>
 </dialog>
+
 <script>
 (function() {
 // Utility helpers for Rack Builder
@@ -3332,7 +3340,7 @@ function init() {
   updateStorageIndicator();
   updateStats(state);
 
-  // Service worker registration removed for minimalist build
+
 }
 
 // ─── Theme ──────────────────────────────────────────────────────────────────
@@ -3709,6 +3717,11 @@ function syncReservedUnitsToForm() {
     if (document.activeElement !== posInput) {
       const sorted = [...reserved].sort((a, b) => a.unit - b.unit);
       posInput.value = sorted.map(r => r.unit).join(', ');
+      // Auto-increase quantity if more positions selected than current qty
+      const qtyInput = document.getElementById('bulk-qty');
+      if (reserved.length > parseInt(qtyInput.value)) {
+        qtyInput.value = reserved.length;
+      }
     }
   }
 }
