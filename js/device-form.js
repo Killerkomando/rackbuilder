@@ -1,7 +1,7 @@
 // Device form handling (add, edit, bulk creation)
 
 import { getState, dispatch, clearReservedUnits } from './state.js';
-import { canPlace, findNextFreeSlot } from './rack-model.js';
+import { canPlace, findNextFreeSlot, findNextFreeSlotReverse } from './rack-model.js';
 import { generateSequence, parsePositionList } from './utils.js';
 import { t } from './i18n.js';
 
@@ -9,8 +9,7 @@ let editingDeviceId = null;
 
 export function initDeviceForm() {
   const form = document.getElementById('device-form');
-  const bulkToggle = document.getElementById('bulk-toggle');
-  const bulkArrow = document.getElementById('bulk-arrow');
+  const bulkCheckbox = document.getElementById('bulk-checkbox');
   const bulkContent = document.getElementById('bulk-content');
   const deleteBtn = document.getElementById('form-delete-btn');
   const cancelBtn = document.getElementById('form-cancel-btn');
@@ -30,10 +29,17 @@ export function initDeviceForm() {
     });
   });
 
-  // Bulk toggle
-  bulkToggle.addEventListener('click', () => {
-    const isOpen = bulkContent.classList.toggle('open');
-    bulkArrow.classList.toggle('open', isOpen);
+  // Bulk toggle via checkbox
+  bulkCheckbox.addEventListener('change', () => {
+    const isOpen = bulkCheckbox.checked;
+    bulkContent.classList.toggle('open', isOpen);
+  });
+
+  // Auto-switch start value when enumeration type changes
+  const bulkNumbering = document.getElementById('bulk-numbering');
+  const bulkStart = document.getElementById('bulk-start');
+  bulkNumbering.addEventListener('change', () => {
+    bulkStart.value = bulkNumbering.value === 'alpha' ? 'A' : '1';
   });
 
   // Form submit
@@ -67,6 +73,7 @@ export function initDeviceForm() {
 function getFormData() {
   return {
     name: document.getElementById('dev-name').value.trim(),
+    manufacturer: document.getElementById('dev-manufacturer').value.trim(),
     deviceType: document.getElementById('dev-type').value.trim(),
     role: document.getElementById('dev-role').value.trim(),
     height: parseInt(document.getElementById('dev-height').value) || 1,
@@ -146,13 +153,23 @@ function handleBulkCreate() {
   const startValue = document.getElementById('bulk-start').value.trim() || '1';
   const specificPositions = document.getElementById('bulk-positions').value.trim();
 
-  const names = generateSequence(data.name, qty, numbering === 'alpha' ? startValue : parseInt(startValue) || 1, numbering);
+  const startParam = numbering === 'alpha'
+    ? (/^[a-zA-Z]$/.test(startValue) ? startValue : 'A')
+    : (parseInt(startValue) || 1);
+  const names = generateSequence(data.name, qty, startParam, numbering);
 
   let devicesToAdd = [];
 
   if (specificPositions) {
     // Specific positions mode
+    const bulkDirection = document.getElementById('bulk-direction').value;
     const positions = parsePositionList(specificPositions);
+    // Sort positions based on stacking direction so names match order
+    if (bulkDirection === 'top-to-bottom') {
+      positions.sort((a, b) => b - a); // highest first
+    } else {
+      positions.sort((a, b) => a - b); // lowest first
+    }
     if (positions.length < qty) {
       showMessage(t('msg_not_enough_pos', { specified: positions.length, total: qty }), 'error');
       return;
@@ -168,17 +185,39 @@ function handleBulkCreate() {
     // Sequential stacking mode
     const posValue = getPositionValue();
     const state = getState();
-    let currentPos = resolvePosition(posValue, data.height, data.face);
+    const bulkDirection = document.getElementById('bulk-direction').value;
+    const isTopDown = bulkDirection === 'top-to-bottom';
+    const isAuto = posValue === '' || posValue.toLowerCase() === 'auto';
 
-    if (currentPos === null) {
+    let startPos;
+    if (isAuto) {
+      if (isTopDown) {
+        // Auto + top-down: start from the top of the rack
+        startPos = findNextFreeSlotReverse(state.devices, data.height, data.face, state.rackConfig.totalUnits, null, data.fullDepth);
+      } else {
+        // Auto + bottom-up: start from the bottom
+        startPos = findNextFreeSlot(state.devices, data.height, data.face, state.rackConfig.totalUnits, 1, data.fullDepth);
+      }
+    } else {
+      startPos = parseInt(posValue);
+      if (isNaN(startPos)) startPos = null;
+    }
+
+    if (startPos === null) {
       showMessage(t('msg_no_start'), 'error');
       return;
     }
 
-    // We need to simulate placement to find sequential positions
+    // Simulate placement to find sequential positions
     const tempDevices = [...state.devices];
+    let currentPos = startPos;
     for (let i = 0; i < qty; i++) {
-      const slot = findNextFreeSlot(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
+      let slot;
+      if (isTopDown) {
+        slot = findNextFreeSlotReverse(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
+      } else {
+        slot = findNextFreeSlot(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
+      }
       if (slot === null) {
         showMessage(t('msg_only_fit', { placed: i, total: qty }), 'error');
         return;
@@ -191,7 +230,7 @@ function handleBulkCreate() {
       };
       tempDevices.push(device);
       devicesToAdd.push({ ...data, name: names[i], position: slot });
-      currentPos = slot + data.height;
+      currentPos = isTopDown ? slot - data.height : slot + data.height;
     }
   }
 
@@ -210,6 +249,15 @@ function handleBulkCreate() {
 
     document.getElementById('dev-name').value = '';
     document.getElementById('dev-position').value = 'auto';
+    // Reset bulk fields
+    document.getElementById('bulk-qty').value = '2';
+    document.getElementById('bulk-numbering').value = 'numeric';
+    document.getElementById('bulk-start').value = '1';
+    document.getElementById('bulk-direction').value = 'bottom-to-top';
+    document.getElementById('bulk-positions').value = '';
+    // Close bulk section and uncheck checkbox
+    document.getElementById('bulk-content').classList.remove('open');
+    document.getElementById('bulk-checkbox').checked = false;
     clearReservedUnits();
   }
 }
@@ -219,12 +267,16 @@ function handleBulkCreate() {
  */
 export function populateFormForEdit(device) {
   if (!device) {
-    resetForm();
+    // Only reset if we were in edit mode, not on every state change
+    if (editingDeviceId) {
+      resetForm();
+    }
     return;
   }
 
   editingDeviceId = device.id;
   document.getElementById('dev-name').value = device.name;
+  document.getElementById('dev-manufacturer').value = device.manufacturer || '';
   document.getElementById('dev-type').value = device.deviceType;
   document.getElementById('dev-role').value = device.role;
   document.getElementById('dev-height').value = device.height;
@@ -244,7 +296,7 @@ export function populateFormForEdit(device) {
 
   // Close bulk section when editing
   document.getElementById('bulk-content').classList.remove('open');
-  document.getElementById('bulk-arrow').classList.remove('open');
+  document.getElementById('bulk-checkbox').checked = false;
 }
 
 function resetForm() {

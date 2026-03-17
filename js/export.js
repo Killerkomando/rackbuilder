@@ -138,10 +138,11 @@ function saveProject() {
 
   const project = {
     _format: 'rackbuilder-project',
-    _version: '0.3.0',
+    _version: '0.4.0',
     rackConfig: state.rackConfig,
     devices: state.devices.map(d => ({
       name: d.name,
+      manufacturer: d.manufacturer,
       deviceType: d.deviceType,
       role: d.role,
       position: d.position,
@@ -220,6 +221,7 @@ function importJSON(e) {
 
       const devices = data.map(d => ({
         name: d.name || '',
+        manufacturer: d.manufacturer || '',
         deviceType: d.device_type || '',
         role: d.role || '',
         position: d.position || 1,

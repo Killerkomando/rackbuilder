@@ -375,7 +375,7 @@ body {
   margin-bottom: 4px;
 }
 
-.form-group input,
+.form-group input:not([type="radio"]):not([type="checkbox"]):not([type="color"]),
 .form-group select,
 .form-group textarea {
   width: 100%;
@@ -388,7 +388,7 @@ body {
   font-family: inherit;
 }
 
-.form-group input:focus,
+.form-group input:not([type="radio"]):not([type="checkbox"]):not([type="color"]):focus,
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
@@ -410,35 +410,154 @@ body {
   flex: 1;
 }
 
+/* Modern radio buttons */
 .form-radio-group {
   display: flex;
-  gap: 8px;
+  gap: 12px;
 }
 
 .form-radio-group label {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   cursor: pointer;
   font-size: 13px;
   color: var(--color-text);
+  margin-bottom: 0;
 }
 
 .form-radio-group input[type="radio"] {
-  width: auto;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
+  border: 2px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--bg-primary);
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.15s, background 0.15s;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
 }
 
+.form-radio-group input[type="radio"]:checked {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+}
+
+.form-radio-group input[type="radio"]:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.form-radio-group input[type="radio"]:hover {
+  border-color: var(--color-accent);
+}
+
+/* Modern checkboxes — iOS-style toggle switch */
 .form-checkbox-label {
-  display: flex;
+  display: inline-flex !important;
   align-items: center;
-  gap: 6px;
+  gap: 10px;
   font-size: 13px;
   cursor: pointer;
   color: var(--color-text);
 }
 
 .form-checkbox-label input[type="checkbox"] {
-  width: auto;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 36px;
+  height: 20px;
+  min-width: 36px;
+  min-height: 20px;
+  border: none;
+  border-radius: 10px;
+  background: var(--color-border);
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.form-checkbox-label input[type="checkbox"]::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.form-checkbox-label input[type="checkbox"]:checked {
+  background: var(--color-accent);
+}
+
+.form-checkbox-label input[type="checkbox"]:checked::after {
+  transform: translateX(16px);
+}
+
+.form-checkbox-label input[type="checkbox"]:hover {
+  background: #475569;
+}
+
+.form-checkbox-label input[type="checkbox"]:checked:hover {
+  background: #4f46e5;
+}
+
+/* Modern color picker */
+.form-group input[type="color"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 36px;
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--bg-primary);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.form-group input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.form-group input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 3px;
+}
+
+.form-group input[type="color"]::-moz-color-swatch {
+  border: none;
+  border-radius: 3px;
+}
+
+.form-group input[type="color"]:hover {
+  border-color: var(--color-accent);
+}
+
+.form-group input[type="color"]:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
 }
 
 /* Buttons */
@@ -540,35 +659,25 @@ body {
   margin-top: 12px;
 }
 
-.bulk-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
+.bulk-toggle-label {
   font-size: 13px;
-  color: var(--color-text-muted);
+  font-weight: 500;
+  color: var(--color-text);
   margin-bottom: 8px;
 }
 
-.bulk-toggle:hover {
-  color: var(--color-text);
-}
-
-.bulk-toggle .arrow {
-  transition: transform 0.2s;
-  font-size: 10px;
-}
-
-.bulk-toggle .arrow.open {
-  transform: rotate(90deg);
-}
-
 .bulk-content {
-  display: none;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.25s ease, margin-top 0.3s ease;
+  margin-top: 0;
 }
 
 .bulk-content.open {
-  display: block;
+  max-height: 500px;
+  opacity: 1;
+  margin-top: 10px;
 }
 
 /* Device list */
