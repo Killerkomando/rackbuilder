@@ -680,6 +680,13 @@ body {
   margin-top: 10px;
 }
 
+/* submit-section */
+.submit-section {
+  border-top: 1px solid var(--color-border);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
 /* Device list */
 .device-list {
   margin-top: 16px;

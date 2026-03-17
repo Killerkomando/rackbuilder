@@ -14,7 +14,7 @@
   <h1>
     <span class="rack-icon">&#9638;</span>
     <span data-i18n="app_title">Rack Builder</span>
-    <span class="app-version" data-i18n="version">v0.5.0</span>
+    <span class="app-version" data-i18n="version">v0.5.1</span>
   </h1>
   <div class="header-actions">
     <button class="btn btn-secondary btn-sm" id="undo-btn" data-i18n-title="btn_undo" title="Undo" disabled>&#x21A9;</button>
@@ -83,8 +83,8 @@
       <div class="form-group">
         <label for="dev-status" data-i18n="label_status">Status</label>
         <select id="dev-status">
-          <option value="planned" data-i18n="status_planned">Planned</option>
           <option value="active" data-i18n="status_active">Active</option>
+          <option value="planned" data-i18n="status_planned">Planned</option>
           <option value="staged" data-i18n="status_staged">Staged</option>
           <option value="failed" data-i18n="status_failed">Failed</option>
           <option value="decommissioning" data-i18n="status_decommissioning">Decommissioning</option>
@@ -111,10 +111,6 @@
         <label for="dev-comments" data-i18n="label_comments">Comments</label>
         <textarea id="dev-comments"></textarea>
       </div>
-
-      <button type="submit" class="btn btn-primary btn-block" id="form-submit-btn" data-i18n="btn_add">Add Device</button>
-      <button type="button" class="btn btn-danger btn-block" id="form-delete-btn" data-i18n="btn_delete" style="display:none; margin-top:6px;">Delete Device</button>
-      <button type="button" class="btn btn-secondary btn-block" id="form-cancel-btn" data-i18n="btn_cancel_edit" style="display:none; margin-top:6px;">Cancel Edit</button>
 
       <!-- Bulk Section -->
       <div class="bulk-section">
@@ -155,6 +151,12 @@
             Leave "Specific Positions" empty for sequential stacking from the start position.
           </div>
         </div>
+      </div>
+
+      <div class="submit-section">
+        <button type="submit" class="btn btn-primary btn-block" id="form-submit-btn" data-i18n="btn_add">Add Device</button>
+        <button type="button" class="btn btn-danger btn-block" id="form-delete-btn" data-i18n="btn_delete" style="display:none; margin-top:6px;">Delete Device</button>
+        <button type="button" class="btn btn-secondary btn-block" id="form-cancel-btn" data-i18n="btn_cancel_edit" style="display:none; margin-top:6px;">Cancel Edit</button>
       </div>
     </form>
   </aside>
