@@ -762,7 +762,6 @@ body {
   border-radius: var(--radius);
   margin-bottom: 8px;
   background: var(--bg-primary);
-  overflow: hidden;
 }
 
 .sidebar-accordion-header {
@@ -788,7 +787,7 @@ body {
   display: inline-block;
   margin-right: 8px;
   font-size: 11px;
-  transition: transform 0.2s;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sidebar-accordion[open] > .sidebar-accordion-header::before {
@@ -802,6 +801,20 @@ body {
 
 .sidebar-accordion-body {
   padding: 10px 14px 14px;
+  overflow: hidden;
+}
+
+/* Animated accordion: JS controls these classes */
+.sidebar-accordion-body.accordion-animating {
+  transition: height 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.2s ease;
+}
+
+.sidebar-accordion-body.accordion-collapsed {
+  height: 0 !important;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 
 .sidebar-accordion-body .btn {
@@ -829,12 +842,55 @@ dialog {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(1);
   margin: 0;
+  opacity: 1;
+  animation: dialog-open 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+dialog.dialog-closing {
+  animation: dialog-close 0.2s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+@keyframes dialog-open {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes dialog-close {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.92);
+  }
 }
 
 dialog::backdrop {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0);
+  animation: backdrop-open 0.25s ease forwards;
+}
+
+dialog.dialog-closing::backdrop {
+  animation: backdrop-close 0.2s ease forwards;
+}
+
+@keyframes backdrop-open {
+  from { background: rgba(0, 0, 0, 0); }
+  to { background: rgba(0, 0, 0, 0.6); }
+}
+
+@keyframes backdrop-close {
+  from { background: rgba(0, 0, 0, 0.6); }
+  to { background: rgba(0, 0, 0, 0); }
 }
 
 dialog h2 {

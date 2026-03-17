@@ -43,6 +43,7 @@ function init() {
   initJsonPreview();
   initStorageIndicator();
   initBulkPositionHighlight();
+  initAccordionAnimations();
   updateStorageIndicator();
   updateStats(state);
 
@@ -214,7 +215,7 @@ function initSettings() {
   });
 
   document.getElementById('settings-cancel').addEventListener('click', () => {
-    modal.close();
+    closeDialogAnimated(modal);
   });
 
   form.addEventListener('submit', (e) => {
@@ -255,7 +256,18 @@ function initSettings() {
         rearColor: document.getElementById('setting-rear-color').value,
       });
     }
-    modal.close();
+    closeDialogAnimated(modal);
+  });
+}
+
+// ─── Dialog animation helper ─────────────────────────────────────────────────
+
+function closeDialogAnimated(dialog) {
+  dialog.classList.add('dialog-closing');
+  dialog.addEventListener('animationend', function handler() {
+    dialog.classList.remove('dialog-closing');
+    dialog.close();
+    dialog.removeEventListener('animationend', handler);
   });
 }
 
@@ -496,6 +508,54 @@ function initUndoRedo() {
 function updateUndoRedoButtons() {
   document.getElementById('undo-btn').disabled = !canUndo();
   document.getElementById('redo-btn').disabled = !canRedo();
+}
+
+// ─── Accordion animations ────────────────────────────────────────────────────
+
+function initAccordionAnimations() {
+  document.querySelectorAll('.sidebar-accordion').forEach(details => {
+    const summary = details.querySelector('.sidebar-accordion-header');
+    const body = details.querySelector('.sidebar-accordion-body');
+    if (!summary || !body) return;
+
+    summary.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      if (details.open) {
+        // Closing: animate height to 0 then remove open
+        const height = body.scrollHeight;
+        body.style.height = height + 'px';
+        body.classList.add('accordion-animating');
+        requestAnimationFrame(() => {
+          body.classList.add('accordion-collapsed');
+          body.style.height = '0px';
+        });
+        body.addEventListener('transitionend', function handler() {
+          body.removeEventListener('transitionend', handler);
+          details.removeAttribute('open');
+          body.classList.remove('accordion-animating', 'accordion-collapsed');
+          body.style.height = '';
+        });
+      } else {
+        // Opening: set open, then animate from 0
+        details.setAttribute('open', '');
+        const height = body.scrollHeight;
+        body.style.height = '0px';
+        body.style.opacity = '0';
+        body.classList.add('accordion-animating');
+        requestAnimationFrame(() => {
+          body.style.height = height + 'px';
+          body.style.opacity = '1';
+        });
+        body.addEventListener('transitionend', function handler() {
+          body.removeEventListener('transitionend', handler);
+          body.classList.remove('accordion-animating');
+          body.style.height = '';
+          body.style.opacity = '';
+        });
+      }
+    });
+  });
 }
 
 // Start
