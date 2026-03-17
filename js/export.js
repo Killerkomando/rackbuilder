@@ -167,7 +167,7 @@ function saveProject() {
 
   const project = {
     _format: 'rackbuilder-project',
-    _version: '0.4.0',
+    _version: '0.5.0',
     rackConfig: state.rackConfig,
     multiRackEnabled: state.multiRackEnabled,
     racks: state.racks,
@@ -241,11 +241,12 @@ function importJSON(e) {
         deviceType: d.device_type || '',
         role: d.role || '',
         position: d.position || 1,
-        height: 1,
+        height: d.u_height || d.height || 1,
         face: d.face || 'front',
         status: d.status || 'planned',
         serial: d.serial || '',
         assetTag: d.asset_tag || '',
+        fullDepth: d.full_depth || false,
         comments: d.comments || '',
         _color: d.face === 'rear' ? '#f97316' : '#3b82f6',
       }));
