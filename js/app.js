@@ -153,10 +153,74 @@ function initSettings() {
   const multiRackFields = document.getElementById('multi-rack-fields');
   const rackCountInput = document.getElementById('setting-rack-count');
 
-  function toggleMultiRackUI(enabled) {
-    singleRackFields.style.display = enabled ? 'none' : 'block';
-    multiRackFields.style.display = enabled ? 'block' : 'none';
-    if (enabled) renderRackRows();
+  // Smooth slide-toggle for a container element
+  function slideToggle(el, show, onDone) {
+    if (show) {
+      // ── Slide open ──
+      el.style.display = 'block';
+      el.style.overflow = 'hidden';
+      const targetHeight = el.scrollHeight;
+      el.style.height = '0px';
+      el.style.opacity = '0';
+      requestAnimationFrame(() => {
+        el.style.transition = 'height 0.35s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.3s ease';
+        requestAnimationFrame(() => {
+          el.style.height = targetHeight + 'px';
+          el.style.opacity = '1';
+        });
+      });
+      el.addEventListener('transitionend', function handler(ev) {
+        if (ev.propertyName !== 'height') return;
+        el.removeEventListener('transitionend', handler);
+        el.style.height = '';
+        el.style.overflow = '';
+        el.style.opacity = '';
+        el.style.transition = '';
+        if (onDone) onDone();
+      });
+    } else {
+      // ── Slide closed ──
+      el.style.overflow = 'hidden';
+      el.style.height = el.scrollHeight + 'px';
+      el.style.opacity = '1';
+      requestAnimationFrame(() => {
+        el.style.transition = 'height 0.3s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.25s ease';
+        requestAnimationFrame(() => {
+          el.style.height = '0px';
+          el.style.opacity = '0';
+        });
+      });
+      el.addEventListener('transitionend', function handler(ev) {
+        if (ev.propertyName !== 'height') return;
+        el.removeEventListener('transitionend', handler);
+        el.style.display = 'none';
+        el.style.height = '';
+        el.style.overflow = '';
+        el.style.opacity = '';
+        el.style.transition = '';
+        if (onDone) onDone();
+      });
+    }
+  }
+
+  function toggleMultiRackUI(enabled, animate) {
+    if (animate) {
+      if (enabled) {
+        slideToggle(singleRackFields, false, () => {
+          renderRackRows();
+          slideToggle(multiRackFields, true);
+        });
+      } else {
+        slideToggle(multiRackFields, false, () => {
+          slideToggle(singleRackFields, true);
+        });
+      }
+    } else {
+      // No animation (initial load)
+      singleRackFields.style.display = enabled ? 'none' : 'block';
+      multiRackFields.style.display = enabled ? 'block' : 'none';
+      if (enabled) renderRackRows();
+    }
   }
 
   function renderRackRows() {
@@ -164,11 +228,14 @@ function initSettings() {
     const container = document.getElementById('rack-rows');
     const state = getState();
     const existingRacks = state.racks || [];
+    const prevCount = container.querySelectorAll('.rack-config-row').length;
+
     let html = '';
     for (let i = 0; i < count; i++) {
       const rack = existingRacks[i] || {};
       const dir = rack.numberingDirection || 'bottom-to-top';
-      html += `<div class="rack-config-row">
+      const isNew = i >= prevCount;
+      html += `<div class="rack-config-row${isNew ? ' rack-row-enter' : ''}">
         <span class="rack-row-num">${i + 1}.</span>
         <input type="text" class="rack-row-name" value="${rack.name || `Rack-${String(i + 1).padStart(2, '0')}`}" placeholder="${t('setting_name')}" required>
         <input type="number" class="rack-row-units" value="${rack.totalUnits || 42}" min="1" max="60" required>
@@ -180,10 +247,20 @@ function initSettings() {
       </div>`;
     }
     container.innerHTML = html;
+
+    // Animate newly added rows with staggered delay
+    const newRows = container.querySelectorAll('.rack-row-enter');
+    newRows.forEach((row, idx) => {
+      row.style.animationDelay = (idx * 60) + 'ms';
+      row.addEventListener('animationend', () => {
+        row.classList.remove('rack-row-enter');
+        row.style.animationDelay = '';
+      }, { once: true });
+    });
   }
 
   multiRackCheckbox.addEventListener('change', () => {
-    toggleMultiRackUI(multiRackCheckbox.checked);
+    toggleMultiRackUI(multiRackCheckbox.checked, true);
   });
 
   rackCountInput.addEventListener('input', renderRackRows);
