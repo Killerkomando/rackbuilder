@@ -33,6 +33,14 @@ export function initDeviceForm() {
   bulkCheckbox.addEventListener('change', () => {
     const isOpen = bulkCheckbox.checked;
     bulkContent.classList.toggle('open', isOpen);
+    if (isOpen) {
+      // Auto-set stacking direction based on rack numbering
+      const cfg = getActiveRackConfig();
+      const dirSelect = document.getElementById('bulk-direction');
+      dirSelect.value = cfg.numberingDirection === 'bottom-to-top'
+        ? 'top-to-bottom'
+        : 'bottom-to-top';
+    }
   });
 
   // Auto-switch start value when enumeration type changes
@@ -40,6 +48,16 @@ export function initDeviceForm() {
   const bulkStart = document.getElementById('bulk-start');
   bulkNumbering.addEventListener('change', () => {
     bulkStart.value = bulkNumbering.value === 'alpha' ? 'A' : '1';
+  });
+
+  // Auto-increase quantity when specific positions exceed current qty
+  const bulkPositions = document.getElementById('bulk-positions');
+  const bulkQty = document.getElementById('bulk-qty');
+  bulkPositions.addEventListener('input', () => {
+    const positions = parsePositionList(bulkPositions.value.trim());
+    if (positions.length > parseInt(bulkQty.value)) {
+      bulkQty.value = positions.length;
+    }
   });
 
   // Form submit
