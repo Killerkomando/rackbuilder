@@ -166,11 +166,16 @@ function initSettings() {
     let html = '';
     for (let i = 0; i < count; i++) {
       const rack = existingRacks[i] || {};
+      const dir = rack.numberingDirection || 'bottom-to-top';
       html += `<div class="rack-config-row">
         <span class="rack-row-num">${i + 1}.</span>
         <input type="text" class="rack-row-name" value="${rack.name || `Rack-${String(i + 1).padStart(2, '0')}`}" placeholder="${t('setting_name')}" required>
         <input type="number" class="rack-row-units" value="${rack.totalUnits || 42}" min="1" max="60" required>
         <span class="rack-row-label">U</span>
+        <select class="rack-row-direction">
+          <option value="bottom-to-top"${dir === 'bottom-to-top' ? ' selected' : ''}>${t('dir_bottom')}</option>
+          <option value="top-to-bottom"${dir === 'top-to-bottom' ? ' selected' : ''}>${t('dir_top')}</option>
+        </select>
       </div>`;
     }
     container.innerHTML = html;
@@ -229,7 +234,7 @@ function initSettings() {
           id: existing.id || undefined,
           name: row.querySelector('.rack-row-name').value.trim(),
           totalUnits: parseInt(row.querySelector('.rack-row-units').value) || 42,
-          numberingDirection: existing.numberingDirection || 'bottom-to-top',
+          numberingDirection: row.querySelector('.rack-row-direction').value,
           frontColor: existing.frontColor || '#3b82f6',
           rearColor: existing.rearColor || '#f97316',
           site,

@@ -186,7 +186,6 @@ export function toNetBoxJSON(devices, rackConfig) {
     status: d.status,
     serial: d.serial || undefined,
     asset_tag: d.assetTag || undefined,
-    full_depth: d.fullDepth || undefined,
     comments: d.comments || undefined,
   })).map(obj => {
     // Remove undefined values
