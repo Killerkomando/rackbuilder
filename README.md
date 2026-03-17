@@ -1,4 +1,4 @@
-# Rack Builder v0.4.0
+# Rack Builder v0.5.0
 
 Visual rack planning tool for creating NetBox-compatible JSON imports. Plan your server rack layouts with drag & drop, collision detection, and bulk device creation — then export directly as JSON, YAML, or CSV.
 
@@ -21,6 +21,7 @@ Works offline as a PWA after the first visit.
 - **Visual Rack Editor** — Front and rear view with color-coded device blocks
 - **Dynamic Rack Sizing** — Racks up to 46U+ fit on screen without scrolling; unit height scales automatically based on viewport
 - **Configurable Face Colors** — Set default colors for front and rear devices in Settings; custom per-device colors are preserved
+- **Multi-Rack Mode** — Manage multiple racks in a single project with tab-based switching; each rack has independent config (name, units, colors) and scoped devices
 - **Light / Dark Mode** — Toggle between themes, preference saved in localStorage
 - **DE / EN Language** — Full German and English UI translation
 
@@ -50,8 +51,8 @@ Works offline as a PWA after the first visit.
 
 - **NetBox Export** — JSON format compatible with `POST /api/dcim/devices/` (no `height` field — NetBox derives it from the device type)
 - **YAML & CSV Export** — Alternative export formats for other workflows
-- **Project Save / Load** — Save and restore full rack projects including device heights, colors, depth settings, and rack configuration
-- **NetBox JSON Import** — Re-import previously exported NetBox device lists
+- **Project Save / Load** — Save and restore full rack projects including device heights, colors, depth settings, rack configuration, and multi-rack state
+- **NetBox JSON Import** — Re-import previously exported NetBox device lists; reads `u_height`, `height`, and `full_depth` when present
 
 ### Live Feedback
 
@@ -92,7 +93,7 @@ The "Save Project" function exports a self-contained file that preserves all dat
 ```json
 {
   "_format": "rackbuilder-project",
-  "_version": "0.4.0",
+  "_version": "0.5.0",
   "rackConfig": {
     "name": "Rack-01",
     "totalUnits": 42,
@@ -102,6 +103,8 @@ The "Save Project" function exports a self-contained file that preserves all dat
     "frontColor": "#3b82f6",
     "rearColor": "#f97316"
   },
+  "multiRackEnabled": false,
+  "racks": [],
   "devices": [ ... ]
 }
 ```
@@ -124,8 +127,8 @@ Use "Load Project" to restore from a project file. NetBox JSON files should be i
 index.html          — App entry point (no build step)
 css/style.css       — Styles, dark/light theme via CSS custom properties
 js/
-  app.js            — Bootstrap, theme/lang init, device list, settings, stats, HE selection sync
-  state.js          — Pub/sub state store + undo/redo + localStorage persistence + reserved units
+  app.js            — Bootstrap, theme/lang init, device list, settings, stats, HE selection sync, rack tabs
+  state.js          — Pub/sub state store + undo/redo + localStorage persistence + multi-rack management
   rack-model.js     — Data model, collision + depth detection, NetBox export, stats
   rack-view.js      — Rack grid renderer, depth blockades, reserved unit overlays
   device-form.js    — Add/edit form + bulk creation logic
@@ -135,6 +138,8 @@ js/
   utils.js          — UUID generation, naming sequences, storage utilities
 sw.js               — Service worker (cache-first offline)
 manifest.json       — PWA manifest
+minimalist/
+  index.html        — Single-file version (all CSS + JS inlined, no dependencies)
 ```
 
 ## Tech Stack
