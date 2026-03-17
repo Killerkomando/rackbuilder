@@ -14,6 +14,16 @@ open index.html
 
 Works offline as a PWA after the first visit.
 
+### Minimalist Version
+
+A single-file version with all CSS and JS inlined is available under `minimalist/index.html`. It has no external dependencies and no service worker — just open the file directly:
+
+```
+open minimalist/index.html
+```
+
+This is useful for quick deployment, embedding, or environments where multiple files are impractical.
+
 ## Features
 
 ### Rack Visualization
