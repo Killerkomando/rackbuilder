@@ -426,6 +426,11 @@ function syncReservedUnitsToForm() {
     if (document.activeElement !== posInput) {
       const sorted = [...reserved].sort((a, b) => a.unit - b.unit);
       posInput.value = sorted.map(r => r.unit).join(', ');
+      // Auto-increase quantity if more positions selected than current qty
+      const qtyInput = document.getElementById('bulk-qty');
+      if (reserved.length > parseInt(qtyInput.value)) {
+        qtyInput.value = reserved.length;
+      }
     }
   }
 }

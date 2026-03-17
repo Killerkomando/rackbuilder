@@ -688,6 +688,13 @@ body {
   margin-top: 10px;
 }
 
+/* submit-section */
+.submit-section {
+  border-top: 1px solid var(--color-border);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
 /* Device list */
 .device-list {
   margin-top: 16px;
@@ -1001,7 +1008,7 @@ dialog .dialog-actions {
   <h1>
     <span class="rack-icon">&#9638;</span>
     <span data-i18n="app_title">Rack Builder</span>
-    <span class="app-version" data-i18n="version">v0.5.0</span>
+    <span class="app-version" data-i18n="version">v0.5.1</span>
   </h1>
   <div class="header-actions">
     <button class="btn btn-secondary btn-sm" id="undo-btn" data-i18n-title="btn_undo" title="Undo" disabled>&#x21A9;</button>
@@ -1070,8 +1077,8 @@ dialog .dialog-actions {
       <div class="form-group">
         <label for="dev-status" data-i18n="label_status">Status</label>
         <select id="dev-status">
-          <option value="planned" data-i18n="status_planned">Planned</option>
           <option value="active" data-i18n="status_active">Active</option>
+          <option value="planned" data-i18n="status_planned">Planned</option>
           <option value="staged" data-i18n="status_staged">Staged</option>
           <option value="failed" data-i18n="status_failed">Failed</option>
           <option value="decommissioning" data-i18n="status_decommissioning">Decommissioning</option>
@@ -1098,10 +1105,6 @@ dialog .dialog-actions {
         <label for="dev-comments" data-i18n="label_comments">Comments</label>
         <textarea id="dev-comments"></textarea>
       </div>
-
-      <button type="submit" class="btn btn-primary btn-block" id="form-submit-btn" data-i18n="btn_add">Add Device</button>
-      <button type="button" class="btn btn-danger btn-block" id="form-delete-btn" data-i18n="btn_delete" style="display:none; margin-top:6px;">Delete Device</button>
-      <button type="button" class="btn btn-secondary btn-block" id="form-cancel-btn" data-i18n="btn_cancel_edit" style="display:none; margin-top:6px;">Cancel Edit</button>
 
       <!-- Bulk Section -->
       <div class="bulk-section">
@@ -1142,6 +1145,12 @@ dialog .dialog-actions {
             Leave "Specific Positions" empty for sequential stacking from the start position.
           </div>
         </div>
+      </div>
+
+      <div class="submit-section">
+        <button type="submit" class="btn btn-primary btn-block" id="form-submit-btn" data-i18n="btn_add">Add Device</button>
+        <button type="button" class="btn btn-danger btn-block" id="form-delete-btn" data-i18n="btn_delete" style="display:none; margin-top:6px;">Delete Device</button>
+        <button type="button" class="btn btn-secondary btn-block" id="form-cancel-btn" data-i18n="btn_cancel_edit" style="display:none; margin-top:6px;">Cancel Edit</button>
       </div>
     </form>
   </aside>
@@ -1274,7 +1283,6 @@ dialog .dialog-actions {
 
 <script>
 (function() {
-// === utils.js ===
 // Utility helpers for Rack Builder
 
 /**
@@ -1344,13 +1352,12 @@ function parsePositionList(input) {
     .filter(n => !isNaN(n) && n > 0);
 }
 
-// === i18n.js ===
 // Internationalization (EN / DE)
 
 const translations = {
   en: {
     app_title: 'Rack Builder',
-    version: 'v0.5.0',
+    version: 'v0.5.1',
     btn_settings: 'Settings',
     btn_clear_devices: 'Clear Devices',
     btn_reset_all: 'Reset All',
@@ -1461,7 +1468,7 @@ const translations = {
   },
   de: {
     app_title: 'Rack Builder',
-    version: 'v0.5.0',
+    version: 'v0.5.1',
     btn_settings: 'Einstellungen',
     btn_clear_devices: 'Geräte löschen',
     btn_reset_all: 'Alles zurücksetzen',
@@ -1614,7 +1621,6 @@ function applyTranslations() {
   if (btn) btn.textContent = currentLang.toUpperCase();
 }
 
-// === rack-model.js ===
 // Rack data model with collision detection and boundary checks
 
 
@@ -1809,7 +1815,6 @@ function toNetBoxJSON(devices, rackConfig) {
   });
 }
 
-// === state.js ===
 // Central state store with pub/sub and localStorage persistence
 
 
@@ -2261,7 +2266,6 @@ function dispatch(action, payload) {
   }
 }
 
-// === rack-view.js ===
 // Rack visualization renderer
 
 
@@ -2484,7 +2488,6 @@ function getPositionPixels(position, height, totalUnits, numberingDirection) {
   };
 }
 
-// === device-form.js ===
 // Device form handling (add, edit, bulk creation)
 
 
@@ -2516,6 +2519,14 @@ function initDeviceForm() {
   bulkCheckbox.addEventListener('change', () => {
     const isOpen = bulkCheckbox.checked;
     bulkContent.classList.toggle('open', isOpen);
+    if (isOpen) {
+      // Auto-set stacking direction based on rack numbering
+      const cfg = getActiveRackConfig();
+      const dirSelect = document.getElementById('bulk-direction');
+      dirSelect.value = cfg.numberingDirection === 'bottom-to-top'
+        ? 'top-to-bottom'
+        : 'bottom-to-top';
+    }
   });
 
   // Auto-switch start value when enumeration type changes
@@ -2523,6 +2534,16 @@ function initDeviceForm() {
   const bulkStart = document.getElementById('bulk-start');
   bulkNumbering.addEventListener('change', () => {
     bulkStart.value = bulkNumbering.value === 'alpha' ? 'A' : '1';
+  });
+
+  // Auto-increase quantity when specific positions exceed current qty
+  const bulkPositions = document.getElementById('bulk-positions');
+  const bulkQty = document.getElementById('bulk-qty');
+  bulkPositions.addEventListener('input', () => {
+    const positions = parsePositionList(bulkPositions.value.trim());
+    if (positions.length > parseInt(bulkQty.value)) {
+      bulkQty.value = positions.length;
+    }
   });
 
   // Form submit
@@ -2816,7 +2837,6 @@ function showMessage(text, type) {
   }
 }
 
-// === drag-drop.js ===
 // Drag and drop handling for repositioning devices in the rack
 
 
@@ -3003,7 +3023,6 @@ function resetDragState() {
   rafPending = false;
 }
 
-// === export.js ===
 // NetBox JSON export + YAML + CSV + Project save/load + download/clipboard
 
 
@@ -3170,7 +3189,7 @@ function saveProject() {
 
   const project = {
     _format: 'rackbuilder-project',
-    _version: '0.5.0',
+    _version: '0.5.1',
     rackConfig: state.rackConfig,
     multiRackEnabled: state.multiRackEnabled,
     racks: state.racks,
@@ -3281,7 +3300,6 @@ function triggerDownload(content, filename, mimeType) {
   URL.revokeObjectURL(url);
 }
 
-// === app.js ===
 // Rack Builder — Main application bootstrap
 
 
@@ -3321,6 +3339,8 @@ function init() {
   initBulkPositionHighlight();
   updateStorageIndicator();
   updateStats(state);
+
+
 }
 
 // ─── Theme ──────────────────────────────────────────────────────────────────
@@ -3697,6 +3717,11 @@ function syncReservedUnitsToForm() {
     if (document.activeElement !== posInput) {
       const sorted = [...reserved].sort((a, b) => a.unit - b.unit);
       posInput.value = sorted.map(r => r.unit).join(', ');
+      // Auto-increase quantity if more positions selected than current qty
+      const qtyInput = document.getElementById('bulk-qty');
+      if (reserved.length > parseInt(qtyInput.value)) {
+        qtyInput.value = reserved.length;
+      }
     }
   }
 }
