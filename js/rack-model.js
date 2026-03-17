@@ -167,7 +167,7 @@ export function getRackUtilization(devices, totalUnits) {
 
 /**
  * Convert devices to NetBox-compatible JSON array.
- * Strips internal fields (id, _color, height).
+ * Strips internal fields (id, _color).
  * @param {Device[]} devices
  * @param {RackConfig} rackConfig
  * @returns {Object[]}
@@ -182,6 +182,7 @@ export function toNetBoxJSON(devices, rackConfig) {
     location: rackConfig.location || undefined,
     rack: rackConfig.name,
     position: d.position,
+    u_height: d.height,
     face: d.face,
     status: d.status,
     serial: d.serial || undefined,

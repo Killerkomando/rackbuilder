@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rack Builder (Minimalist)</title>
   <meta name="theme-color" content="#0f172a">
-  <style>
+<style>
 /* Rack Builder — Dark Theme */
 
 :root {
@@ -763,7 +763,7 @@ dialog {
   border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 24px;
-  max-width: 400px;
+  max-width: 480px;
   width: 90%;
   position: fixed;
   top: 50%;
@@ -841,6 +841,98 @@ dialog .dialog-actions {
   background: var(--color-warning);
 }
 
+/* Rack Tabs (Multi-Rack) */
+#rack-tabs {
+  display: none;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.rack-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  font-family: inherit;
+  color: var(--color-text);
+}
+
+.rack-tab:hover {
+  background: #475569;
+}
+
+.rack-tab.active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+
+.rack-tab-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.rack-tab-info {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+/* Multi-rack settings rows */
+.rack-config-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.rack-row-num {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  min-width: 24px;
+  text-align: right;
+}
+
+.rack-config-row input[type="text"] {
+  flex: 1;
+  padding: 7px 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.rack-config-row input[type="number"] {
+  width: 70px;
+  padding: 7px 10px;
+  background: var(--bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.rack-config-row input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
+}
+
+.rack-row-label {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
@@ -885,15 +977,14 @@ dialog .dialog-actions {
   }
 }
 
-  </style>
+</style>
 </head>
 <body>
-
 <header class="app-header">
   <h1>
     <span class="rack-icon">&#9638;</span>
     <span data-i18n="app_title">Rack Builder</span>
-    <span class="app-version" data-i18n="version">v0.4.0</span>
+    <span class="app-version" data-i18n="version">v0.5.0</span>
   </h1>
   <div class="header-actions">
     <button class="btn btn-secondary btn-sm" id="undo-btn" data-i18n-title="btn_undo" title="Undo" disabled>&#x21A9;</button>
@@ -1040,6 +1131,7 @@ dialog .dialog-actions {
 
   <!-- Center: Rack Visualization -->
   <section class="rack-container">
+    <div id="rack-tabs"></div>
     <div class="rack-controls">
       <span class="rack-name" id="rack-name-display">Rack-01</span>
       <span class="rack-info" id="rack-info"></span>
@@ -1100,21 +1192,15 @@ dialog .dialog-actions {
 <dialog id="settings-modal">
   <h2 data-i18n="settings_title">Rack Settings</h2>
   <form id="settings-form">
+    <!-- Multi-Rack Toggle -->
     <div class="form-group">
-      <label for="setting-name" data-i18n="setting_name">Rack Name</label>
-      <input type="text" id="setting-name" required>
+      <label class="form-checkbox-label">
+        <input type="checkbox" id="setting-multi-rack">
+        <span data-i18n="setting_multi_rack">Multi-Rack Mode</span>
+      </label>
     </div>
-    <div class="form-group">
-      <label for="setting-units" data-i18n="setting_units">Total Units (U)</label>
-      <input type="number" id="setting-units" min="1" max="60" required>
-    </div>
-    <div class="form-group">
-      <label for="setting-direction" data-i18n="setting_direction">Numbering Direction</label>
-      <select id="setting-direction">
-        <option value="bottom-to-top" data-i18n="dir_bottom">U1 at Bottom</option>
-        <option value="top-to-bottom" data-i18n="dir_top">U1 at Top</option>
-      </select>
-    </div>
+
+    <!-- Shared fields (site, location) -->
     <div class="form-group">
       <label for="setting-site" data-i18n="setting_site">Site (for export)</label>
       <input type="text" id="setting-site" data-i18n-placeholder="ph_site" placeholder="e.g. dc1">
@@ -1123,16 +1209,45 @@ dialog .dialog-actions {
       <label for="setting-location" data-i18n="setting_location">Location (for export)</label>
       <input type="text" id="setting-location" data-i18n-placeholder="ph_location" placeholder="e.g. hall-a">
     </div>
-    <div class="form-row">
+
+    <!-- Single-rack fields -->
+    <div id="single-rack-fields">
       <div class="form-group">
-        <label for="setting-front-color" data-i18n="setting_front_color">Front Color</label>
-        <input type="color" id="setting-front-color" value="#3b82f6">
+        <label for="setting-name" data-i18n="setting_name">Rack Name</label>
+        <input type="text" id="setting-name" required>
       </div>
       <div class="form-group">
-        <label for="setting-rear-color" data-i18n="setting_rear_color">Rear Color</label>
-        <input type="color" id="setting-rear-color" value="#f97316">
+        <label for="setting-units" data-i18n="setting_units">Total Units (U)</label>
+        <input type="number" id="setting-units" min="1" max="60" required>
+      </div>
+      <div class="form-group">
+        <label for="setting-direction" data-i18n="setting_direction">Numbering Direction</label>
+        <select id="setting-direction">
+          <option value="bottom-to-top" data-i18n="dir_bottom">U1 at Bottom</option>
+          <option value="top-to-bottom" data-i18n="dir_top">U1 at Top</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="setting-front-color" data-i18n="setting_front_color">Front Color</label>
+          <input type="color" id="setting-front-color" value="#3b82f6">
+        </div>
+        <div class="form-group">
+          <label for="setting-rear-color" data-i18n="setting_rear_color">Rear Color</label>
+          <input type="color" id="setting-rear-color" value="#f97316">
+        </div>
       </div>
     </div>
+
+    <!-- Multi-rack fields -->
+    <div id="multi-rack-fields" style="display:none;">
+      <div class="form-group">
+        <label for="setting-rack-count" data-i18n="setting_rack_count">Number of Racks</label>
+        <input type="number" id="setting-rack-count" min="1" max="20" value="2">
+      </div>
+      <div id="rack-rows"></div>
+    </div>
+
     <div class="dialog-actions">
       <button type="button" class="btn btn-secondary" id="settings-cancel" data-i18n="btn_dialog_cancel">Cancel</button>
       <button type="submit" class="btn btn-primary" data-i18n="btn_save">Save</button>
@@ -1141,9 +1256,8 @@ dialog .dialog-actions {
 </dialog>
 
 <script>
-// Rack Builder v0.4.0 — Minimalist Single-File Edition
-
-// ─── utils.js ────────────────────────────────────────────────────────────────
+(function() {
+// ─── utils.js ───
 // Utility helpers for Rack Builder
 
 /**
@@ -1213,13 +1327,14 @@ function parsePositionList(input) {
     .filter(n => !isNaN(n) && n > 0);
 }
 
-// ─── i18n.js ─────────────────────────────────────────────────────────────────
+
+// ─── i18n.js ───
 // Internationalization (EN / DE)
 
 const translations = {
   en: {
     app_title: 'Rack Builder',
-    version: 'v0.4.0',
+    version: 'v0.5.0',
     btn_settings: 'Settings',
     btn_clear_devices: 'Clear Devices',
     btn_reset_all: 'Reset All',
@@ -1324,11 +1439,13 @@ const translations = {
     bulk_direction: 'Stacking Direction',
     bulk_dir_up: 'Bottom → Top (ascending)',
     bulk_dir_down: 'Top → Bottom (descending)',
+    setting_multi_rack: 'Multi-Rack Mode',
+    setting_rack_count: 'Number of Racks',
     ph_comments: '',
   },
   de: {
     app_title: 'Rack Builder',
-    version: 'v0.4.0',
+    version: 'v0.5.0',
     btn_settings: 'Einstellungen',
     btn_clear_devices: 'Geräte löschen',
     btn_reset_all: 'Alles zurücksetzen',
@@ -1433,6 +1550,8 @@ const translations = {
     bulk_direction: 'Stapelrichtung',
     bulk_dir_up: 'Unten → Oben (aufsteigend)',
     bulk_dir_down: 'Oben → Unten (absteigend)',
+    setting_multi_rack: 'Multi-Rack-Modus',
+    setting_rack_count: 'Anzahl der Racks',
     ph_comments: '',
   },
 };
@@ -1479,7 +1598,8 @@ function applyTranslations() {
   if (btn) btn.textContent = currentLang.toUpperCase();
 }
 
-// ─── rack-model.js ───────────────────────────────────────────────────────────
+
+// ─── rack-model.js ───
 // Rack data model with collision detection and boundary checks
 
 
@@ -1648,7 +1768,7 @@ function getRackUtilization(devices, totalUnits) {
 
 /**
  * Convert devices to NetBox-compatible JSON array.
- * Strips internal fields (id, _color, height).
+ * Strips internal fields (id, _color).
  * @param {Device[]} devices
  * @param {RackConfig} rackConfig
  * @returns {Object[]}
@@ -1663,6 +1783,7 @@ function toNetBoxJSON(devices, rackConfig) {
     location: rackConfig.location || undefined,
     rack: rackConfig.name,
     position: d.position,
+    u_height: d.height,
     face: d.face,
     status: d.status,
     serial: d.serial || undefined,
@@ -1675,7 +1796,8 @@ function toNetBoxJSON(devices, rackConfig) {
   });
 }
 
-// ─── state.js ────────────────────────────────────────────────────────────────
+
+// ─── state.js ───
 // Central state store with pub/sub and localStorage persistence
 
 
@@ -1685,6 +1807,10 @@ const initialState = {
   rackConfig: { ...DEFAULT_RACK_CONFIG },
   devices: [],
   selectedDeviceId: null,
+  // Multi-rack
+  multiRackEnabled: false,
+  racks: [],        // [{id, name, totalUnits, numberingDirection, site, location, frontColor, rearColor}]
+  activeRackId: null,
 };
 
 let state = loadState();
@@ -1700,7 +1826,41 @@ function setReservedUnits(units) {
 }
 function clearReservedUnits() { reservedUnits = []; }
 
-// Undo/Redo history
+// ─── Multi-rack helpers ──────────────────────────────────────────────────────
+
+/**
+ * Get the effective rack config for the currently active context.
+ */
+function getActiveRackConfig(st) {
+  if (!st) st = state;
+  if (st.multiRackEnabled && st.activeRackId) {
+    const rack = st.racks.find(r => r.id === st.activeRackId);
+    if (rack) return rack;
+  }
+  return st.rackConfig;
+}
+
+/**
+ * Get the devices belonging to the currently active rack.
+ */
+function getActiveDevices(st) {
+  if (!st) st = state;
+  if (st.multiRackEnabled && st.activeRackId) {
+    return st.devices.filter(d => d.rackId === st.activeRackId);
+  }
+  return st.devices;
+}
+
+/**
+ * Get rack config for a specific rack by ID.
+ */
+function getRackById(st, rackId) {
+  if (!st.multiRackEnabled) return st.rackConfig;
+  return st.racks.find(r => r.id === rackId) || st.rackConfig;
+}
+
+// ─── Undo/Redo history ──────────────────────────────────────────────────────
+
 let history = [];
 let historyIndex = -1;
 const MAX_HISTORY = 50;
@@ -1710,11 +1870,9 @@ function deepClone(obj) {
 }
 
 function pushHistory() {
-  // Truncate any future entries
   history = history.slice(0, historyIndex + 1);
   history.push(deepClone(state));
   historyIndex = history.length - 1;
-  // Trim if exceeding max
   if (history.length > MAX_HISTORY) {
     history.shift();
     historyIndex--;
@@ -1730,7 +1888,14 @@ function loadState() {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      return { ...initialState, ...parsed };
+      // Migration: ensure multi-rack fields exist
+      return {
+        ...initialState,
+        ...parsed,
+        multiRackEnabled: parsed.multiRackEnabled || false,
+        racks: parsed.racks || [],
+        activeRackId: parsed.activeRackId || null,
+      };
     }
   } catch (e) {
     console.warn('Failed to load state from localStorage:', e);
@@ -1786,20 +1951,44 @@ function canRedo() {
   return historyIndex < history.length - 1;
 }
 
+// ─── Helper: get scoped devices + config for a rack context ──────────────────
+
+function getScopedContext(deviceOrPayload) {
+  if (state.multiRackEnabled) {
+    const rackId = deviceOrPayload?.rackId || state.activeRackId;
+    const rackCfg = state.racks.find(r => r.id === rackId);
+    if (rackCfg) {
+      return {
+        devices: state.devices.filter(d => d.rackId === rackId),
+        totalUnits: rackCfg.totalUnits,
+        rackConfig: rackCfg,
+        rackId,
+      };
+    }
+  }
+  return {
+    devices: state.devices,
+    totalUnits: state.rackConfig.totalUnits,
+    rackConfig: state.rackConfig,
+    rackId: null,
+  };
+}
+
 /**
  * Dispatch an action to update state.
- * @param {string} action
- * @param {*} payload
- * @returns {{ok: boolean, reason?: string}}
  */
 function dispatch(action, payload) {
   switch (action) {
     case 'ADD_DEVICE': {
       pushHistory();
-      const device = createDevice(payload, state.rackConfig);
+      const ctx = getScopedContext(payload);
+      const deviceData = state.multiRackEnabled
+        ? { ...payload, rackId: payload.rackId || state.activeRackId }
+        : payload;
+      const device = createDevice(deviceData, ctx.rackConfig);
       const result = canPlace(
-        state.devices, device.position, device.height,
-        device.face, state.rackConfig.totalUnits, null, device.fullDepth
+        ctx.devices, device.position, device.height,
+        device.face, ctx.totalUnits, null, device.fullDepth
       );
       if (!result.ok) return result;
       state = { ...state, devices: [...state.devices, device] };
@@ -1826,11 +2015,11 @@ function dispatch(action, payload) {
       if (!existing) return { ok: false, reason: 'Device not found.' };
 
       const updated = { ...existing, ...changes };
-      // Check placement if position, height, or face changed
       if (changes.position !== undefined || changes.height !== undefined || changes.face !== undefined || changes.fullDepth !== undefined) {
+        const ctx = getScopedContext(existing);
         const result = canPlace(
-          state.devices, updated.position, updated.height,
-          updated.face, state.rackConfig.totalUnits, id, updated.fullDepth
+          ctx.devices, updated.position, updated.height,
+          updated.face, ctx.totalUnits, id, updated.fullDepth
         );
         if (!result.ok) return result;
       }
@@ -1851,17 +2040,17 @@ function dispatch(action, payload) {
       const existing = state.devices.find(d => d.id === id);
       if (!existing) return { ok: false, reason: 'Device not found.' };
 
+      const ctx = getScopedContext(existing);
       const newFace = face || existing.face;
       const result = canPlace(
-        state.devices, position, existing.height,
-        newFace, state.rackConfig.totalUnits, id, existing.fullDepth
+        ctx.devices, position, existing.height,
+        newFace, ctx.totalUnits, id, existing.fullDepth
       );
       if (!result.ok) return result;
 
-      // Auto-swap color when moving to opposite face (only if using default color)
       let newColor = existing._color;
       if (newFace !== existing.face) {
-        const cfg = state.rackConfig;
+        const cfg = ctx.rackConfig;
         const oldDefault = existing.face === 'front'
           ? (cfg.frontColor || '#3b82f6')
           : (cfg.rearColor || '#f97316');
@@ -1888,12 +2077,19 @@ function dispatch(action, payload) {
       const { devices: newDevices } = payload;
       const results = [];
       let currentDevices = [...state.devices];
+      const ctx = getScopedContext(newDevices[0]);
 
       for (const deviceData of newDevices) {
-        const device = createDevice(deviceData, state.rackConfig);
+        const dd = state.multiRackEnabled
+          ? { ...deviceData, rackId: deviceData.rackId || state.activeRackId }
+          : deviceData;
+        const device = createDevice(dd, ctx.rackConfig);
+        const scopedDevices = state.multiRackEnabled
+          ? currentDevices.filter(d => d.rackId === ctx.rackId)
+          : currentDevices;
         const result = canPlace(
-          currentDevices, device.position, device.height,
-          device.face, state.rackConfig.totalUnits, null, device.fullDepth
+          scopedDevices, device.position, device.height,
+          device.face, ctx.totalUnits, null, device.fullDepth
         );
         if (result.ok) {
           currentDevices.push(device);
@@ -1925,15 +2121,108 @@ function dispatch(action, payload) {
       return { ok: true };
     }
 
+    // ─── Multi-rack actions ────────────────────────────────────────────────
+
+    case 'SET_MULTI_RACK': {
+      pushHistory();
+      const { enabled, racks: newRacks, site, location } = payload;
+      if (enabled && newRacks && newRacks.length > 0) {
+        // Ensure each rack has an ID
+        const racks = newRacks.map(r => ({
+          ...r,
+          id: r.id || generateId(),
+          site: site || r.site || '',
+          location: location || r.location || '',
+        }));
+        // Migrate existing devices to first rack if they have no rackId
+        const firstRackId = racks[0].id;
+        const devices = state.devices.map(d =>
+          d.rackId ? d : { ...d, rackId: firstRackId }
+        );
+        state = {
+          ...state,
+          multiRackEnabled: true,
+          racks,
+          activeRackId: state.activeRackId && racks.find(r => r.id === state.activeRackId)
+            ? state.activeRackId
+            : firstRackId,
+          devices,
+          rackConfig: { ...state.rackConfig, site: site || state.rackConfig.site, location: location || state.rackConfig.location },
+        };
+      } else {
+        // Disable multi-rack: strip rackId from devices
+        const devices = state.devices.map(d => {
+          const { rackId, ...rest } = d;
+          return rest;
+        });
+        // Use first rack config as single rack config if available
+        if (state.racks.length > 0) {
+          const first = state.racks[0];
+          state = {
+            ...state,
+            multiRackEnabled: false,
+            racks: [],
+            activeRackId: null,
+            devices,
+            rackConfig: {
+              ...state.rackConfig,
+              name: first.name,
+              totalUnits: first.totalUnits,
+              numberingDirection: first.numberingDirection || 'bottom-to-top',
+              frontColor: first.frontColor || '#3b82f6',
+              rearColor: first.rearColor || '#f97316',
+            },
+          };
+        } else {
+          state = { ...state, multiRackEnabled: false, racks: [], activeRackId: null, devices };
+        }
+      }
+      notify();
+      return { ok: true };
+    }
+
+    case 'SET_ACTIVE_RACK': {
+      if (state.activeRackId === payload) return { ok: true };
+      state = { ...state, activeRackId: payload, selectedDeviceId: null };
+      notify();
+      return { ok: true };
+    }
+
+    case 'UPDATE_RACK': {
+      pushHistory();
+      const { rackId, ...changes } = payload;
+      state = {
+        ...state,
+        racks: state.racks.map(r => r.id === rackId ? { ...r, ...changes } : r),
+      };
+      notify();
+      return { ok: true };
+    }
+
     case 'CLEAR_DEVICES': {
       pushHistory();
-      state = { ...state, devices: [], selectedDeviceId: null };
+      if (state.multiRackEnabled && state.activeRackId) {
+        // Only clear devices for the active rack
+        state = {
+          ...state,
+          devices: state.devices.filter(d => d.rackId !== state.activeRackId),
+          selectedDeviceId: null,
+        };
+      } else {
+        state = { ...state, devices: [], selectedDeviceId: null };
+      }
       notify();
       return { ok: true };
     }
 
     case 'CLEAR_STATE': {
-      state = { ...initialState, rackConfig: { ...DEFAULT_RACK_CONFIG } };
+      state = {
+        ...initialState,
+        rackConfig: { ...DEFAULT_RACK_CONFIG },
+        multiRackEnabled: false,
+        racks: [],
+        activeRackId: null,
+      };
       history = [deepClone(state)];
       historyIndex = 0;
       notify();
@@ -1941,7 +2230,13 @@ function dispatch(action, payload) {
     }
 
     case 'LOAD_STATE': {
-      state = { ...initialState, ...payload };
+      state = {
+        ...initialState,
+        ...payload,
+        multiRackEnabled: payload.multiRackEnabled || false,
+        racks: payload.racks || [],
+        activeRackId: payload.activeRackId || null,
+      };
       history = [deepClone(state)];
       historyIndex = 0;
       notify();
@@ -1954,9 +2249,9 @@ function dispatch(action, payload) {
   }
 }
 
-// ─── rack-view.js ────────────────────────────────────────────────────────────
-// Rack visualization renderer
 
+// ─── rack-view.js ───
+// Rack visualization renderer
 
 
 // Cached unit height — recalculated on each render
@@ -1984,7 +2279,9 @@ function getUnitHeight() {
  */
 function renderRack(state) {
   const container = document.getElementById('rack-view');
-  const { rackConfig, devices, selectedDeviceId } = state;
+  const rackConfig = getActiveRackConfig(state);
+  const devices = getActiveDevices(state);
+  const { selectedDeviceId } = state;
   const { totalUnits, numberingDirection } = rackConfig;
 
   // Dynamic unit height
@@ -2176,11 +2473,9 @@ function getPositionPixels(position, height, totalUnits, numberingDirection) {
   };
 }
 
-// ─── device-form.js ──────────────────────────────────────────────────────────
+
+// ─── device-form.js ───
 // Device form handling (add, edit, bulk creation)
-
-
-
 
 
 let editingDeviceId = null;
@@ -2198,7 +2493,7 @@ function initDeviceForm() {
   faceRadios.forEach(radio => {
     radio.addEventListener('change', () => {
       if (!editingDeviceId) {
-        const cfg = getState().rackConfig;
+        const cfg = getActiveRackConfig();
         const colorInput = document.getElementById('dev-color');
         colorInput.value = radio.value === 'rear'
           ? (cfg.rearColor || '#f97316')
@@ -2271,9 +2566,11 @@ function getPositionValue() {
 
 function resolvePosition(posValue, height, face) {
   const state = getState();
+  const cfg = getActiveRackConfig(state);
+  const devices = getActiveDevices(state);
   if (posValue === '' || posValue.toLowerCase() === 'auto') {
     const fullDepth = document.getElementById('dev-full-depth').checked;
-    return findNextFreeSlot(state.devices, height, face, state.rackConfig.totalUnits, 1, fullDepth);
+    return findNextFreeSlot(devices, height, face, cfg.totalUnits, 1, fullDepth);
   }
   const pos = parseInt(posValue);
   return isNaN(pos) ? null : pos;
@@ -2363,6 +2660,8 @@ function handleBulkCreate() {
     // Sequential stacking mode
     const posValue = getPositionValue();
     const state = getState();
+    const cfg = getActiveRackConfig(state);
+    const activeDevs = getActiveDevices(state);
     const bulkDirection = document.getElementById('bulk-direction').value;
     const isTopDown = bulkDirection === 'top-to-bottom';
     const isAuto = posValue === '' || posValue.toLowerCase() === 'auto';
@@ -2370,11 +2669,9 @@ function handleBulkCreate() {
     let startPos;
     if (isAuto) {
       if (isTopDown) {
-        // Auto + top-down: start from the top of the rack
-        startPos = findNextFreeSlotReverse(state.devices, data.height, data.face, state.rackConfig.totalUnits, null, data.fullDepth);
+        startPos = findNextFreeSlotReverse(activeDevs, data.height, data.face, cfg.totalUnits, null, data.fullDepth);
       } else {
-        // Auto + bottom-up: start from the bottom
-        startPos = findNextFreeSlot(state.devices, data.height, data.face, state.rackConfig.totalUnits, 1, data.fullDepth);
+        startPos = findNextFreeSlot(activeDevs, data.height, data.face, cfg.totalUnits, 1, data.fullDepth);
       }
     } else {
       startPos = parseInt(posValue);
@@ -2387,14 +2684,14 @@ function handleBulkCreate() {
     }
 
     // Simulate placement to find sequential positions
-    const tempDevices = [...state.devices];
+    const tempDevices = [...activeDevs];
     let currentPos = startPos;
     for (let i = 0; i < qty; i++) {
       let slot;
       if (isTopDown) {
-        slot = findNextFreeSlotReverse(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
+        slot = findNextFreeSlotReverse(tempDevices, data.height, data.face, cfg.totalUnits, currentPos, data.fullDepth);
       } else {
-        slot = findNextFreeSlot(tempDevices, data.height, data.face, state.rackConfig.totalUnits, currentPos, data.fullDepth);
+        slot = findNextFreeSlot(tempDevices, data.height, data.face, cfg.totalUnits, currentPos, data.fullDepth);
       }
       if (slot === null) {
         showMessage(t('msg_only_fit', { placed: i, total: qty }), 'error');
@@ -2482,7 +2779,7 @@ function resetForm() {
   document.getElementById('device-form').reset();
   document.getElementById('dev-position').value = 'auto';
   document.getElementById('dev-full-depth').checked = false;
-  document.getElementById('dev-color').value = getState().rackConfig.frontColor || '#3b82f6';
+  document.getElementById('dev-color').value = getActiveRackConfig().frontColor || '#3b82f6';
   document.getElementById('form-title').textContent = t('add_device');
   document.getElementById('form-submit-btn').textContent = t('btn_add');
   document.getElementById('form-delete-btn').style.display = 'none';
@@ -2509,10 +2806,9 @@ function showMessage(text, type) {
   }
 }
 
-// ─── drag-drop.js ────────────────────────────────────────────────────────────
+
+// ─── drag-drop.js ───
 // Drag and drop handling for repositioning devices in the rack
-
-
 
 
 let dragDeviceId = null;
@@ -2552,7 +2848,8 @@ function handleDragStart(e) {
   const face = block.closest('.rack-face');
   const faceRect = face.getBoundingClientRect();
   const relY = e.clientY - faceRect.top;
-  const clickedUnit = getUnitFromY(relY, state.rackConfig.totalUnits, state.rackConfig.numberingDirection);
+  const cfg = getActiveRackConfig(state);
+  const clickedUnit = getUnitFromY(relY, cfg.totalUnits, cfg.numberingDirection);
   dragGrabOffset = clickedUnit - device.position;
 
   block.classList.add('dragging');
@@ -2594,7 +2891,9 @@ function updateDragHighlights(clientY, target) {
   const faceRect = face.getBoundingClientRect();
   const relY = clientY - faceRect.top;
   const state = getState();
-  const hoveredUnit = getUnitFromY(relY, state.rackConfig.totalUnits, state.rackConfig.numberingDirection);
+  const cfg = getActiveRackConfig(state);
+  const activeDevs = getActiveDevices(state);
+  const hoveredUnit = getUnitFromY(relY, cfg.totalUnits, cfg.numberingDirection);
   const targetPosition = hoveredUnit - dragGrabOffset;
 
   // Skip if position hasn't changed
@@ -2610,8 +2909,8 @@ function updateDragHighlights(clientY, target) {
 
   // Check placement validity
   const result = canPlace(
-    state.devices, targetPosition, dragDeviceHeight,
-    faceType, state.rackConfig.totalUnits, dragDeviceId, dragDeviceFullDepth
+    activeDevs, targetPosition, dragDeviceHeight,
+    faceType, cfg.totalUnits, dragDeviceId, dragDeviceFullDepth
   );
 
   // Highlight target cells
@@ -2627,12 +2926,11 @@ function updateDragHighlights(clientY, target) {
 
   // Position snap guide
   if (snapGuide) {
-    // Ensure snap guide is in the correct face
     if (snapGuide.parentElement !== face) {
       if (snapGuide.parentElement) snapGuide.remove();
       face.appendChild(snapGuide);
     }
-    const px = getPositionPixels(targetPosition, dragDeviceHeight, state.rackConfig.totalUnits, state.rackConfig.numberingDirection);
+    const px = getPositionPixels(targetPosition, dragDeviceHeight, cfg.totalUnits, cfg.numberingDirection);
     snapGuide.style.top = `${px.top}px`;
     snapGuide.style.height = `${px.height}px`;
     snapGuide.classList.toggle('invalid', !result.ok);
@@ -2652,11 +2950,12 @@ function handleDrop(e) {
   const faceRect = face.getBoundingClientRect();
   const relY = e.clientY - faceRect.top;
   const state = getState();
-  const hoveredUnit = getUnitFromY(relY, state.rackConfig.totalUnits, state.rackConfig.numberingDirection);
+  const cfg = getActiveRackConfig(state);
+  const hoveredUnit = getUnitFromY(relY, cfg.totalUnits, cfg.numberingDirection);
   let targetPosition = hoveredUnit - dragGrabOffset;
 
   // Clamp to valid range
-  targetPosition = Math.max(1, Math.min(state.rackConfig.totalUnits - dragDeviceHeight + 1, targetPosition));
+  targetPosition = Math.max(1, Math.min(cfg.totalUnits - dragDeviceHeight + 1, targetPosition));
 
   if (!Number.isInteger(targetPosition)) return;
 
@@ -2695,10 +2994,9 @@ function resetDragState() {
   rafPending = false;
 }
 
-// ─── export.js ───────────────────────────────────────────────────────────────
+
+// ─── export.js ───
 // NetBox JSON export + YAML + CSV + Project save/load + download/clipboard
-
-
 
 
 function initExport() {
@@ -2721,11 +3019,23 @@ function initExport() {
 
 function getExportData() {
   const state = getState();
+  if (state.multiRackEnabled && state.racks.length > 0) {
+    const allData = [];
+    for (const rack of state.racks) {
+      const devs = state.devices.filter(d => d.rackId === rack.id);
+      allData.push(...toNetBoxJSON(devs, rack));
+    }
+    return allData;
+  }
   return toNetBoxJSON(state.devices, state.rackConfig);
 }
 
 function getRackName() {
-  return getState().rackConfig.name;
+  const state = getState();
+  if (state.multiRackEnabled && state.racks.length > 0) {
+    return state.rackConfig.site || state.racks[0].name || 'multi-rack';
+  }
+  return state.rackConfig.name;
 }
 
 // ─── NetBox JSON ────────────────────────────────────────────────────────────
@@ -2833,24 +3143,31 @@ function saveProject() {
   const state = getState();
   if (!state.devices.length) { alert(t('msg_no_export')); return; }
 
+  const mapDevice = d => ({
+    name: d.name,
+    manufacturer: d.manufacturer,
+    deviceType: d.deviceType,
+    role: d.role,
+    position: d.position,
+    height: d.height,
+    face: d.face,
+    status: d.status,
+    serial: d.serial,
+    assetTag: d.assetTag,
+    fullDepth: d.fullDepth,
+    comments: d.comments,
+    _color: d._color,
+    ...(d.rackId ? { rackId: d.rackId } : {}),
+  });
+
   const project = {
     _format: 'rackbuilder-project',
-    _version: '0.4.0',
+    _version: '0.5.0',
     rackConfig: state.rackConfig,
-    devices: state.devices.map(d => ({
-      name: d.name,
-      manufacturer: d.manufacturer,
-      deviceType: d.deviceType,
-      role: d.role,
-      position: d.position,
-      height: d.height,
-      face: d.face,
-      status: d.status,
-      serial: d.serial,
-      assetTag: d.assetTag,
-      comments: d.comments,
-      _color: d._color,
-    })),
+    multiRackEnabled: state.multiRackEnabled,
+    racks: state.racks,
+    activeRackId: state.activeRackId,
+    devices: state.devices.map(mapDevice),
   };
 
   triggerDownload(
@@ -2870,19 +3187,16 @@ function loadProject(e) {
       const data = JSON.parse(event.target.result);
 
       if (data._format === 'rackbuilder-project') {
-        // Internal project format — load rack config + devices with height
-        if (data.rackConfig) {
-          dispatch('UPDATE_RACK_CONFIG', data.rackConfig);
-        }
-        // Clear existing devices first
-        dispatch('CLEAR_DEVICES');
-        if (Array.isArray(data.devices) && data.devices.length) {
-          const result = dispatch('BULK_ADD_DEVICES', { devices: data.devices });
-          if (result.ok) {
-            const placed = result.results.filter(r => r.ok).length;
-            alert(t('msg_import_success', { placed, total: data.devices.length }));
-          }
-        }
+        // Internal project format — load full state
+        dispatch('LOAD_STATE', {
+          rackConfig: data.rackConfig || {},
+          devices: data.devices || [],
+          multiRackEnabled: data.multiRackEnabled || false,
+          racks: data.racks || [],
+          activeRackId: data.activeRackId || null,
+        });
+        const placed = (data.devices || []).length;
+        alert(t('msg_import_success', { placed, total: placed }));
       } else {
         alert(t('msg_import_invalid'));
       }
@@ -2922,11 +3236,12 @@ function importJSON(e) {
         deviceType: d.device_type || '',
         role: d.role || '',
         position: d.position || 1,
-        height: 1,
+        height: d.u_height || d.height || 1,
         face: d.face || 'front',
         status: d.status || 'planned',
         serial: d.serial || '',
         assetTag: d.asset_tag || '',
+        fullDepth: d.full_depth || false,
         comments: d.comments || '',
         _color: d.face === 'rear' ? '#f97316' : '#3b82f6',
       }));
@@ -2958,15 +3273,9 @@ function triggerDownload(content, filename, mimeType) {
   URL.revokeObjectURL(url);
 }
 
-// ─── app.js ──────────────────────────────────────────────────────────────────
+
+// ─── app.js ───
 // Rack Builder — Main application bootstrap
-
-
-
-
-
-
-
 
 
 // Initialize the application
@@ -2981,6 +3290,7 @@ function init() {
 
   // Subscribe to state changes
   subscribe((state) => {
+    renderRackTabs(state);
     renderRack(state);
     renderDeviceList(state);
     handleSelection(state);
@@ -3005,7 +3315,7 @@ function init() {
   updateStorageIndicator();
   updateStats(state);
 
-  // Service worker removed — minimalist single-file version
+
 }
 
 // ─── Theme ──────────────────────────────────────────────────────────────────
@@ -3049,7 +3359,8 @@ function initLang() {
 function renderDeviceList(state) {
   const container = document.getElementById('device-list');
   const countEl = document.getElementById('device-count');
-  const { devices, selectedDeviceId } = state;
+  const devices = getActiveDevices(state);
+  const { selectedDeviceId } = state;
 
   countEl.textContent = devices.length;
 
@@ -3102,16 +3413,64 @@ function handleSelection(state) {
 function initSettings() {
   const modal = document.getElementById('settings-modal');
   const form = document.getElementById('settings-form');
+  const multiRackCheckbox = document.getElementById('setting-multi-rack');
+  const singleRackFields = document.getElementById('single-rack-fields');
+  const multiRackFields = document.getElementById('multi-rack-fields');
+  const rackCountInput = document.getElementById('setting-rack-count');
+
+  function toggleMultiRackUI(enabled) {
+    singleRackFields.style.display = enabled ? 'none' : 'block';
+    multiRackFields.style.display = enabled ? 'block' : 'none';
+    if (enabled) renderRackRows();
+  }
+
+  function renderRackRows() {
+    const count = parseInt(rackCountInput.value) || 1;
+    const container = document.getElementById('rack-rows');
+    const state = getState();
+    const existingRacks = state.racks || [];
+    let html = '';
+    for (let i = 0; i < count; i++) {
+      const rack = existingRacks[i] || {};
+      html += `<div class="rack-config-row">
+        <span class="rack-row-num">${i + 1}.</span>
+        <input type="text" class="rack-row-name" value="${rack.name || `Rack-${String(i + 1).padStart(2, '0')}`}" placeholder="${t('setting_name')}" required>
+        <input type="number" class="rack-row-units" value="${rack.totalUnits || 42}" min="1" max="60" required>
+        <span class="rack-row-label">U</span>
+      </div>`;
+    }
+    container.innerHTML = html;
+  }
+
+  multiRackCheckbox.addEventListener('change', () => {
+    toggleMultiRackUI(multiRackCheckbox.checked);
+  });
+
+  rackCountInput.addEventListener('input', renderRackRows);
 
   document.getElementById('settings-btn').addEventListener('click', () => {
-    const { rackConfig } = getState();
-    document.getElementById('setting-name').value = rackConfig.name;
-    document.getElementById('setting-units').value = rackConfig.totalUnits;
-    document.getElementById('setting-direction').value = rackConfig.numberingDirection;
-    document.getElementById('setting-site').value = rackConfig.site;
-    document.getElementById('setting-location').value = rackConfig.location;
-    document.getElementById('setting-front-color').value = rackConfig.frontColor || '#3b82f6';
-    document.getElementById('setting-rear-color').value = rackConfig.rearColor || '#f97316';
+    const state = getState();
+    const cfg = state.rackConfig;
+
+    // Common fields
+    document.getElementById('setting-site').value = cfg.site;
+    document.getElementById('setting-location').value = cfg.location;
+
+    // Multi-rack state
+    multiRackCheckbox.checked = state.multiRackEnabled;
+    rackCountInput.value = state.multiRackEnabled ? state.racks.length : 2;
+
+    if (state.multiRackEnabled) {
+      toggleMultiRackUI(true);
+    } else {
+      // Single rack fields
+      document.getElementById('setting-name').value = cfg.name;
+      document.getElementById('setting-units').value = cfg.totalUnits;
+      document.getElementById('setting-direction').value = cfg.numberingDirection;
+      document.getElementById('setting-front-color').value = cfg.frontColor || '#3b82f6';
+      document.getElementById('setting-rear-color').value = cfg.rearColor || '#f97316';
+      toggleMultiRackUI(false);
+    }
     modal.showModal();
   });
 
@@ -3121,15 +3480,42 @@ function initSettings() {
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    dispatch('UPDATE_RACK_CONFIG', {
-      name: document.getElementById('setting-name').value.trim(),
-      totalUnits: parseInt(document.getElementById('setting-units').value) || 42,
-      numberingDirection: document.getElementById('setting-direction').value,
-      site: document.getElementById('setting-site').value.trim(),
-      location: document.getElementById('setting-location').value.trim(),
-      frontColor: document.getElementById('setting-front-color').value,
-      rearColor: document.getElementById('setting-rear-color').value,
-    });
+    const site = document.getElementById('setting-site').value.trim();
+    const location = document.getElementById('setting-location').value.trim();
+
+    if (multiRackCheckbox.checked) {
+      // Multi-rack mode
+      const rows = document.querySelectorAll('.rack-config-row');
+      const state = getState();
+      const existingRacks = state.racks || [];
+      const racks = [];
+      rows.forEach((row, i) => {
+        const existing = existingRacks[i] || {};
+        racks.push({
+          id: existing.id || undefined,
+          name: row.querySelector('.rack-row-name').value.trim(),
+          totalUnits: parseInt(row.querySelector('.rack-row-units').value) || 42,
+          numberingDirection: existing.numberingDirection || 'bottom-to-top',
+          frontColor: existing.frontColor || '#3b82f6',
+          rearColor: existing.rearColor || '#f97316',
+          site,
+          location,
+        });
+      });
+      dispatch('SET_MULTI_RACK', { enabled: true, racks, site, location });
+    } else {
+      // Single rack mode
+      dispatch('SET_MULTI_RACK', { enabled: false, racks: [], site, location });
+      dispatch('UPDATE_RACK_CONFIG', {
+        name: document.getElementById('setting-name').value.trim(),
+        totalUnits: parseInt(document.getElementById('setting-units').value) || 42,
+        numberingDirection: document.getElementById('setting-direction').value,
+        site,
+        location,
+        frontColor: document.getElementById('setting-front-color').value,
+        rearColor: document.getElementById('setting-rear-color').value,
+      });
+    }
     modal.close();
   });
 }
@@ -3187,7 +3573,9 @@ function initClearButton() {
 // ─── Live Statistics ────────────────────────────────────────────────────────
 
 function updateStats(state) {
-  const stats = getRackUtilization(state.devices, state.rackConfig.totalUnits);
+  const cfg = getActiveRackConfig(state);
+  const devices = getActiveDevices(state);
+  const stats = getRackUtilization(devices, cfg.totalUnits);
   const el = document.getElementById('rack-stats');
   if (el) {
     el.textContent = `${stats.totalPercent}% ${t('stat_used')} (F: ${stats.frontPercent}% | R: ${stats.rearPercent}%)`;
@@ -3210,8 +3598,18 @@ function initJsonPreview() {
 function updateJsonPreview(state) {
   const el = document.getElementById('json-preview');
   if (!el || el.style.display === 'none') return;
-  const data = toNetBoxJSON(state.devices, state.rackConfig);
-  el.textContent = JSON.stringify(data, null, 2);
+  // In multi-rack mode, show all devices from all racks
+  if (state.multiRackEnabled && state.racks.length > 0) {
+    const allData = [];
+    for (const rack of state.racks) {
+      const devs = state.devices.filter(d => d.rackId === rack.id);
+      allData.push(...toNetBoxJSON(devs, rack));
+    }
+    el.textContent = JSON.stringify(allData, null, 2);
+  } else {
+    const data = toNetBoxJSON(state.devices, state.rackConfig);
+    el.textContent = JSON.stringify(data, null, 2);
+  }
 }
 
 // ─── Storage indicator ──────────────────────────────────────────────────────
@@ -3312,6 +3710,36 @@ function initBulkPositionHighlight() {
   });
 }
 
+// ─── Rack Tabs (Multi-Rack) ──────────────────────────────────────────────────
+
+function renderRackTabs(state) {
+  const container = document.getElementById('rack-tabs');
+  if (!container) return;
+
+  if (!state.multiRackEnabled || state.racks.length === 0) {
+    container.innerHTML = '';
+    container.style.display = 'none';
+    return;
+  }
+
+  container.style.display = 'flex';
+  container.innerHTML = state.racks.map(rack => {
+    const devs = state.devices.filter(d => d.rackId === rack.id);
+    const stats = getRackUtilization(devs, rack.totalUnits);
+    const isActive = rack.id === state.activeRackId;
+    return `<button class="rack-tab${isActive ? ' active' : ''}" data-rack-id="${rack.id}">
+      <span class="rack-tab-name">${rack.name}</span>
+      <span class="rack-tab-info">${rack.totalUnits}U · ${stats.totalPercent}%</span>
+    </button>`;
+  }).join('');
+
+  container.querySelectorAll('.rack-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      dispatch('SET_ACTIVE_RACK', tab.dataset.rackId);
+    });
+  });
+}
+
 // ─── Undo/Redo ──────────────────────────────────────────────────────────────
 
 function initUndoRedo() {
@@ -3328,6 +3756,7 @@ function updateUndoRedoButtons() {
 // Start
 document.addEventListener('DOMContentLoaded', init);
 
+})();
 </script>
 </body>
 </html>

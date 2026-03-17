@@ -3,7 +3,7 @@
 const translations = {
   en: {
     app_title: 'Rack Builder',
-    version: 'v0.4.0',
+    version: 'v0.5.0',
     btn_settings: 'Settings',
     btn_clear_devices: 'Clear Devices',
     btn_reset_all: 'Reset All',
@@ -108,11 +108,13 @@ const translations = {
     bulk_direction: 'Stacking Direction',
     bulk_dir_up: 'Bottom → Top (ascending)',
     bulk_dir_down: 'Top → Bottom (descending)',
+    setting_multi_rack: 'Multi-Rack Mode',
+    setting_rack_count: 'Number of Racks',
     ph_comments: '',
   },
   de: {
     app_title: 'Rack Builder',
-    version: 'v0.4.0',
+    version: 'v0.5.0',
     btn_settings: 'Einstellungen',
     btn_clear_devices: 'Geräte löschen',
     btn_reset_all: 'Alles zurücksetzen',
@@ -217,6 +219,8 @@ const translations = {
     bulk_direction: 'Stapelrichtung',
     bulk_dir_up: 'Unten → Oben (aufsteigend)',
     bulk_dir_down: 'Oben → Unten (absteigend)',
+    setting_multi_rack: 'Multi-Rack-Modus',
+    setting_rack_count: 'Anzahl der Racks',
     ph_comments: '',
   },
 };
