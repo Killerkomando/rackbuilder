@@ -518,40 +518,75 @@ function initAccordionAnimations() {
     const body = details.querySelector('.sidebar-accordion-body');
     if (!summary || !body) return;
 
+    let isAnimating = false;
+
     summary.addEventListener('click', (e) => {
       e.preventDefault();
+      if (isAnimating) return;
+      isAnimating = true;
 
       if (details.open) {
-        // Closing: animate height to 0 then remove open
-        const height = body.scrollHeight;
-        body.style.height = height + 'px';
-        body.classList.add('accordion-animating');
+        // ── Close ──
+        // 1. Lock current height so the browser has a start value
+        body.style.height = body.scrollHeight + 'px';
+        body.style.opacity = '1';
+        body.style.paddingTop = getComputedStyle(body).paddingTop;
+        body.style.paddingBottom = getComputedStyle(body).paddingBottom;
+
+        // 2. Enable transition after one frame, then set target values
         requestAnimationFrame(() => {
-          body.classList.add('accordion-collapsed');
-          body.style.height = '0px';
+          body.classList.add('accordion-animating');
+          requestAnimationFrame(() => {
+            body.style.height = '0px';
+            body.style.opacity = '0';
+            body.style.paddingTop = '0px';
+            body.style.paddingBottom = '0px';
+          });
         });
-        body.addEventListener('transitionend', function handler() {
+
+        // 3. Clean up after transition finishes (listen only for height)
+        body.addEventListener('transitionend', function handler(ev) {
+          if (ev.propertyName !== 'height') return;
           body.removeEventListener('transitionend', handler);
           details.removeAttribute('open');
-          body.classList.remove('accordion-animating', 'accordion-collapsed');
+          body.classList.remove('accordion-animating');
           body.style.height = '';
+          body.style.opacity = '';
+          body.style.paddingTop = '';
+          body.style.paddingBottom = '';
+          isAnimating = false;
         });
       } else {
-        // Opening: set open, then animate from 0
+        // ── Open ──
+        // 1. Set open so content renders (needed to measure scrollHeight)
         details.setAttribute('open', '');
-        const height = body.scrollHeight;
+
+        // 2. Start from collapsed
+        const targetHeight = body.scrollHeight;
         body.style.height = '0px';
         body.style.opacity = '0';
-        body.classList.add('accordion-animating');
+        body.style.paddingTop = '0px';
+        body.style.paddingBottom = '0px';
+
+        // 3. Enable transition after one frame, then set target values
         requestAnimationFrame(() => {
-          body.style.height = height + 'px';
-          body.style.opacity = '1';
+          body.classList.add('accordion-animating');
+          requestAnimationFrame(() => {
+            body.style.height = targetHeight + 'px';
+            body.style.opacity = '1';
+            body.style.paddingTop = '';
+            body.style.paddingBottom = '';
+          });
         });
-        body.addEventListener('transitionend', function handler() {
+
+        // 4. Clean up
+        body.addEventListener('transitionend', function handler(ev) {
+          if (ev.propertyName !== 'height') return;
           body.removeEventListener('transitionend', handler);
           body.classList.remove('accordion-animating');
           body.style.height = '';
           body.style.opacity = '';
+          isAnimating = false;
         });
       }
     });

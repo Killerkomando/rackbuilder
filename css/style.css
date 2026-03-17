@@ -804,17 +804,12 @@ body {
   overflow: hidden;
 }
 
-/* Animated accordion: JS controls these classes */
+/* Animated accordion: JS adds this class during open/close */
 .sidebar-accordion-body.accordion-animating {
-  transition: height 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-              opacity 0.2s ease;
-}
-
-.sidebar-accordion-body.accordion-collapsed {
-  height: 0 !important;
-  opacity: 0;
-  padding-top: 0;
-  padding-bottom: 0;
+  transition: height 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              padding-top 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              padding-bottom 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              opacity 0.3s ease;
 }
 
 .sidebar-accordion-body .btn {
