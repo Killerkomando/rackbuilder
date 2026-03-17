@@ -755,7 +755,7 @@ dialog {
   border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 24px;
-  max-width: 480px;
+  max-width: 540px;
   width: 90%;
   position: fixed;
   top: 50%;
@@ -923,6 +923,23 @@ dialog .dialog-actions {
 .rack-row-label {
   font-size: 12px;
   color: var(--color-text-muted);
+}
+
+.rack-row-direction {
+  padding: 7px 6px;
+  background: var(--bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.rack-row-direction:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25);
 }
 
 /* Scrollbar */
