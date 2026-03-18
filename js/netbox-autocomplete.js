@@ -253,7 +253,7 @@ function selectOption(inputId, index) {
   const state = activeDropdowns.get(inputId);
   if (!state || !state.filtered || !state.filtered[index]) return;
   const input = document.getElementById(inputId);
-  input.value = state.filtered[index].slug;
+  input.value = state.filtered[index].name;
   input.dispatchEvent(new Event('input', { bubbles: true }));
   closeDropdown(inputId);
 }
