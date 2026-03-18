@@ -46,13 +46,17 @@
       <div class="form-row">
         <div class="form-group">
           <label for="dev-type" data-i18n="label_device_type">Device Type</label>
-          <input type="text" id="dev-type" required data-i18n-placeholder="ph_type" placeholder="e.g. catalyst-9300">
+          <input type="text" id="dev-type" required data-i18n-placeholder="ph_type" placeholder="e.g. catalyst-9300" list="netbox-device-types-list">
         </div>
         <div class="form-group">
           <label for="dev-role" data-i18n="label_role">Role</label>
-          <input type="text" id="dev-role" required data-i18n-placeholder="ph_role" placeholder="e.g. access-switch">
+          <input type="text" id="dev-role" required data-i18n-placeholder="ph_role" placeholder="e.g. access-switch" list="netbox-roles-list">
         </div>
       </div>
+
+      <!-- Datalists for NetBox autocomplete (populated by JS if data uploaded) -->
+      <datalist id="netbox-device-types-list"></datalist>
+      <datalist id="netbox-roles-list"></datalist>
 
       <div class="form-row">
         <div class="form-group">
@@ -300,6 +304,33 @@
         <input type="number" id="setting-rack-count" min="1" max="20" value="2">
       </div>
       <div id="rack-rows"></div>
+    </div>
+
+    <!-- NetBox Autocomplete (Opt-In) -->
+    <div class="netbox-autocomplete-section">
+      <h3 class="settings-section-title" data-i18n="netbox_autocomplete_title">NetBox Autocomplete (Optional)</h3>
+      <p class="settings-section-desc" data-i18n="netbox_autocomplete_desc">Upload exported JSON files from NetBox to enable autocomplete for Device Types and Roles.</p>
+
+      <div class="netbox-upload-row">
+        <div class="netbox-upload-group">
+          <label data-i18n="netbox_device_types">Device Types</label>
+          <div class="netbox-upload-controls">
+            <button type="button" class="btn btn-secondary btn-sm" id="netbox-upload-types-btn" data-i18n="netbox_btn_upload">Upload JSON</button>
+            <button type="button" class="btn btn-danger btn-sm" id="netbox-clear-types-btn" style="display:none" data-i18n="netbox_btn_clear">Clear</button>
+            <input type="file" id="netbox-types-file" accept=".json" style="display:none">
+          </div>
+          <span class="netbox-status empty" id="netbox-types-status" data-i18n="netbox_not_loaded">Not loaded</span>
+        </div>
+        <div class="netbox-upload-group">
+          <label data-i18n="netbox_roles">Roles</label>
+          <div class="netbox-upload-controls">
+            <button type="button" class="btn btn-secondary btn-sm" id="netbox-upload-roles-btn" data-i18n="netbox_btn_upload">Upload JSON</button>
+            <button type="button" class="btn btn-danger btn-sm" id="netbox-clear-roles-btn" style="display:none" data-i18n="netbox_btn_clear">Clear</button>
+            <input type="file" id="netbox-roles-file" accept=".json" style="display:none">
+          </div>
+          <span class="netbox-status empty" id="netbox-roles-status" data-i18n="netbox_not_loaded">Not loaded</span>
+        </div>
+      </div>
     </div>
 
     <div class="dialog-actions">
