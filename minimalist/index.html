@@ -4252,7 +4252,20 @@ function initAccordionAnimations() {
 // ─── Live JSON Preview ──────────────────────────────────────────────────────
 
 function initJsonPreview() {
-  // JSON preview is now in an accordion, no separate toggle needed
+  // When the JSON preview accordion opens, refresh the preview content
+  const toggle = document.getElementById('json-preview-toggle');
+  if (toggle) {
+    const details = toggle.closest('.sidebar-accordion');
+    if (details) {
+      // Use MutationObserver to detect when 'open' attribute is added
+      const observer = new MutationObserver(() => {
+        if (details.open) {
+          updateJsonPreview(getState());
+        }
+      });
+      observer.observe(details, { attributes: true, attributeFilter: ['open'] });
+    }
+  }
 }
 
 function updateJsonPreview(state) {
