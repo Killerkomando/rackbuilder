@@ -8,6 +8,7 @@ import { initDeviceForm, populateFormForEdit } from './device-form.js';
 import { initDragDrop } from './drag-drop.js';
 import { initExport } from './export.js';
 import { t, getCurrentLang, setLang, applyTranslations } from './i18n.js';
+import { initNetboxAutocomplete } from './netbox-autocomplete.js';
 
 // Initialize the application
 function init() {
@@ -43,6 +44,7 @@ function init() {
   initJsonPreview();
   initStorageIndicator();
   initBulkPositionHighlight();
+  initNetboxAutocomplete();
   initAccordionAnimations();
   updateStorageIndicator();
   updateStats(state);
@@ -228,8 +230,27 @@ function initSettings() {
     const container = document.getElementById('rack-rows');
     const state = getState();
     const existingRacks = state.racks || [];
-    const prevCount = container.querySelectorAll('.rack-config-row').length;
+    const currentRows = container.querySelectorAll('.rack-config-row');
+    const prevCount = currentRows.length;
 
+    if (count < prevCount) {
+      // ── Animate removal of excess rows, then rebuild ──
+      const rowsToRemove = Array.from(currentRows).slice(count);
+      let pending = rowsToRemove.length;
+      rowsToRemove.forEach((row, idx) => {
+        row.style.animationDelay = (idx * 50) + 'ms';
+        row.classList.add('rack-row-exit');
+        row.addEventListener('animationend', () => {
+          pending--;
+          if (pending === 0) buildRows(count, container, existingRacks, prevCount);
+        }, { once: true });
+      });
+    } else {
+      buildRows(count, container, existingRacks, prevCount);
+    }
+  }
+
+  function buildRows(count, container, existingRacks, prevCount) {
     let html = '';
     for (let i = 0; i < count; i++) {
       const rack = existingRacks[i] || {};

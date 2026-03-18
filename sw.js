@@ -1,6 +1,6 @@
 // Service Worker for offline capability
 
-const CACHE_NAME = 'rackbuilder-v3';
+const CACHE_NAME = 'rackbuilder-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -14,6 +14,7 @@ const ASSETS = [
   './js/export.js',
   './js/utils.js',
   './js/i18n.js',
+  './js/netbox-autocomplete.js',
   './manifest.json',
 ];
 
