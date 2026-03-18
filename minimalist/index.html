@@ -983,12 +983,43 @@ dialog {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(1);
   margin: 0;
+  opacity: 1;
+  animation: dialog-open 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+dialog.dialog-closing {
+  animation: dialog-close 0.2s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+@keyframes dialog-open {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.92); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes dialog-close {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  to { opacity: 0; transform: translate(-50%, -50%) scale(0.92); }
 }
 
 dialog::backdrop {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0);
+  animation: backdrop-open 0.25s ease forwards;
+}
+
+dialog.dialog-closing::backdrop {
+  animation: backdrop-close 0.2s ease forwards;
+}
+
+@keyframes backdrop-open {
+  from { background: rgba(0, 0, 0, 0); }
+  to { background: rgba(0, 0, 0, 0.6); }
+}
+
+@keyframes backdrop-close {
+  from { background: rgba(0, 0, 0, 0.6); }
+  to { background: rgba(0, 0, 0, 0); }
 }
 
 dialog h2 {
@@ -1100,6 +1131,28 @@ dialog .dialog-actions {
 }
 
 /* Multi-rack settings rows */
+/* Entrance animation for new rack rows */
+@keyframes rackRowSlideIn {
+  from { opacity: 0; transform: translateY(-8px); max-height: 0; }
+  to { opacity: 1; transform: translateY(0); max-height: 60px; }
+}
+
+.rack-row-enter {
+  animation: rackRowSlideIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* Exit animation for removed rack rows */
+@keyframes rackRowSlideOut {
+  from { opacity: 1; transform: translateX(0); max-height: 60px; }
+  to { opacity: 0; transform: translateX(20px); max-height: 0; margin-bottom: 0; }
+}
+
+.rack-row-exit {
+  animation: rackRowSlideOut 0.25s cubic-bezier(0.55, 0.06, 0.68, 0.19) both;
+  pointer-events: none;
+  overflow: hidden;
+}
+
 .rack-config-row {
   display: flex;
   align-items: center;
@@ -3731,7 +3784,7 @@ function initSettings() {
   const multiRackFields = document.getElementById('multi-rack-fields');
   const rackCountInput = document.getElementById('setting-rack-count');
 
-  function toggleMultiRackUI(enabled) {
+  function toggleMultiRackUI(enabled, animate) {
     singleRackFields.style.display = enabled ? 'none' : 'block';
     multiRackFields.style.display = enabled ? 'block' : 'none';
     if (enabled) renderRackRows();
@@ -3746,7 +3799,7 @@ function initSettings() {
     for (let i = 0; i < count; i++) {
       const rack = existingRacks[i] || {};
       const dir = rack.numberingDirection || 'bottom-to-top';
-      html += `<div class="rack-config-row">
+      html += `<div class="rack-config-row rack-row-enter" style="animation-delay: ${i * 60}ms">
         <span class="rack-row-num">${i + 1}.</span>
         <input type="text" class="rack-row-name" value="${rack.name || `Rack-${String(i + 1).padStart(2, '0')}`}" placeholder="${t('setting_name')}" required>
         <input type="number" class="rack-row-units" value="${rack.totalUnits || 42}" min="1" max="60" required>
@@ -3793,7 +3846,7 @@ function initSettings() {
   });
 
   document.getElementById('settings-cancel').addEventListener('click', () => {
-    modal.close();
+    closeDialogAnimated(modal);
   });
 
   form.addEventListener('submit', (e) => {
@@ -3834,7 +3887,18 @@ function initSettings() {
         rearColor: document.getElementById('setting-rear-color').value,
       });
     }
-    modal.close();
+    closeDialogAnimated(modal);
+  });
+}
+
+// ─── Dialog animation helper ─────────────────────────────────────────────────
+
+function closeDialogAnimated(dialog) {
+  dialog.classList.add('dialog-closing');
+  dialog.addEventListener('animationend', function handler() {
+    dialog.classList.remove('dialog-closing');
+    dialog.close();
+    dialog.removeEventListener('animationend', handler);
   });
 }
 
@@ -3916,10 +3980,10 @@ function saveNetboxEntries(key, entries) { localStorage.setItem(key, JSON.string
 function extractNameSlug(items) {
   if (!Array.isArray(items)) return null;
   const result = items
-    .filter(e => e && (e.name || e.slug || e.display))
+    .filter(e => e && (e.name || e.slug || e.display || e.model))
     .map(e => ({
-      name: e.display || e.name || e.slug,
-      slug: e.slug || (e.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+      name: e.display || e.model || e.name || e.slug,
+      slug: e.slug || (e.model || e.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
     }));
   return result.length > 0 ? result : null;
 }
@@ -3928,6 +3992,8 @@ function parseNetboxJSON(text) {
   const json = JSON.parse(text);
   if (json && typeof json === 'object' && !Array.isArray(json) && Array.isArray(json.results)) return json.results;
   if (Array.isArray(json)) return json;
+  // Single device type object (e.g. from NetBox device type library)
+  if (json && typeof json === 'object' && !Array.isArray(json) && (json.model || json.slug || json.name)) return [json];
   return null;
 }
 
@@ -3948,6 +4014,26 @@ function parseNetboxCSV(text) {
 }
 
 function parseNetboxYAML(text) {
+  // First, extract top-level key-value pairs (for single device type files)
+  const topLevel = {};
+  let hasTopLevel = false;
+  let hasRootList = false;
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.trimEnd();
+    if (line.match(/^-\s/)) { hasRootList = true; break; }
+    const kvMatch = line.match(/^(\w[\w-]*):\s*(.*)/);
+    if (kvMatch && kvMatch[2] && !kvMatch[2].trimStart().startsWith('')) {
+      topLevel[kvMatch[1]] = kvMatch[2].replace(/^["']|["']$/g, '');
+      hasTopLevel = true;
+    }
+  }
+
+  // If we have a single device type file (has model or slug at top level), return it
+  if (hasTopLevel && !hasRootList && (topLevel.model || topLevel.slug || topLevel.name)) {
+    return [topLevel];
+  }
+
+  // Otherwise parse as list of items
   const items = [];
   let current = null;
   for (const rawLine of text.split(/\r?\n/)) {

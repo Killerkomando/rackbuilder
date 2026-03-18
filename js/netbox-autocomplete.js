@@ -34,10 +34,10 @@ export function clearManufacturers() { localStorage.removeItem(STORAGE_KEY_MANUF
 function extractNameSlug(items) {
   if (!Array.isArray(items)) return null;
   const result = items
-    .filter(entry => entry && (entry.name || entry.slug || entry.display))
+    .filter(entry => entry && (entry.name || entry.slug || entry.display || entry.model))
     .map(entry => ({
-      name: entry.display || entry.name || entry.slug,
-      slug: entry.slug || (entry.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+      name: entry.display || entry.model || entry.name || entry.slug,
+      slug: entry.slug || (entry.model || entry.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
     }));
   return result.length > 0 ? result : null;
 }
@@ -50,6 +50,10 @@ function parseJSON(text) {
     return json.results;
   }
   if (Array.isArray(json)) return json;
+  // Single device type object (e.g. from NetBox device type library)
+  if (json && typeof json === 'object' && !Array.isArray(json) && (json.model || json.slug || json.name)) {
+    return [json];
+  }
   return null;
 }
 
@@ -70,6 +74,28 @@ function parseCSV(text) {
 }
 
 function parseYAML(text) {
+  // First, extract top-level key-value pairs (for single device type files)
+  const topLevel = {};
+  let hasTopLevel = false;
+  let hasRootList = false;
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.trimEnd();
+    if (line.match(/^-\s/)) { hasRootList = true; break; }
+    const kvMatch = line.match(/^(\w[\w-]*):\s*(.*)/);
+    if (kvMatch && kvMatch[2] && !kvMatch[2].trimStart().startsWith('')) {
+      topLevel[kvMatch[1]] = kvMatch[2].replace(/^["']|["']$/g, '');
+      hasTopLevel = true;
+    } else if (line.match(/^(\w[\w-]*):\s*$/) || line.match(/^\s/)) {
+      // Nested block or empty value — stop collecting top-level scalars for this key
+    }
+  }
+
+  // If we have a single device type file (has model or slug at top level), return it
+  if (hasTopLevel && !hasRootList && (topLevel.model || topLevel.slug || topLevel.name)) {
+    return [topLevel];
+  }
+
+  // Otherwise parse as list of items (standard list format)
   const items = [];
   let current = null;
   for (const rawLine of text.split(/\r?\n/)) {
