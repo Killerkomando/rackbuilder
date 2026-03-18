@@ -8,7 +8,7 @@ import { initDeviceForm, populateFormForEdit } from './device-form.js';
 import { initDragDrop } from './drag-drop.js';
 import { initExport } from './export.js';
 import { t, getCurrentLang, setLang, applyTranslations } from './i18n.js';
-import { initNetboxAutocomplete, refreshDatalists } from './netbox-autocomplete.js';
+import { initNetboxAutocomplete } from './netbox-autocomplete.js';
 
 // Initialize the application
 function init() {
