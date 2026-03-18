@@ -16,7 +16,7 @@ Works offline as a PWA after the first visit.
 
 ### Minimalist Version
 
-A single-file version with all CSS and JS inlined is available under `minimalist/index.html`. It has no external dependencies and no service worker — just open the file directly:
+A single-file version with all CSS and JS inlined is available under `minimalist/index.html`. It has **full feature parity** with the main app — including NetBox autocomplete (Device Types, Roles, Manufacturers), the modern custom autocomplete dropdown, accordion sidebar, and all other features. No external dependencies and no service worker — just open the file directly:
 
 ```
 open minimalist/index.html
@@ -63,6 +63,12 @@ This is useful for quick deployment, embedding, or environments where multiple f
 - **YAML & CSV Export** — Alternative export formats for other workflows
 - **Project Save / Load** — Save and restore full rack projects including device heights, colors, depth settings, rack configuration, and multi-rack state
 - **NetBox JSON Import** — Re-import previously exported NetBox device lists; reads `u_height`, `height`, and `full_depth` when present
+
+### NetBox Autocomplete (Optional)
+
+- **NetBox Data Upload** — Upload exported Device Types, Roles, and Manufacturers from NetBox (JSON, YAML, or CSV) in Settings to enable autocomplete
+- **Modern Autocomplete Dropdown** — Custom-styled dropdown with fuzzy search, highlighted matches, keyboard navigation (Arrow Up/Down, Enter, Escape), and two-column layout showing name + slug
+- **Per-Field Autocomplete** — Device Type, Role, and Manufacturer fields each get their own autocomplete backed by uploaded NetBox data
 
 ### Live Feedback
 
@@ -144,6 +150,7 @@ js/
   device-form.js    — Add/edit form + bulk creation logic
   drag-drop.js      — HTML5 drag & drop with rAF throttle + snap guides
   export.js         — JSON, YAML, CSV export + project save/load + NetBox import
+  netbox-autocomplete.js — NetBox data upload, parsing, custom autocomplete dropdown
   i18n.js           — German/English translations
   utils.js          — UUID generation, naming sequences, storage utilities
 sw.js               — Service worker (cache-first offline)
