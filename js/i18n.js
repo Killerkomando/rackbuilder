@@ -3,7 +3,7 @@
 const translations = {
   en: {
     app_title: 'Rack Builder',
-    version: 'v0.5.0',
+    version: 'v0.6.0',
     btn_settings: 'Settings',
     btn_clear_devices: 'Clear Devices',
     btn_reset_all: 'Reset All',
@@ -114,7 +114,7 @@ const translations = {
   },
   de: {
     app_title: 'Rack Builder',
-    version: 'v0.5.0',
+    version: 'v0.6.0',
     btn_settings: 'Einstellungen',
     btn_clear_devices: 'Geräte löschen',
     btn_reset_all: 'Alles zurücksetzen',

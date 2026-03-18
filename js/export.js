@@ -167,7 +167,7 @@ function saveProject() {
 
   const project = {
     _format: 'rackbuilder-project',
-    _version: '0.5.0',
+    _version: '0.6.0',
     rackConfig: state.rackConfig,
     multiRackEnabled: state.multiRackEnabled,
     racks: state.racks,

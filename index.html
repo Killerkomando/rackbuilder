@@ -14,7 +14,7 @@
   <h1>
     <span class="rack-icon">&#9638;</span>
     <span data-i18n="app_title">Rack Builder</span>
-    <span class="app-version" data-i18n="version">v0.5.0</span>
+    <span class="app-version" data-i18n="version">v0.6.0</span>
   </h1>
   <div class="header-actions">
     <button class="btn btn-secondary btn-sm" id="undo-btn" data-i18n-title="btn_undo" title="Undo" disabled>&#x21A9;</button>
@@ -83,8 +83,8 @@
       <div class="form-group">
         <label for="dev-status" data-i18n="label_status">Status</label>
         <select id="dev-status">
-          <option value="planned" data-i18n="status_planned">Planned</option>
           <option value="active" data-i18n="status_active">Active</option>
+          <option value="planned" data-i18n="status_planned">Planned</option>
           <option value="staged" data-i18n="status_staged">Staged</option>
           <option value="failed" data-i18n="status_failed">Failed</option>
           <option value="decommissioning" data-i18n="status_decommissioning">Decommissioning</option>
@@ -111,10 +111,6 @@
         <label for="dev-comments" data-i18n="label_comments">Comments</label>
         <textarea id="dev-comments"></textarea>
       </div>
-
-      <button type="submit" class="btn btn-primary btn-block" id="form-submit-btn" data-i18n="btn_add">Add Device</button>
-      <button type="button" class="btn btn-danger btn-block" id="form-delete-btn" data-i18n="btn_delete" style="display:none; margin-top:6px;">Delete Device</button>
-      <button type="button" class="btn btn-secondary btn-block" id="form-cancel-btn" data-i18n="btn_cancel_edit" style="display:none; margin-top:6px;">Cancel Edit</button>
 
       <!-- Bulk Section -->
       <div class="bulk-section">
@@ -156,6 +152,12 @@
           </div>
         </div>
       </div>
+
+      <div class="submit-section">
+        <button type="submit" class="btn btn-primary btn-block" id="form-submit-btn" data-i18n="btn_add">Add Device</button>
+        <button type="button" class="btn btn-danger btn-block" id="form-delete-btn" data-i18n="btn_delete" style="display:none; margin-top:6px;">Delete Device</button>
+        <button type="button" class="btn btn-secondary btn-block" id="form-cancel-btn" data-i18n="btn_cancel_edit" style="display:none; margin-top:6px;">Cancel Edit</button>
+      </div>
     </form>
   </aside>
 
@@ -174,47 +176,69 @@
 
   <!-- Right Sidebar: Export + Device List -->
   <aside class="sidebar-right">
-    <h2 data-i18n="export_title">Export</h2>
-    <h3 style="font-size:12px; color:var(--color-text-muted); margin-bottom:6px;" data-i18n="export_netbox">NetBox Export</h3>
-    <div class="export-section">
-      <button class="btn btn-success btn-block" id="export-json-btn" data-i18n="btn_json">Download JSON</button>
-      <button class="btn btn-secondary btn-block" id="export-yaml-btn" data-i18n="btn_yaml">Download YAML</button>
-      <button class="btn btn-secondary btn-block" id="export-csv-btn" data-i18n="btn_csv">Download CSV</button>
-      <button class="btn btn-secondary btn-block" id="copy-btn" data-i18n="btn_copy">Copy JSON</button>
-    </div>
-
-    <h3 style="font-size:12px; color:var(--color-text-muted); margin-top:12px; margin-bottom:6px;" data-i18n="export_project">Project Save / Load</h3>
-    <div class="export-section">
-      <button class="btn btn-primary btn-block" id="save-project-btn" data-i18n="btn_save_project">Save Project</button>
-      <button class="btn btn-secondary btn-block" id="load-project-btn" data-i18n="btn_load_project">Load Project</button>
-      <input type="file" id="load-project-file" accept=".json" style="display:none">
-    </div>
-
-    <div class="export-section" style="margin-top:12px;">
-      <h3 style="font-size:12px; color:var(--color-text-muted); margin-bottom:6px;" data-i18n="import_title">NetBox Import</h3>
-      <button class="btn btn-secondary btn-block" id="import-btn" data-i18n="btn_import">Import JSON</button>
-      <input type="file" id="import-file" accept=".json" style="display:none">
-    </div>
-
-    <div class="json-preview-section" style="margin-top:12px;">
-      <button class="btn btn-secondary btn-sm btn-block" id="json-preview-toggle" data-i18n="btn_json_preview">Live JSON Preview</button>
-      <pre class="json-preview" id="json-preview" style="display:none;"></pre>
-    </div>
-
-    <h2 style="margin-top:16px;">
-      <span data-i18n="devices_title">Devices</span> (<span id="device-count">0</span>)
-    </h2>
-    <div class="device-list" id="device-list">
-      <!-- Rendered by app.js -->
-    </div>
-
-    <div class="storage-indicator" id="storage-indicator">
-      <div class="storage-label">
-        <span data-i18n="storage_usage">Storage</span>: <span id="storage-usage-text">0 KB / 5 MB</span>
+    <!-- Accordion: NetBox Export -->
+    <details class="sidebar-accordion" open>
+      <summary class="sidebar-accordion-header" data-i18n="export_netbox">NetBox Export</summary>
+      <div class="sidebar-accordion-body">
+        <button class="btn btn-success btn-block" id="export-json-btn" data-i18n="btn_json">Download JSON</button>
+        <button class="btn btn-secondary btn-block" id="export-yaml-btn" data-i18n="btn_yaml">Download YAML</button>
+        <button class="btn btn-secondary btn-block" id="export-csv-btn" data-i18n="btn_csv">Download CSV</button>
+        <button class="btn btn-secondary btn-block" id="copy-btn" data-i18n="btn_copy">Copy JSON</button>
       </div>
-      <div class="storage-bar"><div class="storage-bar-fill" id="storage-bar-fill"></div></div>
-      <button class="btn btn-secondary btn-sm" id="clear-cache-btn" data-i18n="btn_clear_cache">Clear Cache</button>
-    </div>
+    </details>
+
+    <!-- Accordion: Project Save / Load -->
+    <details class="sidebar-accordion">
+      <summary class="sidebar-accordion-header" data-i18n="export_project">Project Save / Load</summary>
+      <div class="sidebar-accordion-body">
+        <button class="btn btn-primary btn-block" id="save-project-btn" data-i18n="btn_save_project">Save Project</button>
+        <button class="btn btn-secondary btn-block" id="load-project-btn" data-i18n="btn_load_project">Load Project</button>
+        <input type="file" id="load-project-file" accept=".json" style="display:none">
+      </div>
+    </details>
+
+    <!-- Accordion: NetBox Import -->
+    <details class="sidebar-accordion">
+      <summary class="sidebar-accordion-header" data-i18n="import_title">NetBox Import</summary>
+      <div class="sidebar-accordion-body">
+        <button class="btn btn-secondary btn-block" id="import-btn" data-i18n="btn_import">Import JSON</button>
+        <input type="file" id="import-file" accept=".json" style="display:none">
+      </div>
+    </details>
+
+    <!-- Accordion: JSON Preview -->
+    <details class="sidebar-accordion">
+      <summary class="sidebar-accordion-header" id="json-preview-toggle" data-i18n="btn_json_preview">Live JSON Preview</summary>
+      <div class="sidebar-accordion-body">
+        <pre class="json-preview" id="json-preview"></pre>
+      </div>
+    </details>
+
+    <!-- Accordion: Device List -->
+    <details class="sidebar-accordion">
+      <summary class="sidebar-accordion-header">
+        <span data-i18n="devices_title">Devices</span> (<span id="device-count">0</span>)
+      </summary>
+      <div class="sidebar-accordion-body">
+        <div class="device-list" id="device-list">
+          <!-- Rendered by app.js -->
+        </div>
+      </div>
+    </details>
+
+    <!-- Accordion: Storage -->
+    <details class="sidebar-accordion" open>
+      <summary class="sidebar-accordion-header" data-i18n="storage_usage">Storage</summary>
+      <div class="sidebar-accordion-body">
+        <div class="storage-indicator" id="storage-indicator">
+          <div class="storage-label">
+            <span data-i18n="storage_usage">Storage</span>: <span id="storage-usage-text">0 KB / 5 MB</span>
+          </div>
+          <div class="storage-bar"><div class="storage-bar-fill" id="storage-bar-fill"></div></div>
+          <button class="btn btn-secondary btn-sm" id="clear-cache-btn" data-i18n="btn_clear_cache">Clear Cache</button>
+        </div>
+      </div>
+    </details>
   </aside>
 </main>
 
