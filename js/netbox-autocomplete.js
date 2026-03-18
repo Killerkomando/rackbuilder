@@ -80,13 +80,15 @@ function parseYAML(text) {
   let hasRootList = false;
   for (const rawLine of text.split(/\r?\n/)) {
     const line = rawLine.trimEnd();
+    if (!line || line.startsWith('#')) continue;
     if (line.match(/^-\s/)) { hasRootList = true; break; }
-    const kvMatch = line.match(/^(\w[\w-]*):\s*(.*)/);
-    if (kvMatch && kvMatch[2] && !kvMatch[2].trimStart().startsWith('')) {
+    const kvMatch = line.match(/^(\w[\w-]*):\s+(.+)/);
+    if (kvMatch) {
       topLevel[kvMatch[1]] = kvMatch[2].replace(/^["']|["']$/g, '');
       hasTopLevel = true;
-    } else if (line.match(/^(\w[\w-]*):\s*$/) || line.match(/^\s/)) {
-      // Nested block or empty value — stop collecting top-level scalars for this key
+    } else if (line.match(/^(\w[\w-]*):\s*$/)) {
+      // Key with no inline value → start of nested block, stop collecting top-level scalars
+      break;
     }
   }
 
