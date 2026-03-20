@@ -67,6 +67,7 @@ This is useful for quick deployment, embedding, or environments where multiple f
 ### NetBox Autocomplete (Optional)
 
 - **NetBox Data Upload** — Upload exported Device Types, Roles, and Manufacturers from NetBox (JSON, YAML, or CSV) in Settings to enable autocomplete
+- **Multi-Document YAML Support** — Supports the NetBox direct-export YAML format where multiple device types are separated by `---` document markers; each entry is parsed as an individual device type
 - **Modern Autocomplete Dropdown** — Custom-styled dropdown with fuzzy search, highlighted matches, keyboard navigation (Arrow Up/Down, Enter, Escape), and two-column layout showing name + slug
 - **Per-Field Autocomplete** — Device Type, Role, and Manufacturer fields each get their own autocomplete backed by uploaded NetBox data
 

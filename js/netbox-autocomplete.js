@@ -36,7 +36,7 @@ function extractNameSlug(items) {
   const result = items
     .filter(entry => entry && (entry.name || entry.slug || entry.display || entry.model))
     .map(entry => ({
-      name: entry.display || entry.model || entry.name || entry.slug,
+      name: entry.model || entry.name || entry.display || entry.slug,
       slug: entry.slug || (entry.model || entry.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
     }));
   return result.length > 0 ? result : null;
@@ -74,39 +74,59 @@ function parseCSV(text) {
 }
 
 function parseYAML(text) {
-  // First, extract top-level key-value pairs (for single device type files)
-  const topLevel = {};
-  let hasTopLevel = false;
+  const lines = text.split(/\r?\n/);
+
+  // Detect whether the file is a root-level list or a single object.
+  // Look at the first non-empty, non-comment, non-directive line.
   let hasRootList = false;
-  for (const rawLine of text.split(/\r?\n/)) {
+  for (const rawLine of lines) {
     const line = rawLine.trimEnd();
-    if (!line || line.startsWith('#')) continue;
-    if (line.match(/^-\s/)) { hasRootList = true; break; }
-    const kvMatch = line.match(/^(\w[\w-]*):\s+(.+)/);
-    if (kvMatch) {
-      topLevel[kvMatch[1]] = kvMatch[2].replace(/^["']|["']$/g, '');
-      hasTopLevel = true;
-    } else if (line.match(/^(\w[\w-]*):\s*$/)) {
-      // Key with no inline value → start of nested block, stop collecting top-level scalars
-      break;
+    if (!line || line.startsWith('#') || line === '---' || line === '...') continue;
+    if (line.match(/^-\s/)) { hasRootList = true; }
+    break;
+  }
+
+  if (!hasRootList) {
+    // Single or multi-document YAML (documents separated by ---).
+    // Each document between '---' lines is one device type.
+    // Skip indented lines so nested blocks (interfaces, ports…) are ignored.
+    const items = [];
+    let current = {};
+    for (const rawLine of lines) {
+      const line = rawLine.trimEnd();
+      if (!line || line.startsWith('#')) continue;
+      if (line === '---' || line === '...') {
+        // Document separator: flush current document
+        if (current.model || current.slug || current.name) items.push(current);
+        current = {};
+        continue;
+      }
+      if (line.startsWith(' ') || line.startsWith('\t')) continue; // skip nested content
+      const kvMatch = line.match(/^(\w[\w-]*):\s+(.+)/);
+      if (kvMatch) {
+        current[kvMatch[1]] = kvMatch[2].replace(/^["']|["']$/g, '');
+      }
     }
+    // Flush the last document
+    if (current.model || current.slug || current.name) items.push(current);
+    return items.length > 0 ? items : null;
   }
 
-  // If we have a single device type file (has model or slug at top level), return it
-  if (hasTopLevel && !hasRootList && (topLevel.model || topLevel.slug || topLevel.name)) {
-    return [topLevel];
-  }
-
-  // Otherwise parse as list of items (standard list format)
+  // Root-level list: parse each list item, but only capture fields at the item's
+  // own indentation depth — not nested object fields — to avoid field collisions.
   const items = [];
   let current = null;
-  for (const rawLine of text.split(/\r?\n/)) {
+  let itemFieldIndent = -1; // expected indentation of item's direct fields
+  for (const rawLine of lines) {
     const line = rawLine.trimEnd();
-    const listMatch = line.match(/^-\s+(.*)/);
+    if (!line || line.startsWith('#')) continue;
+
+    const listMatch = line.match(/^(\s*)-\s+(.*)/);
     if (listMatch) {
       if (current) items.push(current);
       current = {};
-      const rest = listMatch[1].trim();
+      itemFieldIndent = listMatch[1].length + 2; // fields sit 2 spaces deeper than the '-'
+      const rest = listMatch[2].trim();
       const inlineMatch = rest.match(/^\{(.*)\}$/);
       if (inlineMatch) {
         for (const pair of inlineMatch[1].split(',')) {
@@ -116,13 +136,17 @@ function parseYAML(text) {
           }
         }
       } else {
-        const kvMatch = rest.match(/^(\w+):\s*(.*)/);
+        const kvMatch = rest.match(/^(\w[\w-]*):\s*(.*)/);
         if (kvMatch) {
           current[kvMatch[1]] = kvMatch[2].replace(/^["']|["']$/g, '');
         }
       }
-    } else if (current) {
-      const kvMatch = line.match(/^\s+(\w+):\s*(.*)/);
+    } else if (current && itemFieldIndent >= 0) {
+      // Only capture lines indented at exactly the item's field depth.
+      // Deeper lines belong to nested objects/lists and are intentionally skipped.
+      const indent = line.search(/\S/);
+      if (indent !== itemFieldIndent) continue;
+      const kvMatch = line.match(/^\s+(\w[\w-]*):\s*(.*)/);
       if (kvMatch) {
         current[kvMatch[1]] = kvMatch[2].replace(/^["']|["']$/g, '');
       }
