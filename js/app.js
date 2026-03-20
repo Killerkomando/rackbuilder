@@ -361,12 +361,19 @@ function initSettings() {
 // ─── Dialog animation helper ─────────────────────────────────────────────────
 
 function closeDialogAnimated(dialog) {
+  if (!dialog.open) return;
   dialog.classList.add('dialog-closing');
-  dialog.addEventListener('animationend', function handler() {
+  const done = () => {
     dialog.classList.remove('dialog-closing');
-    dialog.close();
+    if (dialog.open) dialog.close();
+  };
+  dialog.addEventListener('animationend', function handler() {
     dialog.removeEventListener('animationend', handler);
+    clearTimeout(fallback);
+    done();
   });
+  // Fallback in case animationend never fires
+  const fallback = setTimeout(done, 300);
 }
 
 // ─── Keyboard shortcuts ──────────────────────────────────────────────────────

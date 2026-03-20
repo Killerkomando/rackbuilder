@@ -1,0 +1,1446 @@
+manufacturer: APC
+model: Smart-UPS 1500
+slug: smart-ups-1500
+description: ''
+default_platform: null
+part_number: SMT1500RMIUC
+u_height: 2.0
+is_full_depth: true
+subdevice_role: null
+airflow: null
+weight: null
+weight_unit: null
+comments: ''
+---
+manufacturer: APC
+model: SMT1500RMI2UC
+slug: apc-smt1500rmi2uc
+description: ''
+default_platform: null
+part_number: SMT1500RMI2UC
+u_height: 2.0
+is_full_depth: true
+subdevice_role: null
+airflow: front-to-rear
+weight: 38.24
+weight_unit: kg
+comments: APC Smart-UPS, Line Interactive, 1500VA, 2HE, 230V, 4 IEC C13-Stecker, SmartConnect
+  Port+SmartSlot, AVR, LCD
+console-ports:
+- name: Serial
+  type: rj-45
+  label: ''
+  description: ''
+- name: USB
+  type: usb-b
+  label: ''
+  description: ''
+power-ports:
+- name: Source
+  type: iec-60320-c14
+  maximum_draw: 3600
+  allocated_draw: null
+  label: ''
+  description: ''
+power-outlets:
+- name: Group 1 Outlet 1
+  type: iec-60320-c13
+  color: ''
+  power_port: Source
+  feed_leg: null
+  label: ''
+  description: ''
+- name: Group 1 Outlet 2
+  type: iec-60320-c13
+  color: ''
+  power_port: Source
+  feed_leg: null
+  label: ''
+  description: ''
+- name: Group 2 Outlet 1
+  type: iec-60320-c13
+  color: ''
+  power_port: Source
+  feed_leg: null
+  label: ''
+  description: ''
+- name: Group 2 Outlet 2
+  type: iec-60320-c13
+  color: ''
+  power_port: Source
+  feed_leg: null
+  label: ''
+  description: ''
+interfaces:
+- name: SmartConnect
+  type: 1000base-t
+  enabled: true
+  mgmt_only: true
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+module-bays:
+- name: SmartSlot
+  label: ''
+  position: SmartSlot
+  description: ''
+---
+manufacturer: Aruba
+model: J9773A
+slug: j9773a
+description: 2530-24G
+default_platform: null
+part_number: ''
+u_height: 1.0
+is_full_depth: false
+subdevice_role: null
+airflow: null
+weight: null
+weight_unit: null
+comments: ''
+---
+manufacturer: Aruba
+model: JL259A
+slug: jl259a
+description: 2930F
+default_platform: null
+part_number: ''
+u_height: 1.0
+is_full_depth: false
+subdevice_role: null
+airflow: null
+weight: null
+weight_unit: null
+comments: ''
+---
+manufacturer: Bintec
+model: be.IP plus
+slug: be-ip-plus
+description: ''
+default_platform: null
+part_number: ''
+u_height: 1.0
+is_full_depth: false
+subdevice_role: null
+airflow: null
+weight: null
+weight_unit: null
+comments: ''
+---
+manufacturer: Dell
+model: PowerEdge T640
+slug: dell-poweredge-t640
+description: ''
+default_platform: null
+part_number: ''
+u_height: 5.0
+is_full_depth: true
+subdevice_role: null
+airflow: null
+weight: null
+weight_unit: null
+comments: ''
+console-ports:
+- name: Serial
+  type: de-9
+  label: ''
+  description: ''
+power-ports:
+- name: Power 1
+  type: iec-60320-c14
+  maximum_draw: null
+  allocated_draw: null
+  label: ''
+  description: ''
+- name: Power 2
+  type: iec-60320-c14
+  maximum_draw: null
+  allocated_draw: null
+  label: ''
+  description: ''
+interfaces:
+- name: iDRAC
+  type: 1000base-t
+  enabled: true
+  mgmt_only: true
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: TenGig-E 1
+  type: 10gbase-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: TenGig-E 2
+  type: 10gbase-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+---
+manufacturer: Dell
+model: PowerEdge T640_v2
+slug: poweredge-t640
+description: ''
+default_platform: null
+part_number: ''
+u_height: 4.0
+is_full_depth: true
+subdevice_role: null
+airflow: null
+weight: null
+weight_unit: null
+comments: ''
+---
+manufacturer: HPE
+model: Aruba 2530-24G-PoE+
+slug: hpe-aruba-2530-24g-poep
+description: ''
+default_platform: null
+part_number: J9773A
+u_height: 1.0
+is_full_depth: false
+subdevice_role: null
+airflow: null
+weight: 4.0
+weight_unit: kg
+comments: '[Aruba 2530 Switch Series - Specifications](https://support.hpe.com/hpesc/public/docDisplay?docId=emr_na-c03624915#N127FD)'
+console-ports:
+- name: Console
+  type: rj-45
+  label: ''
+  description: ''
+power-ports:
+- name: PS1
+  type: iec-60320-c14
+  maximum_draw: 247
+  allocated_draw: null
+  label: ''
+  description: ''
+interfaces:
+- name: '1'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '2'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '3'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '4'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '5'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '6'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '7'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '8'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '9'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '10'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '11'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '12'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '13'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '14'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '15'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '16'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '17'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '18'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '19'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '20'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '21'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '22'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '23'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '24'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '25'
+  type: 1000base-x-sfp
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '26'
+  type: 1000base-x-sfp
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '27'
+  type: 1000base-x-sfp
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '28'
+  type: 1000base-x-sfp
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+---
+manufacturer: HPE
+model: Aruba 2930F-24G-4SFP
+slug: hpe-aruba-2930f-24g-4sfp
+description: ''
+default_platform: null
+part_number: JL259A
+u_height: 1.0
+is_full_depth: false
+subdevice_role: null
+airflow: null
+weight: 5.31
+weight_unit: lb
+comments: '[Aruba 2930F 24G 4SFP Switch Data sheet](https://www.hpe.com/psnow/doc/PSN1008995548USEN.pdf)'
+console-ports:
+- name: Console
+  type: rj-45
+  label: ''
+  description: ''
+- name: USB Console
+  type: usb-micro-b
+  label: ''
+  description: ''
+power-ports:
+- name: PS1
+  type: iec-60320-c14
+  maximum_draw: 29
+  allocated_draw: null
+  label: ''
+  description: ''
+interfaces:
+- name: '1'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '2'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '3'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '4'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '5'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '6'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '7'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '8'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '9'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '10'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '11'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '12'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '13'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '14'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '15'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '16'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '17'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '18'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '19'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '20'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '21'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '22'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '23'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '24'
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '25'
+  type: 1000base-x-sfp
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '26'
+  type: 1000base-x-sfp
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '27'
+  type: 1000base-x-sfp
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: '28'
+  type: 1000base-x-sfp
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+---
+manufacturer: Metz Connect
+model: NA
+slug: na
+description: ''
+default_platform: null
+part_number: ''
+u_height: 1.0
+is_full_depth: false
+subdevice_role: null
+airflow: null
+weight: null
+weight_unit: null
+comments: ''
+---
+manufacturer: NA
+model: NA
+slug: na
+description: ''
+default_platform: null
+part_number: ''
+u_height: 1.0
+is_full_depth: false
+subdevice_role: null
+airflow: null
+weight: null
+weight_unit: null
+comments: ''
+---
+manufacturer: Ubiquiti
+model: UDM Pro
+slug: udm-pro
+description: UniFi Network Dream Machine Pro
+default_platform: null
+part_number: ''
+u_height: 1.0
+is_full_depth: false
+subdevice_role: null
+airflow: null
+weight: null
+weight_unit: null
+comments: ''
+---
+manufacturer: Ubiquiti
+model: UniFi Dream Machine Pro
+slug: ubiquiti-unifi-dream-machine-pro
+description: ''
+default_platform: null
+part_number: UDM-PRO
+u_height: 1.0
+is_full_depth: false
+subdevice_role: null
+airflow: front-to-rear
+weight: 8.6
+weight_unit: lb
+comments: 'UniFi Dream Machine Pro
+
+
+  Enterprise Security Gateway and Network Appliance with 10G SFP+, (8) 1G LAN, (1)
+  1G WAN, (1) 1/10G SFP+ LAN, (1) 1/10G SFP+ WAN
+
+
+  Dimensions: 442.4 x 43.7 x 285.6 mm (17.42 x 1.72 x 11.24")
+
+  [UniFi Dream Machine Pro Techspecs](https://techspecs.ui.com/unifi/unifi-cloud-gateways/udm-pro)'
+power-ports:
+- name: Input
+  type: iec-60320-c14
+  maximum_draw: 33
+  allocated_draw: null
+  label: ''
+  description: ''
+- name: USP-RPS connector for PSU failover
+  type: ubiquiti-smartpower
+  maximum_draw: 33
+  allocated_draw: null
+  label: ''
+  description: ''
+interfaces:
+- name: port.1
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: Port 1 - LAN
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: port.2
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: Port 2 - LAN
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: port.3
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: Port 3 - LAN
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: port.4
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: Port 4 - LAN
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: port.5
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: Port 5 - LAN
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: port.6
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: Port 6 - LAN
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: port.7
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: Port 7 - LAN
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: port.8
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: Port 8 - LAN
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: port.9
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: Port 9 - WAN 1
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: port.10
+  type: 10gbase-x-sfpp
+  enabled: true
+  mgmt_only: false
+  label: Port 10 - SFP+ WAN 2
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: port.11
+  type: 10gbase-x-sfpp
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+---
+manufacturer: Ubiquiti
+model: UniFi Switch 24 Pro PoE Gen2
+slug: ubiquiti-unifi-switch-24-pro-poe-gen2
+description: ''
+default_platform: null
+part_number: USW-Pro-24-POE
+u_height: 1.0
+is_full_depth: false
+subdevice_role: null
+airflow: front-to-rear
+weight: 9.7
+weight_unit: lb
+comments: 'UniFi Switch 24 Pro PoE (50W + max. 400W PoE), Gen2, (24) Gigabit, (1-16)
+  Gigabit PoE+ IEEE 802.3af/at, (17-24) Gigabit 60W PoE++ IEEE 802.3bt, (2) SFP+
+
+
+  Dimensions: 442.4 x 285.4 x 43.7 mm (17.42 x 11.24 x 1.72")
+
+  [Switch Switch 24 Pro PoE Techspecs](https://techspecs.ui.com/unifi/switching/usw-pro-24-poe)'
+power-ports:
+- name: Input
+  type: iec-60320-c14
+  maximum_draw: 450
+  allocated_draw: null
+  label: ''
+  description: ''
+- name: USP-RPS connector for PSU failover
+  type: ubiquiti-smartpower
+  maximum_draw: 450
+  allocated_draw: null
+  label: ''
+  description: ''
+interfaces:
+- name: Port 1
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type2-ieee802.3at
+  rf_role: ''
+- name: Port 2
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type2-ieee802.3at
+  rf_role: ''
+- name: Port 3
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type2-ieee802.3at
+  rf_role: ''
+- name: Port 4
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type2-ieee802.3at
+  rf_role: ''
+- name: Port 5
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type2-ieee802.3at
+  rf_role: ''
+- name: Port 6
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type2-ieee802.3at
+  rf_role: ''
+- name: Port 7
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type2-ieee802.3at
+  rf_role: ''
+- name: Port 8
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type2-ieee802.3at
+  rf_role: ''
+- name: Port 9
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type2-ieee802.3at
+  rf_role: ''
+- name: Port 10
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type2-ieee802.3at
+  rf_role: ''
+- name: Port 11
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type2-ieee802.3at
+  rf_role: ''
+- name: Port 12
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type2-ieee802.3at
+  rf_role: ''
+- name: Port 13
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type2-ieee802.3at
+  rf_role: ''
+- name: Port 14
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type2-ieee802.3at
+  rf_role: ''
+- name: Port 15
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type2-ieee802.3at
+  rf_role: ''
+- name: Port 16
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type2-ieee802.3at
+  rf_role: ''
+- name: Port 17
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type3-ieee802.3bt
+  rf_role: ''
+- name: Port 18
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type3-ieee802.3bt
+  rf_role: ''
+- name: Port 19
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type3-ieee802.3bt
+  rf_role: ''
+- name: Port 20
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type3-ieee802.3bt
+  rf_role: ''
+- name: Port 21
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type3-ieee802.3bt
+  rf_role: ''
+- name: Port 22
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type3-ieee802.3bt
+  rf_role: ''
+- name: Port 23
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type3-ieee802.3bt
+  rf_role: ''
+- name: Port 24
+  type: 1000base-t
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: pse
+  poe_type: type3-ieee802.3bt
+  rf_role: ''
+- name: SFP+ 25
+  type: 10gbase-x-sfpp
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: SFP+ 26
+  type: 10gbase-x-sfpp
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+---
+manufacturer: Ubiquiti
+model: UniFi Switch Aggregation
+slug: ubiquiti-unifi-switch-aggregation
+description: ''
+default_platform: null
+part_number: USW-Aggregation
+u_height: 1.0
+is_full_depth: false
+subdevice_role: null
+airflow: passive
+weight: 2.7
+weight_unit: kg
+comments: 'UniFi Switch Aggregation, 10G 8-Port Managed Aggregation Switch, 30W, (8)
+  SFP+
+
+
+  Dimensions: 442.4 x 120 x 43.7 mm (17.42 x 4.72 x 1.72")
+
+
+  [USW-Aggregation Techspecs]https://techspecs.ui.com/unifi/switching/usw-aggregation'
+power-ports:
+- name: Input
+  type: iec-60320-c14
+  maximum_draw: 36
+  allocated_draw: null
+  label: ''
+  description: ''
+interfaces:
+- name: SFP+ 1
+  type: 10gbase-x-sfpp
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: SFP+ 2
+  type: 10gbase-x-sfpp
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: SFP+ 3
+  type: 10gbase-x-sfpp
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: SFP+ 4
+  type: 10gbase-x-sfpp
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: SFP+ 5
+  type: 10gbase-x-sfpp
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: SFP+ 6
+  type: 10gbase-x-sfpp
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: SFP+ 7
+  type: 10gbase-x-sfpp
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+- name: SFP+ 8
+  type: 10gbase-x-sfpp
+  enabled: true
+  mgmt_only: false
+  label: ''
+  description: ''
+  bridge: null
+  poe_mode: ''
+  poe_type: ''
+  rf_role: ''
+---
+manufacturer: Ubiquiti
+model: USW Aggregation_v2
+slug: usw-aggregation
+description: ''
+default_platform: null
+part_number: ''
+u_height: 1.0
+is_full_depth: false
+subdevice_role: null
+airflow: null
+weight: null
+weight_unit: null
+comments: ''
+---
+manufacturer: Ubiquiti
+model: USW Pro 24 PoE
+slug: usw-pro-24-poe
+description: UniFi Network Pro 24 PoE
+default_platform: null
+part_number: ''
+u_height: 1.0
+is_full_depth: false
+subdevice_role: null
+airflow: null
+weight: null
+weight_unit: null
+comments: ''

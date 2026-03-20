@@ -272,15 +272,17 @@ body {
   z-index: 1;
   transition: box-shadow 0.15s;
   border: 1px solid rgba(255, 255, 255, 0.15);
+  background-image: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 40%, rgba(0,0,0,0.15) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.3);
 }
 
 .device-block:hover {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.2), 0 0 0 2px rgba(255, 255, 255, 0.3);
   z-index: 2;
 }
 
 .device-block.selected {
-  box-shadow: 0 0 0 2px #fff;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.2), 0 0 0 2px #fff;
   z-index: 3;
 }
 
@@ -3784,10 +3786,71 @@ function initSettings() {
   const multiRackFields = document.getElementById('multi-rack-fields');
   const rackCountInput = document.getElementById('setting-rack-count');
 
+  // Smooth slide-toggle for a container element
+  function slideToggle(el, show, onDone) {
+    if (show) {
+      el.style.display = 'block';
+      el.style.overflow = 'hidden';
+      const targetHeight = el.scrollHeight;
+      el.style.height = '0px';
+      el.style.opacity = '0';
+      requestAnimationFrame(() => {
+        el.style.transition = 'height 0.35s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.3s ease';
+        requestAnimationFrame(() => {
+          el.style.height = targetHeight + 'px';
+          el.style.opacity = '1';
+        });
+      });
+      el.addEventListener('transitionend', function handler(ev) {
+        if (ev.propertyName !== 'height') return;
+        el.removeEventListener('transitionend', handler);
+        el.style.height = '';
+        el.style.overflow = '';
+        el.style.opacity = '';
+        el.style.transition = '';
+        if (onDone) onDone();
+      });
+    } else {
+      el.style.overflow = 'hidden';
+      el.style.height = el.scrollHeight + 'px';
+      el.style.opacity = '1';
+      requestAnimationFrame(() => {
+        el.style.transition = 'height 0.3s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.25s ease';
+        requestAnimationFrame(() => {
+          el.style.height = '0px';
+          el.style.opacity = '0';
+        });
+      });
+      el.addEventListener('transitionend', function handler(ev) {
+        if (ev.propertyName !== 'height') return;
+        el.removeEventListener('transitionend', handler);
+        el.style.display = 'none';
+        el.style.height = '';
+        el.style.overflow = '';
+        el.style.opacity = '';
+        el.style.transition = '';
+        if (onDone) onDone();
+      });
+    }
+  }
+
   function toggleMultiRackUI(enabled, animate) {
-    singleRackFields.style.display = enabled ? 'none' : 'block';
-    multiRackFields.style.display = enabled ? 'block' : 'none';
-    if (enabled) renderRackRows();
+    if (animate) {
+      if (enabled) {
+        slideToggle(singleRackFields, false, () => {
+          renderRackRows();
+          slideToggle(multiRackFields, true);
+        });
+      } else {
+        slideToggle(multiRackFields, false, () => {
+          slideToggle(singleRackFields, true);
+        });
+      }
+    } else {
+      singleRackFields.style.display = enabled ? 'none' : 'block';
+      multiRackFields.style.display = enabled ? 'block' : 'none';
+      if (enabled) renderRackRows();
+    }
   }
 
   function renderRackRows() {
@@ -3795,11 +3858,33 @@ function initSettings() {
     const container = document.getElementById('rack-rows');
     const state = getState();
     const existingRacks = state.racks || [];
+    const currentRows = container.querySelectorAll('.rack-config-row');
+    const prevCount = currentRows.length;
+
+    if (count < prevCount) {
+      // Animate removal of excess rows, then rebuild
+      const rowsToRemove = Array.from(currentRows).slice(count);
+      let pending = rowsToRemove.length;
+      rowsToRemove.forEach((row, idx) => {
+        row.style.animationDelay = (idx * 50) + 'ms';
+        row.classList.add('rack-row-exit');
+        row.addEventListener('animationend', () => {
+          pending--;
+          if (pending === 0) buildRows(count, container, existingRacks, prevCount);
+        }, { once: true });
+      });
+    } else {
+      buildRows(count, container, existingRacks, prevCount);
+    }
+  }
+
+  function buildRows(count, container, existingRacks, prevCount) {
     let html = '';
     for (let i = 0; i < count; i++) {
       const rack = existingRacks[i] || {};
       const dir = rack.numberingDirection || 'bottom-to-top';
-      html += `<div class="rack-config-row rack-row-enter" style="animation-delay: ${i * 60}ms">
+      const isNew = i >= prevCount;
+      html += `<div class="rack-config-row${isNew ? ' rack-row-enter' : ''}">
         <span class="rack-row-num">${i + 1}.</span>
         <input type="text" class="rack-row-name" value="${rack.name || `Rack-${String(i + 1).padStart(2, '0')}`}" placeholder="${t('setting_name')}" required>
         <input type="number" class="rack-row-units" value="${rack.totalUnits || 42}" min="1" max="60" required>
@@ -3811,10 +3896,20 @@ function initSettings() {
       </div>`;
     }
     container.innerHTML = html;
+
+    // Animate newly added rows with staggered delay
+    const newRows = container.querySelectorAll('.rack-row-enter');
+    newRows.forEach((row, idx) => {
+      row.style.animationDelay = (idx * 60) + 'ms';
+      row.addEventListener('animationend', () => {
+        row.classList.remove('rack-row-enter');
+        row.style.animationDelay = '';
+      }, { once: true });
+    });
   }
 
   multiRackCheckbox.addEventListener('change', () => {
-    toggleMultiRackUI(multiRackCheckbox.checked);
+    toggleMultiRackUI(multiRackCheckbox.checked, true);
   });
 
   rackCountInput.addEventListener('input', renderRackRows);
@@ -3894,12 +3989,19 @@ function initSettings() {
 // ─── Dialog animation helper ─────────────────────────────────────────────────
 
 function closeDialogAnimated(dialog) {
+  if (!dialog.open) return;
   dialog.classList.add('dialog-closing');
-  dialog.addEventListener('animationend', function handler() {
+  const done = () => {
     dialog.classList.remove('dialog-closing');
-    dialog.close();
+    if (dialog.open) dialog.close();
+  };
+  dialog.addEventListener('animationend', function handler() {
     dialog.removeEventListener('animationend', handler);
+    clearTimeout(fallback);
+    done();
   });
+  // Fallback in case animationend never fires
+  const fallback = setTimeout(done, 300);
 }
 
 // ─── Keyboard shortcuts ──────────────────────────────────────────────────────
@@ -3982,7 +4084,7 @@ function extractNameSlug(items) {
   const result = items
     .filter(e => e && (e.name || e.slug || e.display || e.model))
     .map(e => ({
-      name: e.display || e.model || e.name || e.slug,
+      name: e.model || e.name || e.display || e.slug,
       slug: e.slug || (e.model || e.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
     }));
   return result.length > 0 ? result : null;
@@ -4014,35 +4116,55 @@ function parseNetboxCSV(text) {
 }
 
 function parseNetboxYAML(text) {
-  // First, extract top-level key-value pairs (for single device type files)
-  const topLevel = {};
-  let hasTopLevel = false;
+  const lines = text.split(/\r?\n/);
+
+  // Detect whether the file is a root-level list or a single object.
   let hasRootList = false;
-  for (const rawLine of text.split(/\r?\n/)) {
+  for (const rawLine of lines) {
     const line = rawLine.trimEnd();
-    if (line.match(/^-\s/)) { hasRootList = true; break; }
-    const kvMatch = line.match(/^(\w[\w-]*):\s*(.*)/);
-    if (kvMatch && kvMatch[2] && !kvMatch[2].trimStart().startsWith('')) {
-      topLevel[kvMatch[1]] = kvMatch[2].replace(/^["']|["']$/g, '');
-      hasTopLevel = true;
+    if (!line || line.startsWith('#') || line === '---' || line === '...') continue;
+    if (line.match(/^-\s/)) { hasRootList = true; }
+    break;
+  }
+
+  if (!hasRootList) {
+    // Single or multi-document YAML (documents separated by ---).
+    // Each document between '---' lines is one device type.
+    // Skip indented lines so nested blocks (interfaces, ports…) are ignored.
+    const items = [];
+    let current = {};
+    for (const rawLine of lines) {
+      const line = rawLine.trimEnd();
+      if (!line || line.startsWith('#')) continue;
+      if (line === '---' || line === '...') {
+        if (current.model || current.slug || current.name) items.push(current);
+        current = {};
+        continue;
+      }
+      if (line.startsWith(' ') || line.startsWith('\t')) continue;
+      const kvMatch = line.match(/^(\w[\w-]*):\s+(.+)/);
+      if (kvMatch) {
+        current[kvMatch[1]] = kvMatch[2].replace(/^["']|["']$/g, '');
+      }
     }
+    if (current.model || current.slug || current.name) items.push(current);
+    return items.length > 0 ? items : null;
   }
 
-  // If we have a single device type file (has model or slug at top level), return it
-  if (hasTopLevel && !hasRootList && (topLevel.model || topLevel.slug || topLevel.name)) {
-    return [topLevel];
-  }
-
-  // Otherwise parse as list of items
+  // Root-level list: parse each list item, but only capture fields at the item's
+  // own indentation depth to avoid nested object field collisions.
   const items = [];
   let current = null;
-  for (const rawLine of text.split(/\r?\n/)) {
+  let itemFieldIndent = -1;
+  for (const rawLine of lines) {
     const line = rawLine.trimEnd();
-    const listMatch = line.match(/^-\s+(.*)/);
+    if (!line || line.startsWith('#')) continue;
+    const listMatch = line.match(/^(\s*)-\s+(.*)/);
     if (listMatch) {
       if (current) items.push(current);
       current = {};
-      const rest = listMatch[1].trim();
+      itemFieldIndent = listMatch[1].length + 2;
+      const rest = listMatch[2].trim();
       const inlineMatch = rest.match(/^\{(.*)\}$/);
       if (inlineMatch) {
         for (const pair of inlineMatch[1].split(',')) {
@@ -4050,11 +4172,13 @@ function parseNetboxYAML(text) {
           if (k && vParts.length) current[k.trim().replace(/^["']|["']$/g, '')] = vParts.join(':').trim().replace(/^["']|["']$/g, '');
         }
       } else {
-        const kvMatch = rest.match(/^(\w+):\s*(.*)/);
+        const kvMatch = rest.match(/^(\w[\w-]*):\s*(.*)/);
         if (kvMatch) current[kvMatch[1]] = kvMatch[2].replace(/^["']|["']$/g, '');
       }
-    } else if (current) {
-      const kvMatch = line.match(/^\s+(\w+):\s*(.*)/);
+    } else if (current && itemFieldIndent >= 0) {
+      const indent = line.search(/\S/);
+      if (indent !== itemFieldIndent) continue;
+      const kvMatch = line.match(/^\s+(\w[\w-]*):\s*(.*)/);
       if (kvMatch) current[kvMatch[1]] = kvMatch[2].replace(/^["']|["']$/g, '');
     }
   }
@@ -4153,7 +4277,7 @@ function acSelectOption(inputId, index) {
   const state = acDropdowns.get(inputId);
   if (!state || !state.filtered || !state.filtered[index]) return;
   const input = document.getElementById(inputId);
-  input.value = state.filtered[index].slug;
+  input.value = state.filtered[index].name;
   input.dispatchEvent(new Event('input', { bubbles: true }));
   acCloseDropdown(inputId);
 }
