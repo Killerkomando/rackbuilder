@@ -14,7 +14,7 @@
   <h1>
     <span class="rack-icon">&#9638;</span>
     <span data-i18n="app_title">Rack Builder</span>
-    <span class="app-version" data-i18n="version">v0.5.1</span>
+    <span class="app-version" data-i18n="version">v0.6.0</span>
   </h1>
   <div class="header-actions">
     <button class="btn btn-secondary btn-sm" id="undo-btn" data-i18n-title="btn_undo" title="Undo" disabled>&#x21A9;</button>
@@ -40,17 +40,17 @@
 
       <div class="form-group">
         <label for="dev-manufacturer" data-i18n="label_manufacturer">Manufacturer</label>
-        <input type="text" id="dev-manufacturer" required data-i18n-placeholder="ph_manufacturer" placeholder="e.g. Cisco">
+        <input type="text" id="dev-manufacturer" required data-i18n-placeholder="ph_manufacturer" placeholder="e.g. Cisco" autocomplete="off">
       </div>
 
       <div class="form-row">
         <div class="form-group">
           <label for="dev-type" data-i18n="label_device_type">Device Type</label>
-          <input type="text" id="dev-type" required data-i18n-placeholder="ph_type" placeholder="e.g. catalyst-9300">
+          <input type="text" id="dev-type" required data-i18n-placeholder="ph_type" placeholder="e.g. catalyst-9300" autocomplete="off">
         </div>
         <div class="form-group">
           <label for="dev-role" data-i18n="label_role">Role</label>
-          <input type="text" id="dev-role" required data-i18n-placeholder="ph_role" placeholder="e.g. access-switch">
+          <input type="text" id="dev-role" required data-i18n-placeholder="ph_role" placeholder="e.g. access-switch" autocomplete="off">
         </div>
       </div>
 
@@ -176,47 +176,69 @@
 
   <!-- Right Sidebar: Export + Device List -->
   <aside class="sidebar-right">
-    <h2 data-i18n="export_title">Export</h2>
-    <h3 style="font-size:12px; color:var(--color-text-muted); margin-bottom:6px;" data-i18n="export_netbox">NetBox Export</h3>
-    <div class="export-section">
-      <button class="btn btn-success btn-block" id="export-json-btn" data-i18n="btn_json">Download JSON</button>
-      <button class="btn btn-secondary btn-block" id="export-yaml-btn" data-i18n="btn_yaml">Download YAML</button>
-      <button class="btn btn-secondary btn-block" id="export-csv-btn" data-i18n="btn_csv">Download CSV</button>
-      <button class="btn btn-secondary btn-block" id="copy-btn" data-i18n="btn_copy">Copy JSON</button>
-    </div>
-
-    <h3 style="font-size:12px; color:var(--color-text-muted); margin-top:12px; margin-bottom:6px;" data-i18n="export_project">Project Save / Load</h3>
-    <div class="export-section">
-      <button class="btn btn-primary btn-block" id="save-project-btn" data-i18n="btn_save_project">Save Project</button>
-      <button class="btn btn-secondary btn-block" id="load-project-btn" data-i18n="btn_load_project">Load Project</button>
-      <input type="file" id="load-project-file" accept=".json" style="display:none">
-    </div>
-
-    <div class="export-section" style="margin-top:12px;">
-      <h3 style="font-size:12px; color:var(--color-text-muted); margin-bottom:6px;" data-i18n="import_title">NetBox Import</h3>
-      <button class="btn btn-secondary btn-block" id="import-btn" data-i18n="btn_import">Import JSON</button>
-      <input type="file" id="import-file" accept=".json" style="display:none">
-    </div>
-
-    <div class="json-preview-section" style="margin-top:12px;">
-      <button class="btn btn-secondary btn-sm btn-block" id="json-preview-toggle" data-i18n="btn_json_preview">Live JSON Preview</button>
-      <pre class="json-preview" id="json-preview" style="display:none;"></pre>
-    </div>
-
-    <h2 style="margin-top:16px;">
-      <span data-i18n="devices_title">Devices</span> (<span id="device-count">0</span>)
-    </h2>
-    <div class="device-list" id="device-list">
-      <!-- Rendered by app.js -->
-    </div>
-
-    <div class="storage-indicator" id="storage-indicator">
-      <div class="storage-label">
-        <span data-i18n="storage_usage">Storage</span>: <span id="storage-usage-text">0 KB / 5 MB</span>
+    <!-- Accordion: NetBox Export -->
+    <details class="sidebar-accordion" open>
+      <summary class="sidebar-accordion-header" data-i18n="export_netbox">NetBox Export</summary>
+      <div class="sidebar-accordion-body">
+        <button class="btn btn-success btn-block" id="export-json-btn" data-i18n="btn_json">Download JSON</button>
+        <button class="btn btn-secondary btn-block" id="export-yaml-btn" data-i18n="btn_yaml">Download YAML</button>
+        <button class="btn btn-secondary btn-block" id="export-csv-btn" data-i18n="btn_csv">Download CSV</button>
+        <button class="btn btn-secondary btn-block" id="copy-btn" data-i18n="btn_copy">Copy JSON</button>
       </div>
-      <div class="storage-bar"><div class="storage-bar-fill" id="storage-bar-fill"></div></div>
-      <button class="btn btn-secondary btn-sm" id="clear-cache-btn" data-i18n="btn_clear_cache">Clear Cache</button>
-    </div>
+    </details>
+
+    <!-- Accordion: Project Save / Load -->
+    <details class="sidebar-accordion">
+      <summary class="sidebar-accordion-header" data-i18n="export_project">Project Save / Load</summary>
+      <div class="sidebar-accordion-body">
+        <button class="btn btn-primary btn-block" id="save-project-btn" data-i18n="btn_save_project">Save Project</button>
+        <button class="btn btn-secondary btn-block" id="load-project-btn" data-i18n="btn_load_project">Load Project</button>
+        <input type="file" id="load-project-file" accept=".json" style="display:none">
+      </div>
+    </details>
+
+    <!-- Accordion: NetBox Import -->
+    <details class="sidebar-accordion">
+      <summary class="sidebar-accordion-header" data-i18n="import_title">NetBox Import</summary>
+      <div class="sidebar-accordion-body">
+        <button class="btn btn-secondary btn-block" id="import-btn" data-i18n="btn_import">Import JSON</button>
+        <input type="file" id="import-file" accept=".json" style="display:none">
+      </div>
+    </details>
+
+    <!-- Accordion: JSON Preview -->
+    <details class="sidebar-accordion">
+      <summary class="sidebar-accordion-header" id="json-preview-toggle" data-i18n="btn_json_preview">Live JSON Preview</summary>
+      <div class="sidebar-accordion-body">
+        <pre class="json-preview" id="json-preview"></pre>
+      </div>
+    </details>
+
+    <!-- Accordion: Device List -->
+    <details class="sidebar-accordion">
+      <summary class="sidebar-accordion-header">
+        <span data-i18n="devices_title">Devices</span> (<span id="device-count">0</span>)
+      </summary>
+      <div class="sidebar-accordion-body">
+        <div class="device-list" id="device-list">
+          <!-- Rendered by app.js -->
+        </div>
+      </div>
+    </details>
+
+    <!-- Accordion: Storage -->
+    <details class="sidebar-accordion" open>
+      <summary class="sidebar-accordion-header" data-i18n="storage_usage">Storage</summary>
+      <div class="sidebar-accordion-body">
+        <div class="storage-indicator" id="storage-indicator">
+          <div class="storage-label">
+            <span data-i18n="storage_usage">Storage</span>: <span id="storage-usage-text">0 KB / 5 MB</span>
+          </div>
+          <div class="storage-bar"><div class="storage-bar-fill" id="storage-bar-fill"></div></div>
+          <button class="btn btn-secondary btn-sm" id="clear-cache-btn" data-i18n="btn_clear_cache">Clear Cache</button>
+        </div>
+      </div>
+    </details>
   </aside>
 </main>
 
@@ -278,6 +300,42 @@
         <input type="number" id="setting-rack-count" min="1" max="20" value="2">
       </div>
       <div id="rack-rows"></div>
+    </div>
+
+    <!-- NetBox Autocomplete (Opt-In) -->
+    <div class="netbox-autocomplete-section">
+      <h3 class="settings-section-title" data-i18n="netbox_autocomplete_title">NetBox Autocomplete (Optional)</h3>
+      <p class="settings-section-desc" data-i18n="netbox_autocomplete_desc">Upload exported files from NetBox (JSON, YAML, or CSV) to enable autocomplete for Device Types and Roles.</p>
+
+      <div class="netbox-upload-row">
+        <div class="netbox-upload-group">
+          <label data-i18n="netbox_device_types">Device Types</label>
+          <div class="netbox-upload-controls">
+            <button type="button" class="btn btn-secondary btn-sm" id="netbox-upload-types-btn" data-i18n="netbox_btn_upload">Upload</button>
+            <button type="button" class="btn btn-danger btn-sm" id="netbox-clear-types-btn" style="display:none" data-i18n="netbox_btn_clear">Clear</button>
+            <input type="file" id="netbox-types-file" accept=".json,.yaml,.yml,.csv,.tsv" style="display:none">
+          </div>
+          <span class="netbox-status empty" id="netbox-types-status" data-i18n="netbox_not_loaded">Not loaded</span>
+        </div>
+        <div class="netbox-upload-group">
+          <label data-i18n="netbox_roles">Roles</label>
+          <div class="netbox-upload-controls">
+            <button type="button" class="btn btn-secondary btn-sm" id="netbox-upload-roles-btn" data-i18n="netbox_btn_upload">Upload</button>
+            <button type="button" class="btn btn-danger btn-sm" id="netbox-clear-roles-btn" style="display:none" data-i18n="netbox_btn_clear">Clear</button>
+            <input type="file" id="netbox-roles-file" accept=".json,.yaml,.yml,.csv,.tsv" style="display:none">
+          </div>
+          <span class="netbox-status empty" id="netbox-roles-status" data-i18n="netbox_not_loaded">Not loaded</span>
+        </div>
+        <div class="netbox-upload-group">
+          <label data-i18n="netbox_manufacturers">Manufacturers</label>
+          <div class="netbox-upload-controls">
+            <button type="button" class="btn btn-secondary btn-sm" id="netbox-upload-mfr-btn" data-i18n="netbox_btn_upload">Upload</button>
+            <button type="button" class="btn btn-danger btn-sm" id="netbox-clear-mfr-btn" style="display:none" data-i18n="netbox_btn_clear">Clear</button>
+            <input type="file" id="netbox-mfr-file" accept=".json,.yaml,.yml,.csv,.tsv" style="display:none">
+          </div>
+          <span class="netbox-status empty" id="netbox-mfr-status" data-i18n="netbox_not_loaded">Not loaded</span>
+        </div>
+      </div>
     </div>
 
     <div class="dialog-actions">

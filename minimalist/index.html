@@ -272,15 +272,17 @@ body {
   z-index: 1;
   transition: box-shadow 0.15s;
   border: 1px solid rgba(255, 255, 255, 0.15);
+  background-image: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 40%, rgba(0,0,0,0.15) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.3);
 }
 
 .device-block:hover {
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.2), 0 0 0 2px rgba(255, 255, 255, 0.3);
   z-index: 2;
 }
 
 .device-block.selected {
-  box-shadow: 0 0 0 2px #fff;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.2), 0 0 0 2px #fff;
   z-index: 3;
 }
 
@@ -754,13 +756,221 @@ body {
   background: rgba(239, 68, 68, 0.15);
 }
 
-/* Export section */
-.export-section {
-  margin-bottom: 16px;
+/* Sidebar Accordions */
+.sidebar-accordion {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  background: var(--bg-primary);
 }
 
-.export-section .btn {
+.sidebar-accordion-header {
+  display: block;
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  transition: background 0.15s;
+}
+
+.sidebar-accordion-header::-webkit-details-marker {
+  display: none;
+}
+
+.sidebar-accordion-header::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 11px;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-accordion[open] > .sidebar-accordion-header::before {
+  transform: rotate(90deg);
+}
+
+.sidebar-accordion-header:hover {
+  background: var(--bg-tertiary);
+  color: var(--color-text);
+}
+
+.sidebar-accordion-body {
+  padding: 10px 14px 14px;
+  overflow: hidden;
+}
+
+.sidebar-accordion-body.accordion-animating {
+  transition: height 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              padding-top 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              padding-bottom 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              opacity 0.3s ease;
+}
+
+.sidebar-accordion-body .btn {
   margin-bottom: 6px;
+}
+
+/* Modern Autocomplete Dropdown */
+.ac-dropdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: 100;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  background: var(--bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: 0 0 var(--radius) var(--radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  transition: max-height 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+              opacity 0.2s ease;
+  pointer-events: none;
+}
+
+.ac-dropdown.visible {
+  max-height: 280px;
+  opacity: 1;
+  overflow-y: auto;
+  pointer-events: auto;
+}
+
+.ac-dropdown::-webkit-scrollbar {
+  width: 5px;
+}
+
+.ac-dropdown::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ac-dropdown::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 3px;
+}
+
+.ac-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background 0.1s;
+  gap: 8px;
+}
+
+.ac-option:hover,
+.ac-option.highlighted {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.ac-option:hover .ac-option-slug,
+.ac-option.highlighted .ac-option-slug {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.ac-option-name {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ac-option-slug {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+  max-width: 45%;
+}
+
+.ac-option mark {
+  background: rgba(59, 130, 246, 0.3);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+.ac-option:hover mark,
+.ac-option.highlighted mark {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* NetBox Autocomplete Section in Settings */
+.netbox-autocomplete-section {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
+.settings-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin: 0 0 6px 0;
+}
+
+.settings-section-desc {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 0 0 12px 0;
+  line-height: 1.4;
+}
+
+.netbox-upload-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.netbox-upload-group {
+  flex: 1 1 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.netbox-upload-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.netbox-upload-controls {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.netbox-status {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.netbox-status.loaded {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.netbox-status.empty {
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--color-text-muted);
 }
 
 /* Settings modal */
@@ -775,12 +985,43 @@ dialog {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) scale(1);
   margin: 0;
+  opacity: 1;
+  animation: dialog-open 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+dialog.dialog-closing {
+  animation: dialog-close 0.2s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+@keyframes dialog-open {
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.92); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes dialog-close {
+  from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  to { opacity: 0; transform: translate(-50%, -50%) scale(0.92); }
 }
 
 dialog::backdrop {
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0);
+  animation: backdrop-open 0.25s ease forwards;
+}
+
+dialog.dialog-closing::backdrop {
+  animation: backdrop-close 0.2s ease forwards;
+}
+
+@keyframes backdrop-open {
+  from { background: rgba(0, 0, 0, 0); }
+  to { background: rgba(0, 0, 0, 0.6); }
+}
+
+@keyframes backdrop-close {
+  from { background: rgba(0, 0, 0, 0.6); }
+  to { background: rgba(0, 0, 0, 0); }
 }
 
 dialog h2 {
@@ -892,6 +1133,28 @@ dialog .dialog-actions {
 }
 
 /* Multi-rack settings rows */
+/* Entrance animation for new rack rows */
+@keyframes rackRowSlideIn {
+  from { opacity: 0; transform: translateY(-8px); max-height: 0; }
+  to { opacity: 1; transform: translateY(0); max-height: 60px; }
+}
+
+.rack-row-enter {
+  animation: rackRowSlideIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* Exit animation for removed rack rows */
+@keyframes rackRowSlideOut {
+  from { opacity: 1; transform: translateX(0); max-height: 60px; }
+  to { opacity: 0; transform: translateX(20px); max-height: 0; margin-bottom: 0; }
+}
+
+.rack-row-exit {
+  animation: rackRowSlideOut 0.25s cubic-bezier(0.55, 0.06, 0.68, 0.19) both;
+  pointer-events: none;
+  overflow: hidden;
+}
+
 .rack-config-row {
   display: flex;
   align-items: center;
@@ -1008,7 +1271,7 @@ dialog .dialog-actions {
   <h1>
     <span class="rack-icon">&#9638;</span>
     <span data-i18n="app_title">Rack Builder</span>
-    <span class="app-version" data-i18n="version">v0.5.1</span>
+    <span class="app-version" data-i18n="version">v0.6.0</span>
   </h1>
   <div class="header-actions">
     <button class="btn btn-secondary btn-sm" id="undo-btn" data-i18n-title="btn_undo" title="Undo" disabled>&#x21A9;</button>
@@ -1034,17 +1297,17 @@ dialog .dialog-actions {
 
       <div class="form-group">
         <label for="dev-manufacturer" data-i18n="label_manufacturer">Manufacturer</label>
-        <input type="text" id="dev-manufacturer" required data-i18n-placeholder="ph_manufacturer" placeholder="e.g. Cisco">
+        <input type="text" id="dev-manufacturer" required data-i18n-placeholder="ph_manufacturer" placeholder="e.g. Cisco" autocomplete="off">
       </div>
 
       <div class="form-row">
         <div class="form-group">
           <label for="dev-type" data-i18n="label_device_type">Device Type</label>
-          <input type="text" id="dev-type" required data-i18n-placeholder="ph_type" placeholder="e.g. catalyst-9300">
+          <input type="text" id="dev-type" required data-i18n-placeholder="ph_type" placeholder="e.g. catalyst-9300" autocomplete="off">
         </div>
         <div class="form-group">
           <label for="dev-role" data-i18n="label_role">Role</label>
-          <input type="text" id="dev-role" required data-i18n-placeholder="ph_role" placeholder="e.g. access-switch">
+          <input type="text" id="dev-role" required data-i18n-placeholder="ph_role" placeholder="e.g. access-switch" autocomplete="off">
         </div>
       </div>
 
@@ -1170,47 +1433,69 @@ dialog .dialog-actions {
 
   <!-- Right Sidebar: Export + Device List -->
   <aside class="sidebar-right">
-    <h2 data-i18n="export_title">Export</h2>
-    <h3 style="font-size:12px; color:var(--color-text-muted); margin-bottom:6px;" data-i18n="export_netbox">NetBox Export</h3>
-    <div class="export-section">
-      <button class="btn btn-success btn-block" id="export-json-btn" data-i18n="btn_json">Download JSON</button>
-      <button class="btn btn-secondary btn-block" id="export-yaml-btn" data-i18n="btn_yaml">Download YAML</button>
-      <button class="btn btn-secondary btn-block" id="export-csv-btn" data-i18n="btn_csv">Download CSV</button>
-      <button class="btn btn-secondary btn-block" id="copy-btn" data-i18n="btn_copy">Copy JSON</button>
-    </div>
-
-    <h3 style="font-size:12px; color:var(--color-text-muted); margin-top:12px; margin-bottom:6px;" data-i18n="export_project">Project Save / Load</h3>
-    <div class="export-section">
-      <button class="btn btn-primary btn-block" id="save-project-btn" data-i18n="btn_save_project">Save Project</button>
-      <button class="btn btn-secondary btn-block" id="load-project-btn" data-i18n="btn_load_project">Load Project</button>
-      <input type="file" id="load-project-file" accept=".json" style="display:none">
-    </div>
-
-    <div class="export-section" style="margin-top:12px;">
-      <h3 style="font-size:12px; color:var(--color-text-muted); margin-bottom:6px;" data-i18n="import_title">NetBox Import</h3>
-      <button class="btn btn-secondary btn-block" id="import-btn" data-i18n="btn_import">Import JSON</button>
-      <input type="file" id="import-file" accept=".json" style="display:none">
-    </div>
-
-    <div class="json-preview-section" style="margin-top:12px;">
-      <button class="btn btn-secondary btn-sm btn-block" id="json-preview-toggle" data-i18n="btn_json_preview">Live JSON Preview</button>
-      <pre class="json-preview" id="json-preview" style="display:none;"></pre>
-    </div>
-
-    <h2 style="margin-top:16px;">
-      <span data-i18n="devices_title">Devices</span> (<span id="device-count">0</span>)
-    </h2>
-    <div class="device-list" id="device-list">
-      <!-- Rendered by app.js -->
-    </div>
-
-    <div class="storage-indicator" id="storage-indicator">
-      <div class="storage-label">
-        <span data-i18n="storage_usage">Storage</span>: <span id="storage-usage-text">0 KB / 5 MB</span>
+    <!-- Accordion: NetBox Export -->
+    <details class="sidebar-accordion" open>
+      <summary class="sidebar-accordion-header" data-i18n="export_netbox">NetBox Export</summary>
+      <div class="sidebar-accordion-body">
+        <button class="btn btn-success btn-block" id="export-json-btn" data-i18n="btn_json">Download JSON</button>
+        <button class="btn btn-secondary btn-block" id="export-yaml-btn" data-i18n="btn_yaml">Download YAML</button>
+        <button class="btn btn-secondary btn-block" id="export-csv-btn" data-i18n="btn_csv">Download CSV</button>
+        <button class="btn btn-secondary btn-block" id="copy-btn" data-i18n="btn_copy">Copy JSON</button>
       </div>
-      <div class="storage-bar"><div class="storage-bar-fill" id="storage-bar-fill"></div></div>
-      <button class="btn btn-secondary btn-sm" id="clear-cache-btn" data-i18n="btn_clear_cache">Clear Cache</button>
-    </div>
+    </details>
+
+    <!-- Accordion: Project Save / Load -->
+    <details class="sidebar-accordion">
+      <summary class="sidebar-accordion-header" data-i18n="export_project">Project Save / Load</summary>
+      <div class="sidebar-accordion-body">
+        <button class="btn btn-primary btn-block" id="save-project-btn" data-i18n="btn_save_project">Save Project</button>
+        <button class="btn btn-secondary btn-block" id="load-project-btn" data-i18n="btn_load_project">Load Project</button>
+        <input type="file" id="load-project-file" accept=".json" style="display:none">
+      </div>
+    </details>
+
+    <!-- Accordion: NetBox Import -->
+    <details class="sidebar-accordion">
+      <summary class="sidebar-accordion-header" data-i18n="import_title">NetBox Import</summary>
+      <div class="sidebar-accordion-body">
+        <button class="btn btn-secondary btn-block" id="import-btn" data-i18n="btn_import">Import JSON</button>
+        <input type="file" id="import-file" accept=".json" style="display:none">
+      </div>
+    </details>
+
+    <!-- Accordion: JSON Preview -->
+    <details class="sidebar-accordion">
+      <summary class="sidebar-accordion-header" id="json-preview-toggle" data-i18n="btn_json_preview">Live JSON Preview</summary>
+      <div class="sidebar-accordion-body">
+        <pre class="json-preview" id="json-preview"></pre>
+      </div>
+    </details>
+
+    <!-- Accordion: Device List -->
+    <details class="sidebar-accordion">
+      <summary class="sidebar-accordion-header">
+        <span data-i18n="devices_title">Devices</span> (<span id="device-count">0</span>)
+      </summary>
+      <div class="sidebar-accordion-body">
+        <div class="device-list" id="device-list">
+          <!-- Rendered by app.js -->
+        </div>
+      </div>
+    </details>
+
+    <!-- Accordion: Storage -->
+    <details class="sidebar-accordion" open>
+      <summary class="sidebar-accordion-header" data-i18n="storage_usage">Storage</summary>
+      <div class="sidebar-accordion-body">
+        <div class="storage-indicator" id="storage-indicator">
+          <div class="storage-label">
+            <span data-i18n="storage_usage">Storage</span>: <span id="storage-usage-text">0 KB / 5 MB</span>
+          </div>
+          <div class="storage-bar"><div class="storage-bar-fill" id="storage-bar-fill"></div></div>
+          <button class="btn btn-secondary btn-sm" id="clear-cache-btn" data-i18n="btn_clear_cache">Clear Cache</button>
+        </div>
+      </div>
+    </details>
   </aside>
 </main>
 
@@ -1272,6 +1557,42 @@ dialog .dialog-actions {
         <input type="number" id="setting-rack-count" min="1" max="20" value="2">
       </div>
       <div id="rack-rows"></div>
+    </div>
+
+    <!-- NetBox Autocomplete (Opt-In) -->
+    <div class="netbox-autocomplete-section">
+      <h3 class="settings-section-title" data-i18n="netbox_autocomplete_title">NetBox Autocomplete (Optional)</h3>
+      <p class="settings-section-desc" data-i18n="netbox_autocomplete_desc">Upload exported files from NetBox (JSON, YAML, or CSV) to enable autocomplete for Device Types, Roles, and Manufacturers.</p>
+
+      <div class="netbox-upload-row">
+        <div class="netbox-upload-group">
+          <label data-i18n="netbox_device_types">Device Types</label>
+          <div class="netbox-upload-controls">
+            <button type="button" class="btn btn-secondary btn-sm" id="netbox-upload-types-btn" data-i18n="netbox_btn_upload">Upload</button>
+            <button type="button" class="btn btn-danger btn-sm" id="netbox-clear-types-btn" style="display:none" data-i18n="netbox_btn_clear">Clear</button>
+            <input type="file" id="netbox-types-file" accept=".json,.yaml,.yml,.csv,.tsv" style="display:none">
+          </div>
+          <span class="netbox-status empty" id="netbox-types-status" data-i18n="netbox_not_loaded">Not loaded</span>
+        </div>
+        <div class="netbox-upload-group">
+          <label data-i18n="netbox_roles">Roles</label>
+          <div class="netbox-upload-controls">
+            <button type="button" class="btn btn-secondary btn-sm" id="netbox-upload-roles-btn" data-i18n="netbox_btn_upload">Upload</button>
+            <button type="button" class="btn btn-danger btn-sm" id="netbox-clear-roles-btn" style="display:none" data-i18n="netbox_btn_clear">Clear</button>
+            <input type="file" id="netbox-roles-file" accept=".json,.yaml,.yml,.csv,.tsv" style="display:none">
+          </div>
+          <span class="netbox-status empty" id="netbox-roles-status" data-i18n="netbox_not_loaded">Not loaded</span>
+        </div>
+        <div class="netbox-upload-group">
+          <label data-i18n="netbox_manufacturers">Manufacturers</label>
+          <div class="netbox-upload-controls">
+            <button type="button" class="btn btn-secondary btn-sm" id="netbox-upload-mfr-btn" data-i18n="netbox_btn_upload">Upload</button>
+            <button type="button" class="btn btn-danger btn-sm" id="netbox-clear-mfr-btn" style="display:none" data-i18n="netbox_btn_clear">Clear</button>
+            <input type="file" id="netbox-mfr-file" accept=".json,.yaml,.yml,.csv,.tsv" style="display:none">
+          </div>
+          <span class="netbox-status empty" id="netbox-mfr-status" data-i18n="netbox_not_loaded">Not loaded</span>
+        </div>
+      </div>
     </div>
 
     <div class="dialog-actions">
@@ -1357,7 +1678,7 @@ function parsePositionList(input) {
 const translations = {
   en: {
     app_title: 'Rack Builder',
-    version: 'v0.5.1',
+    version: 'v0.6.0',
     btn_settings: 'Settings',
     btn_clear_devices: 'Clear Devices',
     btn_reset_all: 'Reset All',
@@ -1464,11 +1785,21 @@ const translations = {
     bulk_dir_down: 'Top → Bottom (descending)',
     setting_multi_rack: 'Multi-Rack Mode',
     setting_rack_count: 'Number of Racks',
+    netbox_autocomplete_title: 'NetBox Autocomplete (Optional)',
+    netbox_autocomplete_desc: 'Upload exported files from NetBox (JSON, YAML, or CSV) to enable autocomplete for Device Types, Roles, and Manufacturers.',
+    netbox_device_types: 'Device Types',
+    netbox_roles: 'Roles',
+    netbox_manufacturers: 'Manufacturers',
+    netbox_btn_upload: 'Upload',
+    netbox_btn_clear: 'Clear',
+    netbox_loaded: '{count} entries loaded',
+    netbox_not_loaded: 'Not loaded',
+    netbox_upload_invalid: 'Invalid file. Expected a JSON, YAML, or CSV file with name/slug columns.',
     ph_comments: '',
   },
   de: {
     app_title: 'Rack Builder',
-    version: 'v0.5.1',
+    version: 'v0.6.0',
     btn_settings: 'Einstellungen',
     btn_clear_devices: 'Geräte löschen',
     btn_reset_all: 'Alles zurücksetzen',
@@ -1575,6 +1906,16 @@ const translations = {
     bulk_dir_down: 'Oben → Unten (absteigend)',
     setting_multi_rack: 'Multi-Rack-Modus',
     setting_rack_count: 'Anzahl der Racks',
+    netbox_autocomplete_title: 'NetBox Autocomplete (Optional)',
+    netbox_autocomplete_desc: 'Lade exportierte Dateien aus NetBox hoch (JSON, YAML oder CSV), um Autocomplete für Gerätetypen, Rollen und Hersteller zu aktivieren.',
+    netbox_device_types: 'Gerätetypen',
+    netbox_roles: 'Rollen',
+    netbox_manufacturers: 'Hersteller',
+    netbox_btn_upload: 'Hochladen',
+    netbox_btn_clear: 'Löschen',
+    netbox_loaded: '{count} Einträge geladen',
+    netbox_not_loaded: 'Nicht geladen',
+    netbox_upload_invalid: 'Ungültige Datei. Erwartet wird eine JSON-, YAML- oder CSV-Datei mit name/slug-Spalten.',
     ph_comments: '',
   },
 };
@@ -3189,7 +3530,7 @@ function saveProject() {
 
   const project = {
     _format: 'rackbuilder-project',
-    _version: '0.5.1',
+    _version: '0.6.0',
     rackConfig: state.rackConfig,
     multiRackEnabled: state.multiRackEnabled,
     racks: state.racks,
@@ -3337,6 +3678,8 @@ function init() {
   initJsonPreview();
   initStorageIndicator();
   initBulkPositionHighlight();
+  initNetboxAutocomplete();
+  initAccordionAnimations();
   updateStorageIndicator();
   updateStats(state);
 
@@ -3443,10 +3786,71 @@ function initSettings() {
   const multiRackFields = document.getElementById('multi-rack-fields');
   const rackCountInput = document.getElementById('setting-rack-count');
 
-  function toggleMultiRackUI(enabled) {
-    singleRackFields.style.display = enabled ? 'none' : 'block';
-    multiRackFields.style.display = enabled ? 'block' : 'none';
-    if (enabled) renderRackRows();
+  // Smooth slide-toggle for a container element
+  function slideToggle(el, show, onDone) {
+    if (show) {
+      el.style.display = 'block';
+      el.style.overflow = 'hidden';
+      const targetHeight = el.scrollHeight;
+      el.style.height = '0px';
+      el.style.opacity = '0';
+      requestAnimationFrame(() => {
+        el.style.transition = 'height 0.35s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.3s ease';
+        requestAnimationFrame(() => {
+          el.style.height = targetHeight + 'px';
+          el.style.opacity = '1';
+        });
+      });
+      el.addEventListener('transitionend', function handler(ev) {
+        if (ev.propertyName !== 'height') return;
+        el.removeEventListener('transitionend', handler);
+        el.style.height = '';
+        el.style.overflow = '';
+        el.style.opacity = '';
+        el.style.transition = '';
+        if (onDone) onDone();
+      });
+    } else {
+      el.style.overflow = 'hidden';
+      el.style.height = el.scrollHeight + 'px';
+      el.style.opacity = '1';
+      requestAnimationFrame(() => {
+        el.style.transition = 'height 0.3s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.25s ease';
+        requestAnimationFrame(() => {
+          el.style.height = '0px';
+          el.style.opacity = '0';
+        });
+      });
+      el.addEventListener('transitionend', function handler(ev) {
+        if (ev.propertyName !== 'height') return;
+        el.removeEventListener('transitionend', handler);
+        el.style.display = 'none';
+        el.style.height = '';
+        el.style.overflow = '';
+        el.style.opacity = '';
+        el.style.transition = '';
+        if (onDone) onDone();
+      });
+    }
+  }
+
+  function toggleMultiRackUI(enabled, animate) {
+    if (animate) {
+      if (enabled) {
+        slideToggle(singleRackFields, false, () => {
+          renderRackRows();
+          slideToggle(multiRackFields, true);
+        });
+      } else {
+        slideToggle(multiRackFields, false, () => {
+          slideToggle(singleRackFields, true);
+        });
+      }
+    } else {
+      singleRackFields.style.display = enabled ? 'none' : 'block';
+      multiRackFields.style.display = enabled ? 'block' : 'none';
+      if (enabled) renderRackRows();
+    }
   }
 
   function renderRackRows() {
@@ -3454,11 +3858,33 @@ function initSettings() {
     const container = document.getElementById('rack-rows');
     const state = getState();
     const existingRacks = state.racks || [];
+    const currentRows = container.querySelectorAll('.rack-config-row');
+    const prevCount = currentRows.length;
+
+    if (count < prevCount) {
+      // Animate removal of excess rows, then rebuild
+      const rowsToRemove = Array.from(currentRows).slice(count);
+      let pending = rowsToRemove.length;
+      rowsToRemove.forEach((row, idx) => {
+        row.style.animationDelay = (idx * 50) + 'ms';
+        row.classList.add('rack-row-exit');
+        row.addEventListener('animationend', () => {
+          pending--;
+          if (pending === 0) buildRows(count, container, existingRacks, prevCount);
+        }, { once: true });
+      });
+    } else {
+      buildRows(count, container, existingRacks, prevCount);
+    }
+  }
+
+  function buildRows(count, container, existingRacks, prevCount) {
     let html = '';
     for (let i = 0; i < count; i++) {
       const rack = existingRacks[i] || {};
       const dir = rack.numberingDirection || 'bottom-to-top';
-      html += `<div class="rack-config-row">
+      const isNew = i >= prevCount;
+      html += `<div class="rack-config-row${isNew ? ' rack-row-enter' : ''}">
         <span class="rack-row-num">${i + 1}.</span>
         <input type="text" class="rack-row-name" value="${rack.name || `Rack-${String(i + 1).padStart(2, '0')}`}" placeholder="${t('setting_name')}" required>
         <input type="number" class="rack-row-units" value="${rack.totalUnits || 42}" min="1" max="60" required>
@@ -3470,10 +3896,20 @@ function initSettings() {
       </div>`;
     }
     container.innerHTML = html;
+
+    // Animate newly added rows with staggered delay
+    const newRows = container.querySelectorAll('.rack-row-enter');
+    newRows.forEach((row, idx) => {
+      row.style.animationDelay = (idx * 60) + 'ms';
+      row.addEventListener('animationend', () => {
+        row.classList.remove('rack-row-enter');
+        row.style.animationDelay = '';
+      }, { once: true });
+    });
   }
 
   multiRackCheckbox.addEventListener('change', () => {
-    toggleMultiRackUI(multiRackCheckbox.checked);
+    toggleMultiRackUI(multiRackCheckbox.checked, true);
   });
 
   rackCountInput.addEventListener('input', renderRackRows);
@@ -3505,7 +3941,7 @@ function initSettings() {
   });
 
   document.getElementById('settings-cancel').addEventListener('click', () => {
-    modal.close();
+    closeDialogAnimated(modal);
   });
 
   form.addEventListener('submit', (e) => {
@@ -3546,8 +3982,26 @@ function initSettings() {
         rearColor: document.getElementById('setting-rear-color').value,
       });
     }
-    modal.close();
+    closeDialogAnimated(modal);
   });
+}
+
+// ─── Dialog animation helper ─────────────────────────────────────────────────
+
+function closeDialogAnimated(dialog) {
+  if (!dialog.open) return;
+  dialog.classList.add('dialog-closing');
+  const done = () => {
+    dialog.classList.remove('dialog-closing');
+    if (dialog.open) dialog.close();
+  };
+  dialog.addEventListener('animationend', function handler() {
+    dialog.removeEventListener('animationend', handler);
+    clearTimeout(fallback);
+    done();
+  });
+  // Fallback in case animationend never fires
+  const fallback = setTimeout(done, 300);
 }
 
 // ─── Keyboard shortcuts ──────────────────────────────────────────────────────
@@ -3612,22 +4066,424 @@ function updateStats(state) {
   }
 }
 
+// ─── NetBox Autocomplete ─────────────────────────────────────────────────────
+
+const STORAGE_KEY_TYPES = 'rackbuilder_netbox_device_types';
+const STORAGE_KEY_ROLES = 'rackbuilder_netbox_roles';
+const STORAGE_KEY_MANUFACTURERS = 'rackbuilder_netbox_manufacturers';
+
+function loadNetboxEntries(key) {
+  try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : []; }
+  catch { return []; }
+}
+
+function saveNetboxEntries(key, entries) { localStorage.setItem(key, JSON.stringify(entries)); }
+
+function extractNameSlug(items) {
+  if (!Array.isArray(items)) return null;
+  const result = items
+    .filter(e => e && (e.name || e.slug || e.display || e.model))
+    .map(e => ({
+      name: e.model || e.name || e.display || e.slug,
+      slug: e.slug || (e.model || e.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+    }));
+  return result.length > 0 ? result : null;
+}
+
+function parseNetboxJSON(text) {
+  const json = JSON.parse(text);
+  if (json && typeof json === 'object' && !Array.isArray(json) && Array.isArray(json.results)) return json.results;
+  if (Array.isArray(json)) return json;
+  // Single device type object (e.g. from NetBox device type library)
+  if (json && typeof json === 'object' && !Array.isArray(json) && (json.model || json.slug || json.name)) return [json];
+  return null;
+}
+
+function parseNetboxCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return null;
+  const sep = lines[0].includes('\t') ? '\t' : ',';
+  const headers = lines[0].split(sep).map(h => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
+  const items = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = lines[i].split(sep).map(v => v.trim().replace(/^["']|["']$/g, ''));
+    if (vals.length < headers.length) continue;
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h] = vals[idx]; });
+    items.push(obj);
+  }
+  return items.length > 0 ? items : null;
+}
+
+function parseNetboxYAML(text) {
+  const lines = text.split(/\r?\n/);
+
+  // Detect whether the file is a root-level list or a single object.
+  let hasRootList = false;
+  for (const rawLine of lines) {
+    const line = rawLine.trimEnd();
+    if (!line || line.startsWith('#') || line === '---' || line === '...') continue;
+    if (line.match(/^-\s/)) { hasRootList = true; }
+    break;
+  }
+
+  if (!hasRootList) {
+    // Single or multi-document YAML (documents separated by ---).
+    // Each document between '---' lines is one device type.
+    // Skip indented lines so nested blocks (interfaces, ports…) are ignored.
+    const items = [];
+    let current = {};
+    for (const rawLine of lines) {
+      const line = rawLine.trimEnd();
+      if (!line || line.startsWith('#')) continue;
+      if (line === '---' || line === '...') {
+        if (current.model || current.slug || current.name) items.push(current);
+        current = {};
+        continue;
+      }
+      if (line.startsWith(' ') || line.startsWith('\t')) continue;
+      const kvMatch = line.match(/^(\w[\w-]*):\s+(.+)/);
+      if (kvMatch) {
+        current[kvMatch[1]] = kvMatch[2].replace(/^["']|["']$/g, '');
+      }
+    }
+    if (current.model || current.slug || current.name) items.push(current);
+    return items.length > 0 ? items : null;
+  }
+
+  // Root-level list: parse each list item, but only capture fields at the item's
+  // own indentation depth to avoid nested object field collisions.
+  const items = [];
+  let current = null;
+  let itemFieldIndent = -1;
+  for (const rawLine of lines) {
+    const line = rawLine.trimEnd();
+    if (!line || line.startsWith('#')) continue;
+    const listMatch = line.match(/^(\s*)-\s+(.*)/);
+    if (listMatch) {
+      if (current) items.push(current);
+      current = {};
+      itemFieldIndent = listMatch[1].length + 2;
+      const rest = listMatch[2].trim();
+      const inlineMatch = rest.match(/^\{(.*)\}$/);
+      if (inlineMatch) {
+        for (const pair of inlineMatch[1].split(',')) {
+          const [k, ...vParts] = pair.split(':');
+          if (k && vParts.length) current[k.trim().replace(/^["']|["']$/g, '')] = vParts.join(':').trim().replace(/^["']|["']$/g, '');
+        }
+      } else {
+        const kvMatch = rest.match(/^(\w[\w-]*):\s*(.*)/);
+        if (kvMatch) current[kvMatch[1]] = kvMatch[2].replace(/^["']|["']$/g, '');
+      }
+    } else if (current && itemFieldIndent >= 0) {
+      const indent = line.search(/\S/);
+      if (indent !== itemFieldIndent) continue;
+      const kvMatch = line.match(/^\s+(\w[\w-]*):\s*(.*)/);
+      if (kvMatch) current[kvMatch[1]] = kvMatch[2].replace(/^["']|["']$/g, '');
+    }
+  }
+  if (current) items.push(current);
+  return items.length > 0 ? items : null;
+}
+
+function detectAndParseNetbox(text, filename) {
+  const ext = (filename || '').split('.').pop().toLowerCase();
+  if (ext === 'json') return parseNetboxJSON(text);
+  if (ext === 'csv' || ext === 'tsv') return parseNetboxCSV(text);
+  if (ext === 'yaml' || ext === 'yml') return parseNetboxYAML(text);
+  const trimmed = text.trimStart();
+  if (trimmed.startsWith('[') || trimmed.startsWith('{')) { try { return parseNetboxJSON(text); } catch {} }
+  if (/^[\w"'].*[,\t]/.test(trimmed.split('\n')[0])) { const r = parseNetboxCSV(text); if (r) return r; }
+  if (trimmed.startsWith('-')) return parseNetboxYAML(text);
+  return null;
+}
+
+function handleNetboxUpload(fileInput, storageKey, onDone) {
+  const file = fileInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const items = detectAndParseNetbox(ev.target.result, file.name);
+      const entries = items ? extractNameSlug(items) : null;
+      if (!entries || entries.length === 0) { alert(t('netbox_upload_invalid')); return; }
+      saveNetboxEntries(storageKey, entries);
+      if (onDone) onDone(entries);
+    } catch { alert(t('netbox_upload_invalid')); }
+  };
+  reader.readAsText(file);
+  fileInput.value = '';
+}
+
+// ── Modern autocomplete dropdown ──
+
+const AC_MAX_VISIBLE = 8;
+const acDropdowns = new Map();
+
+function acEscapeHTML(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function acHighlightMatch(text, query) {
+  if (!query) return acEscapeHTML(text);
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return acEscapeHTML(text);
+  return acEscapeHTML(text.slice(0, idx)) + '<mark>' + acEscapeHTML(text.slice(idx, idx + query.length)) + '</mark>' + acEscapeHTML(text.slice(idx + query.length));
+}
+
+function acFilterEntries(entries, query) {
+  if (!query) return entries.slice(0, AC_MAX_VISIBLE * 2);
+  const q = query.toLowerCase();
+  const starts = [], contains = [];
+  for (const e of entries) {
+    const nameL = e.name.toLowerCase(), slugL = e.slug.toLowerCase();
+    if (nameL.startsWith(q) || slugL.startsWith(q)) starts.push(e);
+    else if (nameL.includes(q) || slugL.includes(q)) contains.push(e);
+  }
+  return [...starts, ...contains].slice(0, AC_MAX_VISIBLE * 2);
+}
+
+function acCreateDropdown(input) {
+  const dropdown = document.createElement('div');
+  dropdown.className = 'ac-dropdown';
+  dropdown.setAttribute('role', 'listbox');
+  const parent = input.closest('.form-group') || input.parentElement;
+  parent.style.position = 'relative';
+  parent.appendChild(dropdown);
+  return dropdown;
+}
+
+function acRenderDropdown(inputId, query) {
+  const state = acDropdowns.get(inputId);
+  if (!state) return;
+  const filtered = acFilterEntries(state.entries, query);
+  state.filtered = filtered;
+  state.selectedIdx = -1;
+  if (filtered.length === 0 || !document.getElementById(inputId).matches(':focus')) {
+    state.dropdown.classList.remove('visible');
+    state.dropdown.innerHTML = '';
+    return;
+  }
+  state.dropdown.innerHTML = filtered.map((e, i) =>
+    `<div class="ac-option" data-index="${i}" role="option">
+      <span class="ac-option-name">${acHighlightMatch(e.name, query)}</span>
+      <span class="ac-option-slug">${acHighlightMatch(e.slug, query)}</span>
+    </div>`
+  ).join('');
+  state.dropdown.classList.add('visible');
+}
+
+function acSelectOption(inputId, index) {
+  const state = acDropdowns.get(inputId);
+  if (!state || !state.filtered || !state.filtered[index]) return;
+  const input = document.getElementById(inputId);
+  input.value = state.filtered[index].name;
+  input.dispatchEvent(new Event('input', { bubbles: true }));
+  acCloseDropdown(inputId);
+}
+
+function acCloseDropdown(inputId) {
+  const state = acDropdowns.get(inputId);
+  if (!state) return;
+  state.dropdown.classList.remove('visible');
+  state.selectedIdx = -1;
+}
+
+function acUpdateHighlight(inputId) {
+  const state = acDropdowns.get(inputId);
+  if (!state) return;
+  state.dropdown.querySelectorAll('.ac-option').forEach((el, i) => {
+    el.classList.toggle('highlighted', i === state.selectedIdx);
+    if (i === state.selectedIdx) el.scrollIntoView({ block: 'nearest' });
+  });
+}
+
+function attachAutocomplete(inputId, entries) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  input.removeAttribute('list');
+  if (acDropdowns.has(inputId)) { acDropdowns.get(inputId).entries = entries; return; }
+
+  const dropdown = acCreateDropdown(input);
+  acDropdowns.set(inputId, { dropdown, entries, filtered: [], selectedIdx: -1 });
+
+  input.addEventListener('input', () => {
+    if ((acDropdowns.get(inputId)?.entries || []).length === 0) return;
+    acRenderDropdown(inputId, input.value);
+  });
+  input.addEventListener('focus', () => {
+    if ((acDropdowns.get(inputId)?.entries || []).length === 0) return;
+    acRenderDropdown(inputId, input.value);
+  });
+  input.addEventListener('blur', () => { setTimeout(() => acCloseDropdown(inputId), 180); });
+  input.addEventListener('keydown', (e) => {
+    const st = acDropdowns.get(inputId);
+    if (!st || !st.filtered || st.filtered.length === 0 || !st.dropdown.classList.contains('visible')) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); st.selectedIdx = Math.min(st.selectedIdx + 1, st.filtered.length - 1); acUpdateHighlight(inputId); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); st.selectedIdx = Math.max(st.selectedIdx - 1, 0); acUpdateHighlight(inputId); }
+    else if (e.key === 'Enter' && st.selectedIdx >= 0) { e.preventDefault(); acSelectOption(inputId, st.selectedIdx); }
+    else if (e.key === 'Escape') { acCloseDropdown(inputId); }
+  });
+  dropdown.addEventListener('mousedown', (e) => {
+    const option = e.target.closest('.ac-option');
+    if (option) { e.preventDefault(); acSelectOption(inputId, parseInt(option.dataset.index)); }
+  });
+}
+
+function updateNetboxUploadStatus() {
+  const data = [
+    { entries: loadNetboxEntries(STORAGE_KEY_TYPES), statusId: 'netbox-types-status', clearId: 'netbox-clear-types-btn' },
+    { entries: loadNetboxEntries(STORAGE_KEY_ROLES), statusId: 'netbox-roles-status', clearId: 'netbox-clear-roles-btn' },
+    { entries: loadNetboxEntries(STORAGE_KEY_MANUFACTURERS), statusId: 'netbox-mfr-status', clearId: 'netbox-clear-mfr-btn' },
+  ];
+  for (const { entries, statusId, clearId } of data) {
+    const statusEl = document.getElementById(statusId);
+    const clearBtn = document.getElementById(clearId);
+    if (statusEl) {
+      statusEl.textContent = entries.length > 0 ? t('netbox_loaded', { count: entries.length }) : t('netbox_not_loaded');
+      statusEl.className = 'netbox-status ' + (entries.length > 0 ? 'loaded' : 'empty');
+    }
+    if (clearBtn) clearBtn.style.display = entries.length > 0 ? '' : 'none';
+  }
+}
+
+function initNetboxAutocomplete() {
+  // Wire upload buttons
+  const wireUpload = (btnId, fileId, storageKey, inputId) => {
+    const btn = document.getElementById(btnId);
+    const fileInput = document.getElementById(fileId);
+    if (!btn || !fileInput) return;
+    btn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
+      handleNetboxUpload(fileInput, storageKey, (entries) => {
+        attachAutocomplete(inputId, entries);
+        updateNetboxUploadStatus();
+      });
+    });
+  };
+  const wireClear = (clearBtnId, storageKey, inputId) => {
+    const btn = document.getElementById(clearBtnId);
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      localStorage.removeItem(storageKey);
+      attachAutocomplete(inputId, []);
+      updateNetboxUploadStatus();
+    });
+  };
+
+  wireUpload('netbox-upload-types-btn', 'netbox-types-file', STORAGE_KEY_TYPES, 'dev-type');
+  wireUpload('netbox-upload-roles-btn', 'netbox-roles-file', STORAGE_KEY_ROLES, 'dev-role');
+  wireUpload('netbox-upload-mfr-btn', 'netbox-mfr-file', STORAGE_KEY_MANUFACTURERS, 'dev-manufacturer');
+
+  wireClear('netbox-clear-types-btn', STORAGE_KEY_TYPES, 'dev-type');
+  wireClear('netbox-clear-roles-btn', STORAGE_KEY_ROLES, 'dev-role');
+  wireClear('netbox-clear-mfr-btn', STORAGE_KEY_MANUFACTURERS, 'dev-manufacturer');
+
+  // Populate on load
+  attachAutocomplete('dev-type', loadNetboxEntries(STORAGE_KEY_TYPES));
+  attachAutocomplete('dev-role', loadNetboxEntries(STORAGE_KEY_ROLES));
+  attachAutocomplete('dev-manufacturer', loadNetboxEntries(STORAGE_KEY_MANUFACTURERS));
+  updateNetboxUploadStatus();
+}
+
+// ─── Accordion animations ────────────────────────────────────────────────────
+
+function initAccordionAnimations() {
+  document.querySelectorAll('.sidebar-accordion').forEach(details => {
+    const summary = details.querySelector('.sidebar-accordion-header');
+    const body = details.querySelector('.sidebar-accordion-body');
+    if (!summary || !body) return;
+
+    let isAnimating = false;
+
+    summary.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (isAnimating) return;
+      isAnimating = true;
+
+      if (details.open) {
+        body.style.height = body.scrollHeight + 'px';
+        body.style.opacity = '1';
+        body.style.paddingTop = getComputedStyle(body).paddingTop;
+        body.style.paddingBottom = getComputedStyle(body).paddingBottom;
+
+        requestAnimationFrame(() => {
+          body.classList.add('accordion-animating');
+          requestAnimationFrame(() => {
+            body.style.height = '0px';
+            body.style.opacity = '0';
+            body.style.paddingTop = '0px';
+            body.style.paddingBottom = '0px';
+          });
+        });
+
+        body.addEventListener('transitionend', function handler(ev) {
+          if (ev.propertyName !== 'height') return;
+          body.removeEventListener('transitionend', handler);
+          details.removeAttribute('open');
+          body.classList.remove('accordion-animating');
+          body.style.height = '';
+          body.style.opacity = '';
+          body.style.paddingTop = '';
+          body.style.paddingBottom = '';
+          isAnimating = false;
+        });
+      } else {
+        details.setAttribute('open', '');
+        const targetHeight = body.scrollHeight;
+        body.style.height = '0px';
+        body.style.opacity = '0';
+        body.style.paddingTop = '0px';
+        body.style.paddingBottom = '0px';
+
+        requestAnimationFrame(() => {
+          body.classList.add('accordion-animating');
+          requestAnimationFrame(() => {
+            body.style.height = targetHeight + 'px';
+            body.style.opacity = '1';
+            body.style.paddingTop = '';
+            body.style.paddingBottom = '';
+          });
+        });
+
+        body.addEventListener('transitionend', function handler(ev) {
+          if (ev.propertyName !== 'height') return;
+          body.removeEventListener('transitionend', handler);
+          body.classList.remove('accordion-animating');
+          body.style.height = '';
+          body.style.opacity = '';
+          isAnimating = false;
+        });
+      }
+    });
+  });
+}
+
 // ─── Live JSON Preview ──────────────────────────────────────────────────────
 
 function initJsonPreview() {
-  document.getElementById('json-preview-toggle').addEventListener('click', () => {
-    const el = document.getElementById('json-preview');
-    const isHidden = el.style.display === 'none' || !el.style.display;
-    el.style.display = isHidden ? 'block' : 'none';
-    if (isHidden) {
-      updateJsonPreview(getState());
+  // When the JSON preview accordion opens, refresh the preview content
+  const toggle = document.getElementById('json-preview-toggle');
+  if (toggle) {
+    const details = toggle.closest('.sidebar-accordion');
+    if (details) {
+      // Use MutationObserver to detect when 'open' attribute is added
+      const observer = new MutationObserver(() => {
+        if (details.open) {
+          updateJsonPreview(getState());
+        }
+      });
+      observer.observe(details, { attributes: true, attributeFilter: ['open'] });
     }
-  });
+  }
 }
 
 function updateJsonPreview(state) {
   const el = document.getElementById('json-preview');
-  if (!el || el.style.display === 'none') return;
+  if (!el) return;
+  // Check if the accordion parent is open
+  const accordion = el.closest('.sidebar-accordion');
+  if (accordion && !accordion.open) return;
   // In multi-rack mode, show all devices from all racks
   if (state.multiRackEnabled && state.racks.length > 0) {
     const allData = [];

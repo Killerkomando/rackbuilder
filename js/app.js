@@ -8,6 +8,7 @@ import { initDeviceForm, populateFormForEdit } from './device-form.js';
 import { initDragDrop } from './drag-drop.js';
 import { initExport } from './export.js';
 import { t, getCurrentLang, setLang, applyTranslations } from './i18n.js';
+import { initNetboxAutocomplete } from './netbox-autocomplete.js';
 
 // Initialize the application
 function init() {
@@ -43,6 +44,8 @@ function init() {
   initJsonPreview();
   initStorageIndicator();
   initBulkPositionHighlight();
+  initNetboxAutocomplete();
+  initAccordionAnimations();
   updateStorageIndicator();
   updateStats(state);
 
@@ -152,10 +155,74 @@ function initSettings() {
   const multiRackFields = document.getElementById('multi-rack-fields');
   const rackCountInput = document.getElementById('setting-rack-count');
 
-  function toggleMultiRackUI(enabled) {
-    singleRackFields.style.display = enabled ? 'none' : 'block';
-    multiRackFields.style.display = enabled ? 'block' : 'none';
-    if (enabled) renderRackRows();
+  // Smooth slide-toggle for a container element
+  function slideToggle(el, show, onDone) {
+    if (show) {
+      // ── Slide open ──
+      el.style.display = 'block';
+      el.style.overflow = 'hidden';
+      const targetHeight = el.scrollHeight;
+      el.style.height = '0px';
+      el.style.opacity = '0';
+      requestAnimationFrame(() => {
+        el.style.transition = 'height 0.35s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.3s ease';
+        requestAnimationFrame(() => {
+          el.style.height = targetHeight + 'px';
+          el.style.opacity = '1';
+        });
+      });
+      el.addEventListener('transitionend', function handler(ev) {
+        if (ev.propertyName !== 'height') return;
+        el.removeEventListener('transitionend', handler);
+        el.style.height = '';
+        el.style.overflow = '';
+        el.style.opacity = '';
+        el.style.transition = '';
+        if (onDone) onDone();
+      });
+    } else {
+      // ── Slide closed ──
+      el.style.overflow = 'hidden';
+      el.style.height = el.scrollHeight + 'px';
+      el.style.opacity = '1';
+      requestAnimationFrame(() => {
+        el.style.transition = 'height 0.3s cubic-bezier(0.25,0.46,0.45,0.94), opacity 0.25s ease';
+        requestAnimationFrame(() => {
+          el.style.height = '0px';
+          el.style.opacity = '0';
+        });
+      });
+      el.addEventListener('transitionend', function handler(ev) {
+        if (ev.propertyName !== 'height') return;
+        el.removeEventListener('transitionend', handler);
+        el.style.display = 'none';
+        el.style.height = '';
+        el.style.overflow = '';
+        el.style.opacity = '';
+        el.style.transition = '';
+        if (onDone) onDone();
+      });
+    }
+  }
+
+  function toggleMultiRackUI(enabled, animate) {
+    if (animate) {
+      if (enabled) {
+        slideToggle(singleRackFields, false, () => {
+          renderRackRows();
+          slideToggle(multiRackFields, true);
+        });
+      } else {
+        slideToggle(multiRackFields, false, () => {
+          slideToggle(singleRackFields, true);
+        });
+      }
+    } else {
+      // No animation (initial load)
+      singleRackFields.style.display = enabled ? 'none' : 'block';
+      multiRackFields.style.display = enabled ? 'block' : 'none';
+      if (enabled) renderRackRows();
+    }
   }
 
   function renderRackRows() {
@@ -163,11 +230,33 @@ function initSettings() {
     const container = document.getElementById('rack-rows');
     const state = getState();
     const existingRacks = state.racks || [];
+    const currentRows = container.querySelectorAll('.rack-config-row');
+    const prevCount = currentRows.length;
+
+    if (count < prevCount) {
+      // ── Animate removal of excess rows, then rebuild ──
+      const rowsToRemove = Array.from(currentRows).slice(count);
+      let pending = rowsToRemove.length;
+      rowsToRemove.forEach((row, idx) => {
+        row.style.animationDelay = (idx * 50) + 'ms';
+        row.classList.add('rack-row-exit');
+        row.addEventListener('animationend', () => {
+          pending--;
+          if (pending === 0) buildRows(count, container, existingRacks, prevCount);
+        }, { once: true });
+      });
+    } else {
+      buildRows(count, container, existingRacks, prevCount);
+    }
+  }
+
+  function buildRows(count, container, existingRacks, prevCount) {
     let html = '';
     for (let i = 0; i < count; i++) {
       const rack = existingRacks[i] || {};
       const dir = rack.numberingDirection || 'bottom-to-top';
-      html += `<div class="rack-config-row">
+      const isNew = i >= prevCount;
+      html += `<div class="rack-config-row${isNew ? ' rack-row-enter' : ''}">
         <span class="rack-row-num">${i + 1}.</span>
         <input type="text" class="rack-row-name" value="${rack.name || `Rack-${String(i + 1).padStart(2, '0')}`}" placeholder="${t('setting_name')}" required>
         <input type="number" class="rack-row-units" value="${rack.totalUnits || 42}" min="1" max="60" required>
@@ -179,10 +268,20 @@ function initSettings() {
       </div>`;
     }
     container.innerHTML = html;
+
+    // Animate newly added rows with staggered delay
+    const newRows = container.querySelectorAll('.rack-row-enter');
+    newRows.forEach((row, idx) => {
+      row.style.animationDelay = (idx * 60) + 'ms';
+      row.addEventListener('animationend', () => {
+        row.classList.remove('rack-row-enter');
+        row.style.animationDelay = '';
+      }, { once: true });
+    });
   }
 
   multiRackCheckbox.addEventListener('change', () => {
-    toggleMultiRackUI(multiRackCheckbox.checked);
+    toggleMultiRackUI(multiRackCheckbox.checked, true);
   });
 
   rackCountInput.addEventListener('input', renderRackRows);
@@ -214,7 +313,7 @@ function initSettings() {
   });
 
   document.getElementById('settings-cancel').addEventListener('click', () => {
-    modal.close();
+    closeDialogAnimated(modal);
   });
 
   form.addEventListener('submit', (e) => {
@@ -255,8 +354,26 @@ function initSettings() {
         rearColor: document.getElementById('setting-rear-color').value,
       });
     }
-    modal.close();
+    closeDialogAnimated(modal);
   });
+}
+
+// ─── Dialog animation helper ─────────────────────────────────────────────────
+
+function closeDialogAnimated(dialog) {
+  if (!dialog.open) return;
+  dialog.classList.add('dialog-closing');
+  const done = () => {
+    dialog.classList.remove('dialog-closing');
+    if (dialog.open) dialog.close();
+  };
+  dialog.addEventListener('animationend', function handler() {
+    dialog.removeEventListener('animationend', handler);
+    clearTimeout(fallback);
+    done();
+  });
+  // Fallback in case animationend never fires
+  const fallback = setTimeout(done, 300);
 }
 
 // ─── Keyboard shortcuts ──────────────────────────────────────────────────────
@@ -324,19 +441,20 @@ function updateStats(state) {
 // ─── Live JSON Preview ──────────────────────────────────────────────────────
 
 function initJsonPreview() {
-  document.getElementById('json-preview-toggle').addEventListener('click', () => {
-    const el = document.getElementById('json-preview');
-    const isHidden = el.style.display === 'none' || !el.style.display;
-    el.style.display = isHidden ? 'block' : 'none';
-    if (isHidden) {
-      updateJsonPreview(getState());
-    }
-  });
+  const details = document.getElementById('json-preview-toggle')?.closest('details');
+  if (details) {
+    details.addEventListener('toggle', () => {
+      if (details.open) {
+        updateJsonPreview(getState());
+      }
+    });
+  }
 }
 
 function updateJsonPreview(state) {
   const el = document.getElementById('json-preview');
-  if (!el || el.style.display === 'none') return;
+  const details = el?.closest('details');
+  if (!el || (details && !details.open)) return;
   // In multi-rack mode, show all devices from all racks
   if (state.multiRackEnabled && state.racks.length > 0) {
     const allData = [];
@@ -495,6 +613,89 @@ function initUndoRedo() {
 function updateUndoRedoButtons() {
   document.getElementById('undo-btn').disabled = !canUndo();
   document.getElementById('redo-btn').disabled = !canRedo();
+}
+
+// ─── Accordion animations ────────────────────────────────────────────────────
+
+function initAccordionAnimations() {
+  document.querySelectorAll('.sidebar-accordion').forEach(details => {
+    const summary = details.querySelector('.sidebar-accordion-header');
+    const body = details.querySelector('.sidebar-accordion-body');
+    if (!summary || !body) return;
+
+    let isAnimating = false;
+
+    summary.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (isAnimating) return;
+      isAnimating = true;
+
+      if (details.open) {
+        // ── Close ──
+        // 1. Lock current height so the browser has a start value
+        body.style.height = body.scrollHeight + 'px';
+        body.style.opacity = '1';
+        body.style.paddingTop = getComputedStyle(body).paddingTop;
+        body.style.paddingBottom = getComputedStyle(body).paddingBottom;
+
+        // 2. Enable transition after one frame, then set target values
+        requestAnimationFrame(() => {
+          body.classList.add('accordion-animating');
+          requestAnimationFrame(() => {
+            body.style.height = '0px';
+            body.style.opacity = '0';
+            body.style.paddingTop = '0px';
+            body.style.paddingBottom = '0px';
+          });
+        });
+
+        // 3. Clean up after transition finishes (listen only for height)
+        body.addEventListener('transitionend', function handler(ev) {
+          if (ev.propertyName !== 'height') return;
+          body.removeEventListener('transitionend', handler);
+          details.removeAttribute('open');
+          body.classList.remove('accordion-animating');
+          body.style.height = '';
+          body.style.opacity = '';
+          body.style.paddingTop = '';
+          body.style.paddingBottom = '';
+          isAnimating = false;
+        });
+      } else {
+        // ── Open ──
+        // 1. Set open so content renders (needed to measure scrollHeight)
+        details.setAttribute('open', '');
+
+        // 2. Start from collapsed
+        const targetHeight = body.scrollHeight;
+        body.style.height = '0px';
+        body.style.opacity = '0';
+        body.style.paddingTop = '0px';
+        body.style.paddingBottom = '0px';
+
+        // 3. Enable transition after one frame, then set target values
+        requestAnimationFrame(() => {
+          body.classList.add('accordion-animating');
+          requestAnimationFrame(() => {
+            body.style.height = targetHeight + 'px';
+            body.style.opacity = '1';
+            body.style.paddingTop = '';
+            body.style.paddingBottom = '';
+          });
+        });
+
+        // 4. Clean up
+        body.addEventListener('transitionend', function handler(ev) {
+          if (ev.propertyName !== 'height') return;
+          body.removeEventListener('transitionend', handler);
+          body.classList.remove('accordion-animating');
+          body.style.height = '';
+          body.style.opacity = '';
+          isAnimating = false;
+        });
+      }
+    });
+  });
 }
 
 // Start
