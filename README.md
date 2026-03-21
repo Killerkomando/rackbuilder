@@ -1,6 +1,6 @@
-# Rack Builder v0.6.0
+# Rack Builder v0.7.0
 
-Visual rack planning tool for creating NetBox-compatible JSON imports. Plan your server rack layouts with drag & drop, collision detection, and bulk device creation — then export directly as JSON, YAML, or CSV.
+Visual rack planning tool for creating NetBox-compatible JSON imports. Plan your server rack layouts with drag & drop, collision detection, and bulk device creation — then export directly as JSON, YAML, CSV, or PNG.
 
 ## Quick Start
 
@@ -67,14 +67,29 @@ This is useful for quick deployment, embedding, or environments where multiple f
 ### NetBox Autocomplete (Optional)
 
 - **NetBox Data Upload** — Upload exported Device Types, Roles, and Manufacturers from NetBox (JSON, YAML, or CSV) in Settings to enable autocomplete
+- **NetBox Live API** — Alternatively connect directly to a running NetBox instance via URL + API token; test the connection and fetch Device Types, Roles, and Manufacturers with paginated API calls (no CORS proxy required when NetBox is on the same network)
 - **Multi-Document YAML Support** — Supports the NetBox direct-export YAML format where multiple device types are separated by `---` document markers; each entry is parsed as an individual device type
-- **Modern Autocomplete Dropdown** — Custom-styled dropdown with fuzzy search, highlighted matches, keyboard navigation (Arrow Up/Down, Enter, Escape), and two-column layout showing name + slug
-- **Per-Field Autocomplete** — Device Type, Role, and Manufacturer fields each get their own autocomplete backed by uploaded NetBox data
+- **Modern Autocomplete Dropdown** — Custom-styled dropdown with fuzzy search, highlighted matches, keyboard navigation (Arrow Up/Down, Enter, Escape), and two-column layout showing name + slug. Dropdown is body-appended and repositions on scroll, so it is never clipped by sidebar overflow.
+- **Autocomplete Meta Badges** — Device Type entries show U height and Full Depth badges in the dropdown. Selecting a device type auto-fills the height and depth fields in the form.
+- **Per-Field Autocomplete** — Device Type, Role, and Manufacturer fields each get their own autocomplete backed by uploaded or API-fetched NetBox data
 
 ### Live Feedback
 
 - **Live Statistics** — Real-time rack utilization percentage broken down by front and rear face
+- **Utilization Bar** — Visual bar below the rack showing front/rear fill ratio at a glance
+- **Device Search** — Search box in the rack view filters and highlights matching devices; non-matching devices are dimmed
+- **Auto-fill Toast** — Brief toast notification confirms when clicking a rack cell auto-fills the position field
 - **Live JSON Preview** — Toggle panel showing the NetBox JSON output in real-time as devices are added or moved
+
+### Responsive Layout
+
+- **Sidebar Drawers** — On narrow viewports, sidebars slide in as drawers via hamburger toggle buttons with a backdrop overlay
+- **Settings Modal Tabs** — Tabbed settings dialog with a sliding pill indicator for smooth tab switching
+- **Custom Keyboard Shortcuts** — Record and reassign keyboard shortcuts from within the Settings dialog; conflicts are flagged inline
+
+### Export
+
+- **PNG Export** — Download the current rack view as a PNG image (respects dark/light theme)
 
 ### Offline & PWA
 
@@ -110,7 +125,7 @@ The "Save Project" function exports a self-contained file that preserves all dat
 ```json
 {
   "_format": "rackbuilder-project",
-  "_version": "0.5.0",
+  "_version": "0.7.0",
   "rackConfig": {
     "name": "Rack-01",
     "totalUnits": 42,

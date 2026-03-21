@@ -6,6 +6,10 @@ import { t } from './i18n.js';
 // Cached unit height — recalculated on each render
 let currentUnitHeight = 28;
 
+// Search filter term — set externally, applied in renderDeviceBlocks
+let searchFilter = '';
+export function setSearchFilter(term) { searchFilter = term; }
+
 /**
  * Calculate the optimal unit height to fit the rack on screen.
  */
@@ -139,7 +143,15 @@ function renderDeviceBlocks(devices, face, unitOrder, selectedDeviceId) {
     const fontSize = uh < 20 ? '10px' : '11px';
 
     const fdClass = device.fullDepth ? ' device-block--full-depth' : '';
-    html += `<div class="device-block${isSelected ? ' selected' : ''}${fdClass}"
+    let searchClass = '';
+    if (searchFilter) {
+      const q = searchFilter.toLowerCase();
+      const matches = (device.name || '').toLowerCase().includes(q)
+        || (device.deviceType || '').toLowerCase().includes(q)
+        || (device.role || '').toLowerCase().includes(q);
+      searchClass = matches ? ' device-block--search-match' : ' device-block--search-nomatch';
+    }
+    html += `<div class="device-block${isSelected ? ' selected' : ''}${fdClass}${searchClass}"
       data-device-id="${device.id}"
       draggable="true"
       style="top: ${top}px; height: ${height - 2}px; background: ${color}; font-size: ${fontSize};"

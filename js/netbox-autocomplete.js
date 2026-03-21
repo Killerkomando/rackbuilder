@@ -4,9 +4,12 @@
 
 import { t } from './i18n.js';
 
-const STORAGE_KEY_TYPES = 'rackbuilder_netbox_device_types';
-const STORAGE_KEY_ROLES = 'rackbuilder_netbox_roles';
+const STORAGE_KEY_TYPES         = 'rackbuilder_netbox_device_types';
+const STORAGE_KEY_ROLES         = 'rackbuilder_netbox_roles';
 const STORAGE_KEY_MANUFACTURERS = 'rackbuilder_netbox_manufacturers';
+const STORAGE_KEY_API_URL       = 'rackbuilder_netbox_api_url';
+const STORAGE_KEY_API_TOKEN     = 'rackbuilder_netbox_api_token';
+const STORAGE_KEY_MODE          = 'rackbuilder_netbox_mode'; // 'upload' | 'api'
 
 // ─── Storage helpers ─────────────────────────────────────────────────────────
 
@@ -35,10 +38,19 @@ function extractNameSlug(items) {
   if (!Array.isArray(items)) return null;
   const result = items
     .filter(entry => entry && (entry.name || entry.slug || entry.display || entry.model))
-    .map(entry => ({
-      name: entry.model || entry.name || entry.display || entry.slug,
-      slug: entry.slug || (entry.model || entry.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-    }));
+    .map(entry => {
+      const obj = {
+        name: entry.model || entry.name || entry.display || entry.slug,
+        slug: entry.slug || (entry.model || entry.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+      };
+      // Device type metadata for auto-fill
+      if (entry.u_height !== undefined) obj.uHeight = parseInt(entry.u_height) || 1;
+      const fd = entry.full_depth ?? entry.is_full_depth;
+      if (fd !== undefined) obj.fullDepth = fd === true || fd === 'true';
+      const mfr = entry.manufacturer;
+      if (mfr) obj.manufacturer = typeof mfr === 'object' ? (mfr.name || mfr.display || '') : String(mfr);
+      return obj;
+    });
   return result.length > 0 ? result : null;
 }
 
@@ -240,11 +252,21 @@ function createDropdown(input) {
   const dropdown = document.createElement('div');
   dropdown.className = 'ac-dropdown';
   dropdown.setAttribute('role', 'listbox');
-  // Position relative to the input's .form-group parent
-  const parent = input.closest('.form-group') || input.parentElement;
-  parent.style.position = 'relative';
-  parent.appendChild(dropdown);
+  // Append to body to escape overflow clipping in sidebars/dialogs
+  document.body.appendChild(dropdown);
   return dropdown;
+}
+
+function positionDropdown(inputId) {
+  const state = activeDropdowns.get(inputId);
+  if (!state) return;
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const rect = input.getBoundingClientRect();
+  const dd = state.dropdown;
+  dd.style.top  = rect.bottom + 'px';
+  dd.style.left = rect.left + 'px';
+  dd.style.minWidth = rect.width + 'px';
 }
 
 function renderDropdown(inputId, query) {
@@ -264,21 +286,29 @@ function renderDropdown(inputId, query) {
   dropdown.innerHTML = filtered.map((e, i) => {
     const nameHtml = highlightMatch(e.name, query);
     const slugHtml = highlightMatch(e.slug, query);
+    const metaParts = [];
+    if (e.uHeight) metaParts.push(`${e.uHeight}U`);
+    if (e.fullDepth) metaParts.push('Full');
+    const metaHtml = metaParts.length ? `<span class="ac-option-meta">${metaParts.join(' · ')}</span>` : '';
     return `<div class="ac-option" data-index="${i}" role="option">
       <span class="ac-option-name">${nameHtml}</span>
+      ${metaHtml}
       <span class="ac-option-slug">${slugHtml}</span>
     </div>`;
   }).join('');
 
+  positionDropdown(inputId);
   dropdown.classList.add('visible');
 }
 
 function selectOption(inputId, index) {
   const state = activeDropdowns.get(inputId);
   if (!state || !state.filtered || !state.filtered[index]) return;
+  const entry = state.filtered[index];
   const input = document.getElementById(inputId);
-  input.value = state.filtered[index].name;
+  input.value = entry.name;
   input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new CustomEvent('ac:select', { detail: entry, bubbles: true }));
   closeDropdown(inputId);
 }
 
@@ -316,6 +346,22 @@ export function attachAutocomplete(inputId, entries) {
 
   const dropdown = createDropdown(input);
   activeDropdowns.set(inputId, { dropdown, entries, filtered: [], selectedIdx: -1 });
+
+  // Reposition on scroll of any scrollable ancestor (sidebar, window)
+  const scrollHandler = () => {
+    const state = activeDropdowns.get(inputId);
+    if (state?.dropdown.classList.contains('visible')) positionDropdown(inputId);
+  };
+  window.addEventListener('scroll', scrollHandler, { passive: true });
+  // Find scrollable parent (sidebar) and listen there too
+  let el = input.parentElement;
+  while (el && el !== document.body) {
+    if (el.scrollHeight > el.clientHeight) {
+      el.addEventListener('scroll', scrollHandler, { passive: true });
+      break;
+    }
+    el = el.parentElement;
+  }
 
   input.addEventListener('input', () => {
     const entries = activeDropdowns.get(inputId)?.entries || [];
@@ -362,6 +408,48 @@ export function attachAutocomplete(inputId, entries) {
       selectOption(inputId, parseInt(option.dataset.index));
     }
   });
+}
+
+// ─── NetBox Live API ─────────────────────────────────────────────────────────
+
+async function apiFetchPages(baseUrl, token, endpoint) {
+  const results = [];
+  let url = `${baseUrl.replace(/\/+$/, '')}/api/${endpoint}/?limit=200&format=json`;
+  while (url) {
+    const res = await fetch(url, {
+      headers: { 'Authorization': `Token ${token}`, 'Accept': 'application/json' },
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+    const data = await res.json();
+    results.push(...(data.results || []));
+    url = data.next || null;
+  }
+  return results;
+}
+
+async function apiFetchAndStore(endpoint, storageKey, inputId, btnId) {
+  const baseUrl = localStorage.getItem(STORAGE_KEY_API_URL)   || '';
+  const token   = localStorage.getItem(STORAGE_KEY_API_TOKEN) || '';
+  if (!baseUrl || !token) { alert(t('netbox_api_missing_creds')); return false; }
+
+  const btn = document.getElementById(btnId);
+  const origText = btn?.textContent;
+  if (btn) { btn.disabled = true; btn.textContent = t('netbox_api_fetching'); }
+
+  try {
+    const items   = await apiFetchPages(baseUrl, token, endpoint);
+    const entries = extractNameSlug(items);
+    if (!entries || entries.length === 0) { alert(t('netbox_api_empty')); return false; }
+    saveEntries(storageKey, entries);
+    attachAutocomplete(inputId, entries);
+    updateUploadStatus();
+    return true;
+  } catch (err) {
+    alert(`${t('netbox_api_error')}: ${err.message}`);
+    return false;
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = origText; }
+  }
 }
 
 // ─── Refresh all autocompletes ───────────────────────────────────────────────
@@ -415,25 +503,115 @@ export function initNetboxAutocomplete() {
   // Populate on load
   refreshAutocompletes();
   updateUploadStatus();
+
+  // ── NetBox mode toggle (Upload ↔ Live API) ──
+  const uploadSection = document.getElementById('netbox-upload-section');
+  const apiSection    = document.getElementById('netbox-api-section');
+  const modeUploadBtn = document.getElementById('netbox-mode-upload');
+  const modeApiBtn    = document.getElementById('netbox-mode-api');
+
+  function setNetboxMode(mode, save = true) {
+    const isApi = mode === 'api';
+    if (uploadSection) uploadSection.style.display = isApi ? 'none' : '';
+    if (apiSection)    apiSection.style.display    = isApi ? '' : 'none';
+    modeUploadBtn?.classList.toggle('active', !isApi);
+    modeApiBtn?.classList.toggle('active',    isApi);
+    if (save) localStorage.setItem(STORAGE_KEY_MODE, mode);
+  }
+
+  modeUploadBtn?.addEventListener('click', () => setNetboxMode('upload'));
+  modeApiBtn?.addEventListener('click',    () => setNetboxMode('api'));
+
+  // Restore saved credentials
+  const urlInput   = document.getElementById('netbox-api-url-input');
+  const tokenInput = document.getElementById('netbox-api-token-input');
+  if (urlInput)   urlInput.value   = localStorage.getItem(STORAGE_KEY_API_URL)   || '';
+  if (tokenInput) tokenInput.value = localStorage.getItem(STORAGE_KEY_API_TOKEN) || '';
+
+  urlInput?.addEventListener('input',   () => localStorage.setItem(STORAGE_KEY_API_URL,   urlInput.value.trim()));
+  tokenInput?.addEventListener('input', () => localStorage.setItem(STORAGE_KEY_API_TOKEN, tokenInput.value.trim()));
+
+  // Show / hide token
+  document.getElementById('netbox-api-token-toggle')?.addEventListener('click', () => {
+    if (!tokenInput) return;
+    tokenInput.type = tokenInput.type === 'password' ? 'text' : 'password';
+  });
+
+  // Test connection
+  document.getElementById('netbox-api-test-btn')?.addEventListener('click', async () => {
+    const baseUrl = urlInput?.value.trim();
+    const token   = tokenInput?.value.trim();
+    const status  = document.getElementById('netbox-api-conn-status');
+    if (!baseUrl || !token) {
+      if (status) { status.textContent = t('netbox_api_missing_creds'); status.className = 'netbox-api-conn-status error'; }
+      return;
+    }
+    if (status) { status.textContent = t('netbox_api_connecting'); status.className = 'netbox-api-conn-status'; }
+    const btn = document.getElementById('netbox-api-test-btn');
+    if (btn) btn.disabled = true;
+    try {
+      const res = await fetch(`${baseUrl.replace(/\/+$/, '')}/api/`, {
+        headers: { 'Authorization': `Token ${token}`, 'Accept': 'application/json' },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (status) { status.textContent = t('netbox_api_connected'); status.className = 'netbox-api-conn-status success'; }
+    } catch (err) {
+      if (status) { status.textContent = `${t('netbox_api_error')}: ${err.message}`; status.className = 'netbox-api-conn-status error'; }
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  });
+
+  // Individual fetch buttons
+  document.getElementById('netbox-api-fetch-types-btn')?.addEventListener('click', () =>
+    apiFetchAndStore('dcim/device-types', STORAGE_KEY_TYPES, 'dev-type', 'netbox-api-fetch-types-btn'));
+  document.getElementById('netbox-api-fetch-roles-btn')?.addEventListener('click', () =>
+    apiFetchAndStore('dcim/device-roles', STORAGE_KEY_ROLES, 'dev-role', 'netbox-api-fetch-roles-btn'));
+  document.getElementById('netbox-api-fetch-mfr-btn')?.addEventListener('click', () =>
+    apiFetchAndStore('dcim/manufacturers', STORAGE_KEY_MANUFACTURERS, 'dev-manufacturer', 'netbox-api-fetch-mfr-btn'));
+
+  // Fetch All
+  document.getElementById('netbox-api-fetch-all-btn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('netbox-api-fetch-all-btn');
+    if (btn) { btn.disabled = true; btn.textContent = t('netbox_api_fetching'); }
+    await apiFetchAndStore('dcim/device-types',  STORAGE_KEY_TYPES,         'dev-type',        'netbox-api-fetch-types-btn');
+    await apiFetchAndStore('dcim/device-roles',  STORAGE_KEY_ROLES,         'dev-role',        'netbox-api-fetch-roles-btn');
+    await apiFetchAndStore('dcim/manufacturers', STORAGE_KEY_MANUFACTURERS, 'dev-manufacturer', 'netbox-api-fetch-mfr-btn');
+    if (btn) { btn.disabled = false; btn.textContent = t('netbox_api_fetch_all'); }
+  });
+
+  // Set initial mode from localStorage
+  setNetboxMode(localStorage.getItem(STORAGE_KEY_MODE) || 'upload', false);
 }
 
 // ─── Status badges ───────────────────────────────────────────────────────────
 
 export function updateUploadStatus() {
   const data = [
-    { entries: getDeviceTypes(), statusId: 'netbox-types-status', clearId: 'netbox-clear-types-btn' },
-    { entries: getRoles(), statusId: 'netbox-roles-status', clearId: 'netbox-clear-roles-btn' },
-    { entries: getManufacturers(), statusId: 'netbox-mfr-status', clearId: 'netbox-clear-mfr-btn' },
+    {
+      entries: getDeviceTypes(),
+      statusIds: ['netbox-types-status', 'netbox-api-types-status'],
+      clearId: 'netbox-clear-types-btn',
+    },
+    {
+      entries: getRoles(),
+      statusIds: ['netbox-roles-status', 'netbox-api-roles-status'],
+      clearId: 'netbox-clear-roles-btn',
+    },
+    {
+      entries: getManufacturers(),
+      statusIds: ['netbox-mfr-status', 'netbox-api-mfr-status'],
+      clearId: 'netbox-clear-mfr-btn',
+    },
   ];
-  for (const { entries, statusId, clearId } of data) {
-    const statusEl = document.getElementById(statusId);
-    const clearBtn = document.getElementById(clearId);
-    if (statusEl) {
-      statusEl.textContent = entries.length > 0
-        ? t('netbox_loaded', { count: entries.length })
-        : t('netbox_not_loaded');
-      statusEl.className = 'netbox-status ' + (entries.length > 0 ? 'loaded' : 'empty');
+  for (const { entries, statusIds, clearId } of data) {
+    const text  = entries.length > 0 ? t('netbox_loaded', { count: entries.length }) : t('netbox_not_loaded');
+    const cls   = 'netbox-status ' + (entries.length > 0 ? 'loaded' : 'empty');
+    for (const id of statusIds) {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = text; el.className = cls; }
     }
+    const clearBtn = document.getElementById(clearId);
     if (clearBtn) clearBtn.style.display = entries.length > 0 ? '' : 'none';
   }
 }

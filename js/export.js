@@ -1,6 +1,6 @@
 // NetBox JSON export + YAML + CSV + Project save/load + download/clipboard
 
-import { getState, dispatch } from './state.js';
+import { getState, dispatch, getActiveRackConfig, getActiveDevices } from './state.js';
 import { toNetBoxJSON } from './rack-model.js';
 import { t } from './i18n.js';
 
@@ -9,6 +9,8 @@ export function initExport() {
   document.getElementById('export-yaml-btn').addEventListener('click', downloadYAML);
   document.getElementById('export-csv-btn').addEventListener('click', downloadCSV);
   document.getElementById('copy-btn').addEventListener('click', copyToClipboard);
+  document.getElementById('export-png-btn').addEventListener('click', downloadPNG);
+  document.getElementById('print-btn').addEventListener('click', () => window.print());
   document.getElementById('import-btn').addEventListener('click', () => {
     document.getElementById('import-file').click();
   });
@@ -167,7 +169,7 @@ function saveProject() {
 
   const project = {
     _format: 'rackbuilder-project',
-    _version: '0.6.0',
+    _version: '0.7.0',
     rackConfig: state.rackConfig,
     multiRackEnabled: state.multiRackEnabled,
     racks: state.racks,
@@ -262,6 +264,128 @@ function importJSON(e) {
   };
   reader.readAsText(file);
   e.target.value = '';
+}
+
+// ─── PNG Export ─────────────────────────────────────────────────────────────
+
+function downloadPNG() {
+  const state = getState();
+  const cfg = getActiveRackConfig(state);
+  const devices = getActiveDevices(state);
+  const { totalUnits, numberingDirection } = cfg;
+
+  const UH = 28;
+  const FACE_W = 220;
+  const LABEL_W = 36;
+  const HEADER_H = 22;
+  const TITLE_H = 32;
+  const PAD = 12;
+  const DPR = window.devicePixelRatio || 1;
+
+  const W = PAD * 2 + FACE_W * 2 + LABEL_W;
+  const H = TITLE_H + HEADER_H + totalUnits * UH + PAD;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = W * DPR;
+  canvas.height = H * DPR;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(DPR, DPR);
+
+  const isDark = document.documentElement.dataset.theme === 'dark';
+  const bg      = isDark ? '#0f172a' : '#f8fafc';
+  const bgCell  = isDark ? '#1e293b' : '#f1f5f9';
+  const bgHead  = isDark ? '#1e293b' : '#e2e8f0';
+  const border  = isDark ? '#334155' : '#cbd5e1';
+  const txtMut  = isDark ? '#64748b' : '#94a3b8';
+  const txtMain = isDark ? '#e2e8f0' : '#1e293b';
+
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, W, H);
+
+  // Title
+  ctx.fillStyle = txtMain;
+  ctx.font = 'bold 13px system-ui, sans-serif';
+  ctx.textAlign = 'left';
+  ctx.fillText(cfg.name, PAD, TITLE_H - 8);
+
+  const unitOrder = [];
+  if (numberingDirection === 'bottom-to-top') {
+    for (let u = totalUnits; u >= 1; u--) unitOrder.push(u);
+  } else {
+    for (let u = 1; u <= totalUnits; u++) unitOrder.push(u);
+  }
+
+  const frontX = PAD;
+  const labelX = PAD + FACE_W;
+  const rearX  = PAD + FACE_W + LABEL_W;
+  const bodyY  = TITLE_H + HEADER_H;
+
+  // Column headers
+  ctx.fillStyle = bgHead;
+  ctx.fillRect(frontX, TITLE_H, FACE_W, HEADER_H);
+  ctx.fillRect(rearX,  TITLE_H, FACE_W, HEADER_H);
+  ctx.fillStyle = txtMain;
+  ctx.font = '11px system-ui, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Front', frontX + FACE_W / 2, TITLE_H + 15);
+  ctx.fillText('Rear',  rearX  + FACE_W / 2, TITLE_H + 15);
+
+  // Cells and unit labels
+  for (let i = 0; i < unitOrder.length; i++) {
+    const u = unitOrder[i];
+    const y = bodyY + i * UH;
+    const stripe = i % 2 === 0;
+    const cellBg = stripe ? bgCell : bg;
+
+    ctx.fillStyle = cellBg;
+    ctx.fillRect(frontX, y, FACE_W, UH);
+    ctx.fillRect(rearX,  y, FACE_W, UH);
+
+    ctx.strokeStyle = border;
+    ctx.lineWidth = 0.5;
+    ctx.strokeRect(frontX, y, FACE_W, UH);
+    ctx.strokeRect(rearX,  y, FACE_W, UH);
+
+    ctx.fillStyle = txtMut;
+    ctx.font = '9px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(String(u), labelX + LABEL_W / 2, y + UH / 2 + 3);
+  }
+
+  // Devices
+  for (const face of ['front', 'rear']) {
+    const faceX = face === 'front' ? frontX : rearX;
+    for (const device of devices.filter(d => d.face === face)) {
+      const topIdx = unitOrder.indexOf(device.position + device.height - 1);
+      if (topIdx === -1) continue;
+      const y = bodyY + topIdx * UH;
+      const h = device.height * UH - 1;
+      const color = device._color || (face === 'front' ? '#3b82f6' : '#f97316');
+
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.roundRect(faceX + 1, y + 1, FACE_W - 2, h - 1, 3);
+      ctx.fill();
+
+      ctx.fillStyle = '#fff';
+      ctx.font = `${h < 20 ? 9 : 11}px system-ui, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(faceX + 1, y + 1, FACE_W - 2, h - 1);
+      ctx.clip();
+      ctx.fillText(device.name || '(unnamed)', faceX + FACE_W / 2, y + Math.min(h / 2 + 4, h - 3));
+      ctx.restore();
+    }
+  }
+
+  canvas.toBlob(blob => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${getRackName()}_rack.png`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────

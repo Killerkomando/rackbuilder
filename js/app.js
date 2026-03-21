@@ -1,7 +1,7 @@
 // Rack Builder — Main application bootstrap
 
 import { getState, subscribe, dispatch, undo, redo, canUndo, canRedo, getReservedUnits, setReservedUnits, clearReservedUnits, getActiveRackConfig, getActiveDevices } from './state.js';
-import { renderRack } from './rack-view.js';
+import { renderRack, setSearchFilter } from './rack-view.js';
 import { getLocalStorageUsage, parsePositionList, generateId } from './utils.js';
 import { getRackUtilization, toNetBoxJSON } from './rack-model.js';
 import { initDeviceForm, populateFormForEdit } from './device-form.js';
@@ -46,6 +46,9 @@ function init() {
   initBulkPositionHighlight();
   initNetboxAutocomplete();
   initAccordionAnimations();
+  initDeviceSearch();
+  initResponsiveSidebars();
+  initShortcutsPanel();
   updateStorageIndicator();
   updateStats(state);
 
@@ -93,6 +96,8 @@ function initLang() {
 
 // ─── Device list ────────────────────────────────────────────────────────────
 
+let deviceSearchTerm = '';
+
 function renderDeviceList(state) {
   const container = document.getElementById('device-list');
   const countEl = document.getElementById('device-count');
@@ -107,8 +112,20 @@ function renderDeviceList(state) {
   }
 
   const sorted = [...devices].sort((a, b) => a.position - b.position);
+  const q = deviceSearchTerm.toLowerCase();
+  const filtered = q
+    ? sorted.filter(d =>
+        (d.name || '').toLowerCase().includes(q) ||
+        (d.deviceType || '').toLowerCase().includes(q) ||
+        (d.role || '').toLowerCase().includes(q))
+    : sorted;
 
-  container.innerHTML = sorted.map(d => `
+  if (filtered.length === 0) {
+    container.innerHTML = `<p style="color: var(--color-text-muted); font-size: 12px;">—</p>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(d => `
     <div class="device-list-item${d.id === selectedDeviceId ? ' selected' : ''}" data-device-id="${d.id}">
       <div class="device-info">
         <span class="device-color" style="background: ${d._color || '#3b82f6'}"></span>
@@ -132,6 +149,31 @@ function renderDeviceList(state) {
       e.stopPropagation();
       dispatch('REMOVE_DEVICE', btn.dataset.deviceId);
     });
+  });
+}
+
+function initDeviceSearch() {
+  const input = document.getElementById('device-search');
+  if (!input) return;
+  input.addEventListener('input', () => {
+    deviceSearchTerm = input.value.trim();
+    setSearchFilter(deviceSearchTerm);
+    const state = getState();
+    // Auto-switch rack in multi-rack mode to first matching device's rack
+    if (deviceSearchTerm && state.multiRackEnabled) {
+      const q = deviceSearchTerm.toLowerCase();
+      const match = state.devices.find(d =>
+        (d.name || '').toLowerCase().includes(q) ||
+        (d.deviceType || '').toLowerCase().includes(q) ||
+        (d.role || '').toLowerCase().includes(q)
+      );
+      if (match && match.rackId && match.rackId !== state.activeRackId) {
+        dispatch('SET_ACTIVE_RACK', match.rackId);
+        return; // dispatch triggers subscribe which re-renders everything
+      }
+    }
+    renderDeviceList(state);
+    renderRack(state);
   });
 }
 
@@ -286,6 +328,55 @@ function initSettings() {
 
   rackCountInput.addEventListener('input', renderRackRows);
 
+  // ── Sliding tab indicator + animated height switching ──
+  const tabsEl   = modal.querySelector('.modal-tabs');
+  const indicator = modal.querySelector('.modal-tab-indicator');
+  const wrap      = document.getElementById('modal-panels-wrap');
+
+  function moveIndicator(tab, animate) {
+    if (!animate) indicator.style.transition = 'none';
+    const tabsRect = tabsEl.getBoundingClientRect();
+    const tabRect  = tab.getBoundingClientRect();
+    indicator.style.width     = tabRect.width + 'px';
+    indicator.style.transform = `translateX(${tabRect.left - tabsRect.left - 3}px)`;
+    if (!animate) requestAnimationFrame(() => { indicator.style.transition = ''; });
+  }
+
+  function switchTab(tab) {
+    const currentPanel = modal.querySelector('.modal-tab-panel.active');
+    const targetPanel  = document.getElementById('tab-panel-' + tab.dataset.tab);
+    if (currentPanel === targetPanel) return;
+
+    // Move the pill indicator
+    moveIndicator(tab, true);
+
+    // Update active tab button
+    modal.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+
+    // Animate content height
+    const fromH = currentPanel.scrollHeight;
+    wrap.style.height = fromH + 'px';
+    wrap.style.overflow = 'hidden';
+
+    currentPanel.classList.remove('active');
+    targetPanel.classList.add('active');
+    if (tab.dataset.tab === 'shortcuts') renderShortcutsPanel();
+
+    requestAnimationFrame(() => {
+      wrap.style.height = targetPanel.scrollHeight + 'px';
+    });
+
+    wrap.addEventListener('transitionend', () => {
+      wrap.style.height   = '';
+      wrap.style.overflow = '';
+    }, { once: true });
+  }
+
+  modal.querySelectorAll('.modal-tab').forEach(tab => {
+    tab.addEventListener('click', () => switchTab(tab));
+  });
+
   document.getElementById('settings-btn').addEventListener('click', () => {
     const state = getState();
     const cfg = state.rackConfig;
@@ -309,7 +400,14 @@ function initSettings() {
       document.getElementById('setting-rear-color').value = cfg.rearColor || '#f97316';
       toggleMultiRackUI(false);
     }
+    // Reset to first tab
+    modal.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+    modal.querySelectorAll('.modal-tab-panel').forEach(p => p.classList.remove('active'));
+    modal.querySelector('.modal-tab[data-tab="rack"]').classList.add('active');
+    document.getElementById('tab-panel-rack').classList.add('active');
     modal.showModal();
+    // Position indicator after dialog is visible (getBoundingClientRect needs layout)
+    requestAnimationFrame(() => moveIndicator(modal.querySelector('.modal-tab.active'), false));
   });
 
   document.getElementById('settings-cancel').addEventListener('click', () => {
@@ -378,35 +476,148 @@ function closeDialogAnimated(dialog) {
 
 // ─── Keyboard shortcuts ──────────────────────────────────────────────────────
 
+const DEFAULT_SHORTCUTS = {
+  undo:   { label: 'shortcut_undo',   key: 'z',      ctrl: true,  shift: false },
+  redo:   { label: 'shortcut_redo',   key: 'y',      ctrl: true,  shift: false },
+  delete: { label: 'shortcut_delete', key: 'Delete', ctrl: false, shift: false },
+  escape: { label: 'shortcut_escape', key: 'Escape', ctrl: false, shift: false },
+};
+
+let shortcuts = {};
+
+function loadShortcuts() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('rackbuilder_shortcuts') || '{}');
+    shortcuts = {};
+    for (const [id, def] of Object.entries(DEFAULT_SHORTCUTS)) {
+      shortcuts[id] = { ...def, ...(saved[id] || {}) };
+    }
+  } catch {
+    shortcuts = {};
+    for (const [id, def] of Object.entries(DEFAULT_SHORTCUTS)) {
+      shortcuts[id] = { ...def };
+    }
+  }
+}
+
+function saveShortcuts() {
+  const toSave = {};
+  for (const [id, sc] of Object.entries(shortcuts)) {
+    const def = DEFAULT_SHORTCUTS[id];
+    if (sc.key !== def.key || sc.ctrl !== def.ctrl || sc.shift !== def.shift) {
+      toSave[id] = { key: sc.key, ctrl: sc.ctrl, shift: sc.shift };
+    }
+  }
+  if (Object.keys(toSave).length > 0) {
+    localStorage.setItem('rackbuilder_shortcuts', JSON.stringify(toSave));
+  } else {
+    localStorage.removeItem('rackbuilder_shortcuts');
+  }
+}
+
+function matchesShortcut(e, sc) {
+  return (e.ctrlKey || e.metaKey) === (sc.ctrl || false)
+    && e.shiftKey === (sc.shift || false)
+    && e.key === sc.key;
+}
+
+function formatShortcut(sc) {
+  const parts = [];
+  if (sc.ctrl) parts.push('Ctrl');
+  if (sc.shift) parts.push('Shift');
+  const k = sc.key === ' ' ? 'Space' : sc.key;
+  parts.push(k);
+  return parts;
+}
+
 function initKeyboardShortcuts() {
+  loadShortcuts();
   document.addEventListener('keydown', (e) => {
-    // Undo/Redo work even in inputs
-    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
-      e.preventDefault();
-      undo();
-      return;
+    if (matchesShortcut(e, shortcuts.undo)) {
+      e.preventDefault(); undo(); return;
     }
-    if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
-      e.preventDefault();
-      redo();
-      return;
+    // Also handle Ctrl+Shift+Z as alternative redo
+    if (matchesShortcut(e, shortcuts.redo) || ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z')) {
+      e.preventDefault(); redo(); return;
     }
-
     if (e.target.matches('input, textarea, select')) return;
-
     const state = getState();
+    if (matchesShortcut(e, shortcuts.delete) && state.selectedDeviceId) {
+      dispatch('REMOVE_DEVICE', state.selectedDeviceId);
+    }
+    if (matchesShortcut(e, shortcuts.escape) && state.selectedDeviceId) {
+      dispatch('SELECT_DEVICE', null);
+    }
+  });
+}
 
-    if (e.key === 'Delete' || e.key === 'Backspace') {
-      if (state.selectedDeviceId) {
-        dispatch('REMOVE_DEVICE', state.selectedDeviceId);
+// ─── Shortcuts Settings Panel ────────────────────────────────────────────────
+
+let recordingCleanup = null;
+
+function renderShortcutsPanel() {
+  const container = document.getElementById('shortcuts-list');
+  if (!container) return;
+  container.innerHTML = Object.entries(shortcuts).map(([id, sc]) => {
+    const keys = formatShortcut(sc);
+    const kbdHtml = keys.map(k => `<kbd>${k}</kbd>`).join('<span class="shortcut-plus">+</span>');
+    return `<div class="shortcut-row" data-shortcut-id="${id}">
+      <span class="shortcut-label">${t(sc.label)}</span>
+      <div class="shortcut-binding">${kbdHtml}</div>
+      <button type="button" class="btn btn-secondary btn-sm shortcut-record-btn" data-id="${id}">${t('shortcut_record')}</button>
+    </div>`;
+  }).join('');
+
+  container.querySelectorAll('.shortcut-record-btn').forEach(btn => {
+    btn.addEventListener('click', () => startRecording(btn.dataset.id));
+  });
+}
+
+function startRecording(id) {
+  if (recordingCleanup) recordingCleanup();
+  const btn = document.querySelector(`.shortcut-record-btn[data-id="${id}"]`);
+  if (btn) btn.textContent = t('shortcut_recording');
+
+  function onKey(e) {
+    if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.key === 'Escape' && !e.ctrlKey && !e.shiftKey) { cleanup(); return; }
+
+    const newSc = { key: e.key, ctrl: e.ctrlKey || e.metaKey, shift: e.shiftKey };
+    const conflict = Object.entries(shortcuts).find(([oid, sc]) =>
+      oid !== id && sc.key === newSc.key && (sc.ctrl || false) === newSc.ctrl && (sc.shift || false) === newSc.shift
+    );
+    shortcuts[id] = { ...shortcuts[id], ...newSc };
+    saveShortcuts();
+    cleanup();
+    renderShortcutsPanel();
+    if (conflict) {
+      const row = document.querySelector(`.shortcut-row[data-shortcut-id="${id}"]`);
+      if (row) {
+        const warn = document.createElement('span');
+        warn.className = 'shortcut-conflict';
+        warn.textContent = t('shortcut_conflict');
+        row.appendChild(warn);
+        setTimeout(() => warn.remove(), 2500);
       }
     }
+  }
 
-    if (e.key === 'Escape') {
-      if (state.selectedDeviceId) {
-        dispatch('SELECT_DEVICE', null);
-      }
-    }
+  function cleanup() {
+    document.removeEventListener('keydown', onKey, true);
+    recordingCleanup = null;
+    if (btn && btn.isConnected) btn.textContent = t('shortcut_record');
+  }
+  recordingCleanup = cleanup;
+  document.addEventListener('keydown', onKey, true);
+}
+
+function initShortcutsPanel() {
+  document.getElementById('shortcuts-reset-btn')?.addEventListener('click', () => {
+    localStorage.removeItem('rackbuilder_shortcuts');
+    loadShortcuts();
+    renderShortcutsPanel();
   });
 }
 
@@ -432,9 +643,28 @@ function updateStats(state) {
   const cfg = getActiveRackConfig(state);
   const devices = getActiveDevices(state);
   const stats = getRackUtilization(devices, cfg.totalUnits);
+
   const el = document.getElementById('rack-stats');
   if (el) {
     el.textContent = `${stats.totalPercent}% ${t('stat_used')} (F: ${stats.frontPercent}% | R: ${stats.rearPercent}%)`;
+  }
+
+  // Utilization bar
+  const utilEl = document.getElementById('rack-utilization');
+  if (utilEl) {
+    const hasDevices = devices.length > 0;
+    utilEl.style.display = hasDevices ? 'flex' : 'none';
+    const frontW = stats.front / (cfg.totalUnits * 2) * 100;
+    const rearW  = stats.rear  / (cfg.totalUnits * 2) * 100;
+    const frontBar = document.getElementById('util-bar-front');
+    const rearBar  = document.getElementById('util-bar-rear');
+    const label    = document.getElementById('util-label');
+    if (frontBar) frontBar.style.width = frontW + '%';
+    if (rearBar)  rearBar.style.width  = rearW  + '%';
+    if (label) {
+      const used = stats.front + stats.rear;
+      label.textContent = `${used}/${cfg.totalUnits * 2}U (${stats.totalPercent}%)`;
+    }
   }
 }
 
@@ -696,6 +926,36 @@ function initAccordionAnimations() {
       }
     });
   });
+}
+
+// ─── Responsive Sidebar Drawers ──────────────────────────────────────────────
+
+function initResponsiveSidebars() {
+  const leftToggle  = document.getElementById('sidebar-toggle-left');
+  const rightToggle = document.getElementById('sidebar-toggle-right');
+  const backdrop    = document.getElementById('sidebar-backdrop');
+  const sidebar      = document.querySelector('.sidebar');
+  const sidebarRight = document.querySelector('.sidebar-right');
+
+  function closeSidebars() {
+    sidebar?.classList.remove('sidebar--open');
+    sidebarRight?.classList.remove('sidebar--open');
+    backdrop?.classList.remove('visible');
+  }
+
+  leftToggle?.addEventListener('click', () => {
+    const wasOpen = sidebar?.classList.contains('sidebar--open');
+    closeSidebars();
+    if (!wasOpen) { sidebar?.classList.add('sidebar--open'); backdrop?.classList.add('visible'); }
+  });
+
+  rightToggle?.addEventListener('click', () => {
+    const wasOpen = sidebarRight?.classList.contains('sidebar--open');
+    closeSidebars();
+    if (!wasOpen) { sidebarRight?.classList.add('sidebar--open'); backdrop?.classList.add('visible'); }
+  });
+
+  backdrop?.addEventListener('click', closeSidebars);
 }
 
 // Start

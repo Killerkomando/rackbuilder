@@ -26,7 +26,7 @@
   --color-accent: #6366f1;
   --unit-height: 28px;
   --rack-width: 260px;
-  --sidebar-width: 320px;
+  --sidebar-width: 360px;
   --radius: 6px;
 }
 
@@ -817,11 +817,10 @@ body {
 
 /* Modern Autocomplete Dropdown */
 .ac-dropdown {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 100%;
-  z-index: 100;
+  position: fixed;
+  z-index: 9000;
+  width: max-content;
+  max-width: 520px;
   max-height: 0;
   overflow: hidden;
   opacity: 0;
@@ -879,8 +878,6 @@ body {
   font-size: 13px;
   font-weight: 500;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .ac-option-slug {
@@ -888,10 +885,24 @@ body {
   color: var(--color-text-muted);
   font-family: 'SF Mono', 'Fira Code', monospace;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   flex-shrink: 0;
-  max-width: 45%;
+}
+
+.ac-option-meta {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  background: var(--color-border);
+  border-radius: 10px;
+  padding: 1px 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.ac-option:hover .ac-option-meta,
+.ac-option.highlighted .ac-option-meta {
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 .ac-option mark {
@@ -907,11 +918,21 @@ body {
 }
 
 /* NetBox Autocomplete Section in Settings */
-.netbox-autocomplete-section {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid var(--color-border);
-}
+.netbox-autocomplete-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--color-border); }
+.netbox-mode-selector { display: flex; gap: 6px; margin-bottom: 16px; }
+.netbox-mode-btn { flex: 1; padding: 8px 12px; font-size: 13px; font-weight: 500; color: var(--color-text-muted); background: var(--bg-primary); border: 1px solid var(--color-border); border-radius: var(--radius); cursor: pointer; transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease; }
+.netbox-mode-btn:hover { color: var(--color-text); border-color: var(--color-text-muted); }
+.netbox-mode-btn.active { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
+.netbox-api-token-wrap { position: relative; display: flex; }
+.netbox-api-token-wrap input { flex: 1; padding-right: 38px; }
+.netbox-api-token-toggle { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 4px; opacity: 0.6; transition: opacity 0.15s; }
+.netbox-api-token-toggle:hover { opacity: 1; }
+.netbox-api-test-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.netbox-api-conn-status { font-size: 12px; color: var(--color-text-muted); transition: color 0.2s ease; }
+.netbox-api-conn-status.success { color: #22c55e; }
+.netbox-api-conn-status.error { color: #ef4444; }
+.netbox-api-cors-hint { font-size: 11px; color: var(--color-text-muted); margin-bottom: 14px; line-height: 1.4; padding: 6px 10px; background: var(--bg-primary); border-radius: var(--radius); border-left: 3px solid var(--color-border); }
+.netbox-api-data-section { border-top: 1px solid var(--color-border); padding-top: 14px; margin-top: 4px; }
 
 .settings-section-title {
   font-size: 13px;
@@ -1239,29 +1260,92 @@ dialog .dialog-actions {
   background: #475569;
 }
 
+/* Utilization Bar */
+#rack-utilization { display: flex; align-items: center; gap: 10px; width: calc(var(--rack-width) * 2 + 40px); padding: 4px 0 6px; }
+.util-bar-wrap { flex: 1; height: 6px; background: var(--bg-tertiary); border-radius: 3px; overflow: hidden; display: flex; }
+.util-bar-front { height: 100%; background: #3b82f6; transition: width 0.4s ease; }
+.util-bar-rear  { height: 100%; background: #f97316; transition: width 0.4s ease; }
+#util-label { font-size: 11px; color: var(--color-text-muted); white-space: nowrap; }
+
+/* Auto-fill Toast */
+.autofill-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px); background: var(--bg-tertiary); color: var(--color-text); border: 1px solid var(--color-border); border-left: 3px solid var(--color-accent); padding: 8px 16px; border-radius: var(--radius); font-size: 13px; opacity: 0; pointer-events: none; transition: opacity 0.2s ease, transform 0.2s ease; white-space: nowrap; z-index: 9999; }
+.autofill-toast--show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* Device Search */
+.device-search-wrap { position: relative; margin-bottom: 8px; }
+.device-search-wrap::before { content: '⌕'; position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 15px; color: var(--color-text-muted); pointer-events: none; line-height: 1; }
+.device-search-input { width: 100%; box-sizing: border-box; padding: 7px 10px 7px 30px; background: var(--bg-primary); border: 1px solid var(--color-border); border-radius: var(--radius); color: var(--color-text); font-size: 13px; outline: none; transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+.device-search-input::placeholder { color: var(--color-text-muted); }
+.device-search-input:focus { border-color: var(--color-accent); box-shadow: 0 0 0 2px rgba(99,102,241,0.2); }
+.device-block--search-match { box-shadow: 0 0 0 2px #fff, 0 0 10px rgba(255,255,255,.35); z-index: 4; }
+.device-block--search-nomatch { opacity: 0.2; }
+
+/* Settings Modal Tabs */
+.modal-tabs { position: relative; display: flex; gap: 2px; margin-bottom: 20px; background: var(--bg-primary); border-radius: var(--radius); padding: 3px; }
+.modal-tab-indicator { position: absolute; top: 3px; left: 3px; height: calc(100% - 6px); background: var(--bg-secondary); border-radius: calc(var(--radius) - 2px); box-shadow: 0 1px 4px rgba(0,0,0,.35); pointer-events: none; z-index: 0; transition: transform 0.3s cubic-bezier(0.34,1.3,0.64,1), width 0.3s cubic-bezier(0.34,1.3,0.64,1); }
+.modal-tab { position: relative; z-index: 1; flex: 1; padding: 7px 12px; font-size: 13px; font-weight: 500; color: var(--color-text-muted); background: transparent; border: none; border-radius: calc(var(--radius) - 2px); cursor: pointer; transition: color 0.18s ease; }
+.modal-tab:hover { color: var(--color-text); }
+.modal-tab.active { color: var(--color-text); }
+.modal-panels-wrap { overflow: hidden; transition: height 0.28s cubic-bezier(0.25,0.46,0.45,0.94); }
+.modal-tab-panel { display: none; }
+@keyframes tab-panel-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.modal-tab-panel.active { display: block; animation: tab-panel-in 0.2s cubic-bezier(0.25,0.46,0.45,0.94) both; }
+
+/* Keyboard Shortcuts */
+.shortcuts-section { margin-top: 0; padding-top: 0; border-top: none; }
+.shortcut-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--color-border); }
+.shortcut-row:last-of-type { border-bottom: none; }
+.shortcut-label { flex: 1; font-size: 13px; color: var(--color-text); }
+.shortcut-binding { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.shortcut-plus { font-size: 11px; color: var(--color-text-muted); margin: 0 1px; }
+kbd { display: inline-block; padding: 2px 6px; font-family: 'SF Mono','Fira Code',monospace; font-size: 11px; background: var(--bg-tertiary); border: 1px solid var(--color-border); border-radius: 4px; color: var(--color-text); box-shadow: 0 1px 0 var(--color-border); line-height: 1.4; }
+.shortcut-conflict { font-size: 11px; color: #ef4444; margin-left: 6px; }
+
+/* Sidebar toggle */
+.sidebar-toggle { display: none; }
+
+/* Backdrop */
+#sidebar-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 49; backdrop-filter: blur(2px); }
+#sidebar-backdrop.visible { display: block; }
+
 /* Responsive */
-@media (max-width: 1100px) {
+@media (max-width: 1200px) {
+  #sidebar-toggle-right { display: inline-flex; }
   .sidebar-right {
-    display: none;
+    width: var(--sidebar-width); min-width: var(--sidebar-width);
+    position: fixed; top: 53px; right: 0;
+    height: calc(100dvh - 53px); z-index: 50; overflow-y: auto;
+    transform: translateX(110%);
+    transition: transform 0.28s cubic-bezier(0.25,0.46,0.45,0.94);
+    box-shadow: -4px 0 32px rgba(0,0,0,.5);
   }
+  .sidebar-right.sidebar--open { transform: translateX(0); }
 }
 
-@media (max-width: 800px) {
-  .app-layout {
-    flex-direction: column;
-    height: auto;
-  }
-
+@media (max-width: 960px) {
+  #sidebar-toggle-left { display: inline-flex; }
   .sidebar {
-    width: 100%;
-    min-width: auto;
-    border-right: none;
-    border-bottom: 1px solid var(--color-border);
+    width: var(--sidebar-width); min-width: var(--sidebar-width);
+    position: fixed; top: 53px; left: 0;
+    height: calc(100dvh - 53px); z-index: 50; overflow-y: auto;
+    transform: translateX(-110%);
+    transition: transform 0.28s cubic-bezier(0.25,0.46,0.45,0.94);
+    box-shadow: 4px 0 32px rgba(0,0,0,.5); border-bottom: none;
   }
+  .sidebar.sidebar--open { transform: translateX(0); }
+}
 
-  .rack-container {
-    min-height: 60vh;
-  }
+@media (max-width: 600px) {
+  .header-actions { flex-wrap: wrap; gap: 4px; }
+  .rack-container { padding: 8px; }
+  .rack-controls { flex-wrap: wrap; gap: 4px; }
+}
+
+@media print {
+  .sidebar, .sidebar-right, .header-actions, #rack-tabs, #rack-utilization, #sidebar-backdrop { display: none !important; }
+  .app-layout { display: block; height: auto; overflow: visible; }
+  .rack-container { padding: 0; height: auto; overflow: visible; align-items: flex-start; }
+  body { background: #fff; color: #000; }
 }
 
   </style>
@@ -1271,9 +1355,11 @@ dialog .dialog-actions {
   <h1>
     <span class="rack-icon">&#9638;</span>
     <span data-i18n="app_title">Rack Builder</span>
-    <span class="app-version" data-i18n="version">v0.6.0</span>
+    <span class="app-version" data-i18n="version">v0.7.0</span>
   </h1>
   <div class="header-actions">
+    <button class="btn btn-secondary btn-sm sidebar-toggle" id="sidebar-toggle-left" title="Form">&#9776;</button>
+    <button class="btn btn-secondary btn-sm sidebar-toggle" id="sidebar-toggle-right" title="Tools">&#9776;</button>
     <button class="btn btn-secondary btn-sm" id="undo-btn" data-i18n-title="btn_undo" title="Undo" disabled>&#x21A9;</button>
     <button class="btn btn-secondary btn-sm" id="redo-btn" data-i18n-title="btn_redo" title="Redo" disabled>&#x21AA;</button>
     <button class="btn btn-secondary btn-sm" id="lang-btn" title="Switch language / Sprache wechseln">DE</button>
@@ -1421,6 +1507,13 @@ dialog .dialog-actions {
   <!-- Center: Rack Visualization -->
   <section class="rack-container">
     <div id="rack-tabs"></div>
+    <div id="rack-utilization" style="display:none">
+      <div class="util-bar-wrap">
+        <div class="util-bar-front" id="util-bar-front"></div>
+        <div class="util-bar-rear" id="util-bar-rear"></div>
+      </div>
+      <span id="util-label"></span>
+    </div>
     <div class="rack-controls">
       <span class="rack-name" id="rack-name-display">Rack-01</span>
       <span class="rack-info" id="rack-info"></span>
@@ -1441,6 +1534,8 @@ dialog .dialog-actions {
         <button class="btn btn-secondary btn-block" id="export-yaml-btn" data-i18n="btn_yaml">Download YAML</button>
         <button class="btn btn-secondary btn-block" id="export-csv-btn" data-i18n="btn_csv">Download CSV</button>
         <button class="btn btn-secondary btn-block" id="copy-btn" data-i18n="btn_copy">Copy JSON</button>
+        <button class="btn btn-secondary btn-block" id="export-png-btn" data-i18n="btn_export_png">Download PNG</button>
+        <button class="btn btn-secondary btn-block" id="print-btn" data-i18n="btn_print">Print / PDF</button>
       </div>
     </details>
 
@@ -1477,8 +1572,11 @@ dialog .dialog-actions {
         <span data-i18n="devices_title">Devices</span> (<span id="device-count">0</span>)
       </summary>
       <div class="sidebar-accordion-body">
+        <div class="device-search-wrap">
+          <input type="text" id="device-search" class="device-search-input" data-i18n-placeholder="device_search_ph" placeholder="Search devices…" autocomplete="off">
+        </div>
         <div class="device-list" id="device-list">
-          <!-- Rendered by app.js -->
+          <!-- Rendered by inline JS -->
         </div>
       </div>
     </details>
@@ -1503,97 +1601,172 @@ dialog .dialog-actions {
 <dialog id="settings-modal">
   <h2 data-i18n="settings_title">Rack Settings</h2>
   <form id="settings-form">
-    <!-- Multi-Rack Toggle -->
-    <div class="form-group">
-      <label class="form-checkbox-label">
-        <input type="checkbox" id="setting-multi-rack">
-        <span data-i18n="setting_multi_rack">Multi-Rack Mode</span>
-      </label>
+    <!-- Tab Navigation -->
+    <div class="modal-tabs" role="tablist">
+      <span class="modal-tab-indicator" aria-hidden="true"></span>
+      <button type="button" class="modal-tab active" data-tab="rack" data-i18n="tab_rack">Rack</button>
+      <button type="button" class="modal-tab" data-tab="netbox" data-i18n="tab_netbox">NetBox</button>
+      <button type="button" class="modal-tab" data-tab="shortcuts" data-i18n="tab_shortcuts">Shortcuts</button>
     </div>
 
-    <!-- Shared fields (site, location) -->
-    <div class="form-group">
-      <label for="setting-site" data-i18n="setting_site">Site (for export)</label>
-      <input type="text" id="setting-site" data-i18n-placeholder="ph_site" placeholder="e.g. dc1">
-    </div>
-    <div class="form-group">
-      <label for="setting-location" data-i18n="setting_location">Location (for export)</label>
-      <input type="text" id="setting-location" data-i18n-placeholder="ph_location" placeholder="e.g. hall-a">
-    </div>
+    <!-- Panels wrapper (height animates) -->
+    <div class="modal-panels-wrap" id="modal-panels-wrap">
 
-    <!-- Single-rack fields -->
-    <div id="single-rack-fields">
+    <!-- Tab: Rack -->
+    <div class="modal-tab-panel active" id="tab-panel-rack">
+      <!-- Multi-Rack Toggle -->
       <div class="form-group">
-        <label for="setting-name" data-i18n="setting_name">Rack Name</label>
-        <input type="text" id="setting-name" required>
+        <label class="form-checkbox-label">
+          <input type="checkbox" id="setting-multi-rack">
+          <span data-i18n="setting_multi_rack">Multi-Rack Mode</span>
+        </label>
+      </div>
+
+      <!-- Shared fields (site, location) -->
+      <div class="form-group">
+        <label for="setting-site" data-i18n="setting_site">Site (for export)</label>
+        <input type="text" id="setting-site" data-i18n-placeholder="ph_site" placeholder="e.g. dc1">
       </div>
       <div class="form-group">
-        <label for="setting-units" data-i18n="setting_units">Total Units (U)</label>
-        <input type="number" id="setting-units" min="1" max="60" required>
+        <label for="setting-location" data-i18n="setting_location">Location (for export)</label>
+        <input type="text" id="setting-location" data-i18n-placeholder="ph_location" placeholder="e.g. hall-a">
       </div>
-      <div class="form-group">
-        <label for="setting-direction" data-i18n="setting_direction">Numbering Direction</label>
-        <select id="setting-direction">
-          <option value="bottom-to-top" data-i18n="dir_bottom">U1 at Bottom</option>
-          <option value="top-to-bottom" data-i18n="dir_top">U1 at Top</option>
-        </select>
-      </div>
-      <div class="form-row">
+
+      <!-- Single-rack fields -->
+      <div id="single-rack-fields">
         <div class="form-group">
-          <label for="setting-front-color" data-i18n="setting_front_color">Front Color</label>
-          <input type="color" id="setting-front-color" value="#3b82f6">
+          <label for="setting-name" data-i18n="setting_name">Rack Name</label>
+          <input type="text" id="setting-name" required>
         </div>
         <div class="form-group">
-          <label for="setting-rear-color" data-i18n="setting_rear_color">Rear Color</label>
-          <input type="color" id="setting-rear-color" value="#f97316">
+          <label for="setting-units" data-i18n="setting_units">Total Units (U)</label>
+          <input type="number" id="setting-units" min="1" max="60" required>
         </div>
+        <div class="form-group">
+          <label for="setting-direction" data-i18n="setting_direction">Numbering Direction</label>
+          <select id="setting-direction">
+            <option value="bottom-to-top" data-i18n="dir_bottom">U1 at Bottom</option>
+            <option value="top-to-bottom" data-i18n="dir_top">U1 at Top</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="setting-front-color" data-i18n="setting_front_color">Front Color</label>
+            <input type="color" id="setting-front-color" value="#3b82f6">
+          </div>
+          <div class="form-group">
+            <label for="setting-rear-color" data-i18n="setting_rear_color">Rear Color</label>
+            <input type="color" id="setting-rear-color" value="#f97316">
+          </div>
+        </div>
+      </div>
+
+      <!-- Multi-rack fields -->
+      <div id="multi-rack-fields" style="display:none;">
+        <div class="form-group">
+          <label for="setting-rack-count" data-i18n="setting_rack_count">Number of Racks</label>
+          <input type="number" id="setting-rack-count" min="1" max="20" value="2">
+        </div>
+        <div id="rack-rows"></div>
       </div>
     </div>
 
-    <!-- Multi-rack fields -->
-    <div id="multi-rack-fields" style="display:none;">
-      <div class="form-group">
-        <label for="setting-rack-count" data-i18n="setting_rack_count">Number of Racks</label>
-        <input type="number" id="setting-rack-count" min="1" max="20" value="2">
+    <!-- Tab: NetBox -->
+    <div class="modal-tab-panel" id="tab-panel-netbox">
+
+      <!-- Mode selector -->
+      <div class="netbox-mode-selector">
+        <button type="button" class="netbox-mode-btn active" id="netbox-mode-upload" data-i18n="netbox_mode_upload">⬆ File Upload</button>
+        <button type="button" class="netbox-mode-btn" id="netbox-mode-api" data-i18n="netbox_mode_api">⚡ Live API</button>
       </div>
-      <div id="rack-rows"></div>
+
+      <!-- Upload section -->
+      <div id="netbox-upload-section">
+        <p class="settings-section-desc" data-i18n="netbox_autocomplete_desc">Upload exported files from NetBox (JSON, YAML, or CSV) to enable autocomplete for Device Types, Roles, and Manufacturers.</p>
+        <p class="settings-section-desc" style="margin-top:6px;color:var(--color-accent)" data-i18n="netbox_autofill_hint">Re-upload Device Types to enable Auto-Fill (height, depth, manufacturer).</p>
+        <div class="netbox-upload-row">
+          <div class="netbox-upload-group">
+            <label data-i18n="netbox_device_types">Device Types</label>
+            <div class="netbox-upload-controls">
+              <button type="button" class="btn btn-secondary btn-sm" id="netbox-upload-types-btn" data-i18n="netbox_btn_upload">Upload</button>
+              <button type="button" class="btn btn-danger btn-sm" id="netbox-clear-types-btn" style="display:none" data-i18n="netbox_btn_clear">Clear</button>
+              <input type="file" id="netbox-types-file" accept=".json,.yaml,.yml,.csv,.tsv" style="display:none">
+            </div>
+            <span class="netbox-status empty" id="netbox-types-status" data-i18n="netbox_not_loaded">Not loaded</span>
+          </div>
+          <div class="netbox-upload-group">
+            <label data-i18n="netbox_roles">Roles</label>
+            <div class="netbox-upload-controls">
+              <button type="button" class="btn btn-secondary btn-sm" id="netbox-upload-roles-btn" data-i18n="netbox_btn_upload">Upload</button>
+              <button type="button" class="btn btn-danger btn-sm" id="netbox-clear-roles-btn" style="display:none" data-i18n="netbox_btn_clear">Clear</button>
+              <input type="file" id="netbox-roles-file" accept=".json,.yaml,.yml,.csv,.tsv" style="display:none">
+            </div>
+            <span class="netbox-status empty" id="netbox-roles-status" data-i18n="netbox_not_loaded">Not loaded</span>
+          </div>
+          <div class="netbox-upload-group">
+            <label data-i18n="netbox_manufacturers">Manufacturers</label>
+            <div class="netbox-upload-controls">
+              <button type="button" class="btn btn-secondary btn-sm" id="netbox-upload-mfr-btn" data-i18n="netbox_btn_upload">Upload</button>
+              <button type="button" class="btn btn-danger btn-sm" id="netbox-clear-mfr-btn" style="display:none" data-i18n="netbox_btn_clear">Clear</button>
+              <input type="file" id="netbox-mfr-file" accept=".json,.yaml,.yml,.csv,.tsv" style="display:none">
+            </div>
+            <span class="netbox-status empty" id="netbox-mfr-status" data-i18n="netbox_not_loaded">Not loaded</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- API section -->
+      <div id="netbox-api-section" style="display:none">
+        <p class="settings-section-desc" data-i18n="netbox_api_desc">Connect directly to your NetBox instance. URL and token are stored locally in your browser.</p>
+        <div class="form-group" style="margin-top:12px">
+          <label for="netbox-api-url-input" data-i18n="netbox_api_url">NetBox URL</label>
+          <input type="url" id="netbox-api-url-input" placeholder="https://netbox.example.com" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label for="netbox-api-token-input" data-i18n="netbox_api_token_label">API Token</label>
+          <div class="netbox-api-token-wrap">
+            <input type="password" id="netbox-api-token-input" data-i18n-placeholder="netbox_api_token_ph" placeholder="e.g. 1a2b3c…" autocomplete="off">
+            <button type="button" class="netbox-api-token-toggle" id="netbox-api-token-toggle" title="Show / hide token">👁</button>
+          </div>
+        </div>
+        <div class="netbox-api-test-row">
+          <button type="button" class="btn btn-secondary btn-sm" id="netbox-api-test-btn" data-i18n="netbox_api_test">Test Connection</button>
+          <span class="netbox-api-conn-status" id="netbox-api-conn-status"></span>
+        </div>
+        <p class="netbox-api-cors-hint" data-i18n="netbox_api_cors_hint">Note: NetBox must allow CORS for this origin.</p>
+        <div class="netbox-api-data-section">
+          <div class="netbox-upload-row">
+            <div class="netbox-upload-group">
+              <label data-i18n="netbox_device_types">Device Types</label>
+              <button type="button" class="btn btn-secondary btn-sm" id="netbox-api-fetch-types-btn" data-i18n="netbox_api_fetch">Fetch</button>
+              <span class="netbox-status empty" id="netbox-api-types-status" data-i18n="netbox_not_loaded">Not loaded</span>
+            </div>
+            <div class="netbox-upload-group">
+              <label data-i18n="netbox_roles">Roles</label>
+              <button type="button" class="btn btn-secondary btn-sm" id="netbox-api-fetch-roles-btn" data-i18n="netbox_api_fetch">Fetch</button>
+              <span class="netbox-status empty" id="netbox-api-roles-status" data-i18n="netbox_not_loaded">Not loaded</span>
+            </div>
+            <div class="netbox-upload-group">
+              <label data-i18n="netbox_manufacturers">Manufacturers</label>
+              <button type="button" class="btn btn-secondary btn-sm" id="netbox-api-fetch-mfr-btn" data-i18n="netbox_api_fetch">Fetch</button>
+              <span class="netbox-status empty" id="netbox-api-mfr-status" data-i18n="netbox_not_loaded">Not loaded</span>
+            </div>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" id="netbox-api-fetch-all-btn" style="width:100%;margin-top:10px" data-i18n="netbox_api_fetch_all">⬇ Fetch All</button>
+        </div>
+      </div>
+
     </div>
 
-    <!-- NetBox Autocomplete (Opt-In) -->
-    <div class="netbox-autocomplete-section">
-      <h3 class="settings-section-title" data-i18n="netbox_autocomplete_title">NetBox Autocomplete (Optional)</h3>
-      <p class="settings-section-desc" data-i18n="netbox_autocomplete_desc">Upload exported files from NetBox (JSON, YAML, or CSV) to enable autocomplete for Device Types, Roles, and Manufacturers.</p>
-
-      <div class="netbox-upload-row">
-        <div class="netbox-upload-group">
-          <label data-i18n="netbox_device_types">Device Types</label>
-          <div class="netbox-upload-controls">
-            <button type="button" class="btn btn-secondary btn-sm" id="netbox-upload-types-btn" data-i18n="netbox_btn_upload">Upload</button>
-            <button type="button" class="btn btn-danger btn-sm" id="netbox-clear-types-btn" style="display:none" data-i18n="netbox_btn_clear">Clear</button>
-            <input type="file" id="netbox-types-file" accept=".json,.yaml,.yml,.csv,.tsv" style="display:none">
-          </div>
-          <span class="netbox-status empty" id="netbox-types-status" data-i18n="netbox_not_loaded">Not loaded</span>
-        </div>
-        <div class="netbox-upload-group">
-          <label data-i18n="netbox_roles">Roles</label>
-          <div class="netbox-upload-controls">
-            <button type="button" class="btn btn-secondary btn-sm" id="netbox-upload-roles-btn" data-i18n="netbox_btn_upload">Upload</button>
-            <button type="button" class="btn btn-danger btn-sm" id="netbox-clear-roles-btn" style="display:none" data-i18n="netbox_btn_clear">Clear</button>
-            <input type="file" id="netbox-roles-file" accept=".json,.yaml,.yml,.csv,.tsv" style="display:none">
-          </div>
-          <span class="netbox-status empty" id="netbox-roles-status" data-i18n="netbox_not_loaded">Not loaded</span>
-        </div>
-        <div class="netbox-upload-group">
-          <label data-i18n="netbox_manufacturers">Manufacturers</label>
-          <div class="netbox-upload-controls">
-            <button type="button" class="btn btn-secondary btn-sm" id="netbox-upload-mfr-btn" data-i18n="netbox_btn_upload">Upload</button>
-            <button type="button" class="btn btn-danger btn-sm" id="netbox-clear-mfr-btn" style="display:none" data-i18n="netbox_btn_clear">Clear</button>
-            <input type="file" id="netbox-mfr-file" accept=".json,.yaml,.yml,.csv,.tsv" style="display:none">
-          </div>
-          <span class="netbox-status empty" id="netbox-mfr-status" data-i18n="netbox_not_loaded">Not loaded</span>
-        </div>
+    <!-- Tab: Shortcuts -->
+    <div class="modal-tab-panel" id="tab-panel-shortcuts">
+      <div class="shortcuts-section">
+        <div id="shortcuts-list"></div>
+        <button type="button" class="btn btn-secondary btn-sm" id="shortcuts-reset-btn" style="margin-top:8px" data-i18n="shortcut_reset">Reset defaults</button>
       </div>
     </div>
+
+    </div><!-- /.modal-panels-wrap -->
 
     <div class="dialog-actions">
       <button type="button" class="btn btn-secondary" id="settings-cancel" data-i18n="btn_dialog_cancel">Cancel</button>
@@ -1601,6 +1774,8 @@ dialog .dialog-actions {
     </div>
   </form>
 </dialog>
+
+<div id="sidebar-backdrop"></div>
 
 <script>
 (function() {
@@ -1678,7 +1853,7 @@ function parsePositionList(input) {
 const translations = {
   en: {
     app_title: 'Rack Builder',
-    version: 'v0.6.0',
+    version: 'v0.7.0',
     btn_settings: 'Settings',
     btn_clear_devices: 'Clear Devices',
     btn_reset_all: 'Reset All',
@@ -1796,10 +1971,34 @@ const translations = {
     netbox_not_loaded: 'Not loaded',
     netbox_upload_invalid: 'Invalid file. Expected a JSON, YAML, or CSV file with name/slug columns.',
     ph_comments: '',
+    btn_export_png: 'Download PNG',
+    btn_print: 'Print / PDF',
+    device_search_ph: 'Search devices…',
+    shortcuts_title: 'Keyboard Shortcuts',
+    shortcut_undo: 'Undo',
+    shortcut_redo: 'Redo',
+    shortcut_delete: 'Delete selected',
+    shortcut_escape: 'Deselect',
+    shortcut_record: 'Record',
+    shortcut_recording: 'Press a key…',
+    shortcut_reset: 'Reset defaults',
+    shortcut_conflict: 'Already assigned!',
+    tab_rack: 'Rack',
+    tab_netbox: 'NetBox',
+    tab_shortcuts: 'Shortcuts',
+    netbox_autofill_hint: 'Re-upload Device Types to enable Auto-Fill (height, depth, manufacturer).',
+    netbox_mode_upload: '⬆ File Upload', netbox_mode_api: '⚡ Live API',
+    netbox_api_desc: 'Connect directly to your NetBox instance. URL and token are stored locally in your browser.',
+    netbox_api_url: 'NetBox URL', netbox_api_token_label: 'API Token', netbox_api_token_ph: 'e.g. 1a2b3c4d5e6f…',
+    netbox_api_test: 'Test Connection', netbox_api_connecting: 'Connecting…', netbox_api_connected: '✓ Connected',
+    netbox_api_error: 'Connection failed', netbox_api_fetch: 'Fetch', netbox_api_fetch_all: '⬇ Fetch All',
+    netbox_api_fetching: 'Loading…', netbox_api_missing_creds: 'Please enter URL and API token first.',
+    netbox_api_empty: 'No entries received from API.',
+    netbox_api_cors_hint: 'Note: NetBox must allow CORS for this origin, or you must be on the same network.',
   },
   de: {
     app_title: 'Rack Builder',
-    version: 'v0.6.0',
+    version: 'v0.7.0',
     btn_settings: 'Einstellungen',
     btn_clear_devices: 'Geräte löschen',
     btn_reset_all: 'Alles zurücksetzen',
@@ -1917,6 +2116,30 @@ const translations = {
     netbox_not_loaded: 'Nicht geladen',
     netbox_upload_invalid: 'Ungültige Datei. Erwartet wird eine JSON-, YAML- oder CSV-Datei mit name/slug-Spalten.',
     ph_comments: '',
+    btn_export_png: 'PNG herunterladen',
+    btn_print: 'Drucken / PDF',
+    device_search_ph: 'Geräte suchen…',
+    shortcuts_title: 'Tastaturkürzel',
+    shortcut_undo: 'Rückgängig',
+    shortcut_redo: 'Wiederholen',
+    shortcut_delete: 'Ausgewähltes löschen',
+    shortcut_escape: 'Auswahl aufheben',
+    shortcut_record: 'Aufnehmen',
+    shortcut_recording: 'Taste drücken…',
+    shortcut_reset: 'Zurücksetzen',
+    shortcut_conflict: 'Bereits belegt!',
+    tab_rack: 'Rack',
+    tab_netbox: 'NetBox',
+    tab_shortcuts: 'Shortcuts',
+    netbox_autofill_hint: 'Device-Types erneut hochladen, um Auto-Fill zu aktivieren (Höhe, Tiefe, Hersteller).',
+    netbox_mode_upload: '⬆ Datei-Upload', netbox_mode_api: '⚡ Live API',
+    netbox_api_desc: 'Direkt mit deiner NetBox-Instanz verbinden. URL und Token werden lokal im Browser gespeichert.',
+    netbox_api_url: 'NetBox URL', netbox_api_token_label: 'API Token', netbox_api_token_ph: 'z.B. 1a2b3c4d5e6f…',
+    netbox_api_test: 'Verbindung testen', netbox_api_connecting: 'Verbinde…', netbox_api_connected: '✓ Verbunden',
+    netbox_api_error: 'Verbindung fehlgeschlagen', netbox_api_fetch: 'Laden', netbox_api_fetch_all: '⬇ Alle laden',
+    netbox_api_fetching: 'Lade…', netbox_api_missing_creds: 'Bitte zuerst URL und API-Token eingeben.',
+    netbox_api_empty: 'Keine Einträge von der API erhalten.',
+    netbox_api_cors_hint: 'Hinweis: NetBox muss CORS für diese Origin erlauben oder du musst im selben Netzwerk sein.',
   },
 };
 
@@ -2746,7 +2969,13 @@ function renderDeviceBlocks(devices, face, unitOrder, selectedDeviceId) {
     const fontSize = uh < 20 ? '10px' : '11px';
 
     const fdClass = device.fullDepth ? ' device-block--full-depth' : '';
-    html += `<div class="device-block${isSelected ? ' selected' : ''}${fdClass}"
+    let searchClass = '';
+    if (searchFilter) {
+      const q = searchFilter.toLowerCase();
+      const matches = (device.name || '').toLowerCase().includes(q) || (device.deviceType || '').toLowerCase().includes(q) || (device.role || '').toLowerCase().includes(q);
+      searchClass = matches ? ' device-block--search-match' : ' device-block--search-nomatch';
+    }
+    html += `<div class="device-block${isSelected ? ' selected' : ''}${fdClass}${searchClass}"
       data-device-id="${device.id}"
       draggable="true"
       style="top: ${top}px; height: ${height - 2}px; background: ${color}; font-size: ${fontSize};"
@@ -2855,6 +3084,30 @@ function initDeviceForm() {
       }
     });
   });
+
+  // Auto-fill form from device type template metadata
+  document.getElementById('dev-type').addEventListener('ac:select', (e) => {
+    if (editingDeviceId) return;
+    const entry = e.detail;
+    const parts = [];
+    if (entry.uHeight) { document.getElementById('dev-height').value = entry.uHeight; parts.push(entry.uHeight + 'U'); }
+    if (entry.fullDepth !== undefined) { document.getElementById('dev-full-depth').checked = entry.fullDepth; if (entry.fullDepth) parts.push('Full'); }
+    if (entry.manufacturer) { document.getElementById('dev-manufacturer').value = entry.manufacturer; parts.push(entry.manufacturer); }
+    if (parts.length > 0) showAutofillToast(parts.join(' · '));
+  });
+
+  function showAutofillToast(text) {
+    let toast = document.getElementById('autofill-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'autofill-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = '⚡ Auto-filled: ' + text;
+    toast.className = 'autofill-toast autofill-toast--show';
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => { toast.className = 'autofill-toast'; }, 2500);
+  }
 
   // Bulk toggle via checkbox
   bulkCheckbox.addEventListener('change', () => {
@@ -3372,6 +3625,8 @@ function initExport() {
   document.getElementById('export-yaml-btn').addEventListener('click', downloadYAML);
   document.getElementById('export-csv-btn').addEventListener('click', downloadCSV);
   document.getElementById('copy-btn').addEventListener('click', copyToClipboard);
+  document.getElementById('export-png-btn').addEventListener('click', downloadPNG);
+  document.getElementById('print-btn').addEventListener('click', () => window.print());
   document.getElementById('import-btn').addEventListener('click', () => {
     document.getElementById('import-file').click();
   });
@@ -3530,7 +3785,7 @@ function saveProject() {
 
   const project = {
     _format: 'rackbuilder-project',
-    _version: '0.6.0',
+    _version: '0.7.0',
     rackConfig: state.rackConfig,
     multiRackEnabled: state.multiRackEnabled,
     racks: state.racks,
@@ -3680,6 +3935,9 @@ function init() {
   initBulkPositionHighlight();
   initNetboxAutocomplete();
   initAccordionAnimations();
+  initDeviceSearch();
+  initResponsiveSidebars();
+  initShortcutsPanel();
   updateStorageIndicator();
   updateStats(state);
 
@@ -3724,22 +3982,29 @@ function initLang() {
 
 // ─── Device list ────────────────────────────────────────────────────────────
 
+let deviceSearchTerm = '';
+
 function renderDeviceList(state) {
   const container = document.getElementById('device-list');
   const countEl = document.getElementById('device-count');
   const devices = getActiveDevices(state);
   const { selectedDeviceId } = state;
-
   countEl.textContent = devices.length;
-
   if (devices.length === 0) {
     container.innerHTML = `<p style="color: var(--color-text-muted); font-size: 12px;">${t('no_devices')}</p>`;
     return;
   }
-
   const sorted = [...devices].sort((a, b) => a.position - b.position);
-
-  container.innerHTML = sorted.map(d => `
+  const q = deviceSearchTerm.toLowerCase();
+  const filtered = q ? sorted.filter(d =>
+    (d.name || '').toLowerCase().includes(q) ||
+    (d.deviceType || '').toLowerCase().includes(q) ||
+    (d.role || '').toLowerCase().includes(q)) : sorted;
+  if (filtered.length === 0) {
+    container.innerHTML = `<p style="color: var(--color-text-muted); font-size: 12px;">—</p>`;
+    return;
+  }
+  container.innerHTML = filtered.map(d => `
     <div class="device-list-item${d.id === selectedDeviceId ? ' selected' : ''}" data-device-id="${d.id}">
       <div class="device-info">
         <span class="device-color" style="background: ${d._color || '#3b82f6'}"></span>
@@ -3749,7 +4014,6 @@ function renderDeviceList(state) {
       <button class="device-delete" data-device-id="${d.id}" title="Delete">&times;</button>
     </div>
   `).join('');
-
   container.querySelectorAll('.device-list-item').forEach(item => {
     item.addEventListener('click', (e) => {
       if (e.target.closest('.device-delete')) return;
@@ -3757,12 +4021,33 @@ function renderDeviceList(state) {
       dispatch('SELECT_DEVICE', id === state.selectedDeviceId ? null : id);
     });
   });
-
   container.querySelectorAll('.device-delete').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       dispatch('REMOVE_DEVICE', btn.dataset.deviceId);
     });
+  });
+}
+
+function initDeviceSearch() {
+  const input = document.getElementById('device-search');
+  if (!input) return;
+  input.addEventListener('input', () => {
+    deviceSearchTerm = input.value.trim();
+    setSearchFilter(deviceSearchTerm);
+    const state = getState();
+    if (deviceSearchTerm && state.multiRackEnabled) {
+      const q = deviceSearchTerm.toLowerCase();
+      const match = state.devices.find(d =>
+        (d.name || '').toLowerCase().includes(q) ||
+        (d.deviceType || '').toLowerCase().includes(q) ||
+        (d.role || '').toLowerCase().includes(q));
+      if (match && match.rackId && match.rackId !== state.activeRackId) {
+        dispatch('SET_ACTIVE_RACK', match.rackId); return;
+      }
+    }
+    renderDeviceList(state);
+    renderRack(state);
   });
 }
 
@@ -3914,6 +4199,41 @@ function initSettings() {
 
   rackCountInput.addEventListener('input', renderRackRows);
 
+  // ── Sliding tab indicator + animated height switching ──
+  const tabsEl    = modal.querySelector('.modal-tabs');
+  const indicator = modal.querySelector('.modal-tab-indicator');
+  const wrap      = document.getElementById('modal-panels-wrap');
+
+  function moveIndicator(tab, animate) {
+    if (!animate) indicator.style.transition = 'none';
+    const tabsRect = tabsEl.getBoundingClientRect();
+    const tabRect  = tab.getBoundingClientRect();
+    indicator.style.width     = tabRect.width + 'px';
+    indicator.style.transform = `translateX(${tabRect.left - tabsRect.left - 3}px)`;
+    if (!animate) requestAnimationFrame(() => { indicator.style.transition = ''; });
+  }
+
+  function switchTab(tab) {
+    const currentPanel = modal.querySelector('.modal-tab-panel.active');
+    const targetPanel  = document.getElementById('tab-panel-' + tab.dataset.tab);
+    if (currentPanel === targetPanel) return;
+    moveIndicator(tab, true);
+    modal.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const fromH = currentPanel.scrollHeight;
+    wrap.style.height   = fromH + 'px';
+    wrap.style.overflow = 'hidden';
+    currentPanel.classList.remove('active');
+    targetPanel.classList.add('active');
+    if (tab.dataset.tab === 'shortcuts') renderShortcutsPanel();
+    requestAnimationFrame(() => { wrap.style.height = targetPanel.scrollHeight + 'px'; });
+    wrap.addEventListener('transitionend', () => { wrap.style.height = ''; wrap.style.overflow = ''; }, { once: true });
+  }
+
+  modal.querySelectorAll('.modal-tab').forEach(tab => {
+    tab.addEventListener('click', () => switchTab(tab));
+  });
+
   document.getElementById('settings-btn').addEventListener('click', () => {
     const state = getState();
     const cfg = state.rackConfig;
@@ -3937,7 +4257,13 @@ function initSettings() {
       document.getElementById('setting-rear-color').value = cfg.rearColor || '#f97316';
       toggleMultiRackUI(false);
     }
+    // Reset to first tab
+    modal.querySelectorAll('.modal-tab').forEach(t => t.classList.remove('active'));
+    modal.querySelectorAll('.modal-tab-panel').forEach(p => p.classList.remove('active'));
+    modal.querySelector('.modal-tab[data-tab="rack"]').classList.add('active');
+    document.getElementById('tab-panel-rack').classList.add('active');
     modal.showModal();
+    requestAnimationFrame(() => moveIndicator(modal.querySelector('.modal-tab.active'), false));
   });
 
   document.getElementById('settings-cancel').addEventListener('click', () => {
@@ -4006,35 +4332,108 @@ function closeDialogAnimated(dialog) {
 
 // ─── Keyboard shortcuts ──────────────────────────────────────────────────────
 
+const DEFAULT_SHORTCUTS = {
+  undo:   { label: 'shortcut_undo',   key: 'z',      ctrl: true,  shift: false },
+  redo:   { label: 'shortcut_redo',   key: 'y',      ctrl: true,  shift: false },
+  delete: { label: 'shortcut_delete', key: 'Delete', ctrl: false, shift: false },
+  escape: { label: 'shortcut_escape', key: 'Escape', ctrl: false, shift: false },
+};
+let shortcuts = {};
+
+function loadShortcuts() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('rackbuilder_shortcuts') || '{}');
+    shortcuts = {};
+    for (const [id, def] of Object.entries(DEFAULT_SHORTCUTS)) {
+      shortcuts[id] = { ...def, ...(saved[id] || {}) };
+    }
+  } catch {
+    shortcuts = {};
+    for (const [id, def] of Object.entries(DEFAULT_SHORTCUTS)) shortcuts[id] = { ...def };
+  }
+}
+
+function saveShortcuts() {
+  const toSave = {};
+  for (const [id, sc] of Object.entries(shortcuts)) {
+    const def = DEFAULT_SHORTCUTS[id];
+    if (sc.key !== def.key || sc.ctrl !== def.ctrl || sc.shift !== def.shift) toSave[id] = { key: sc.key, ctrl: sc.ctrl, shift: sc.shift };
+  }
+  if (Object.keys(toSave).length > 0) localStorage.setItem('rackbuilder_shortcuts', JSON.stringify(toSave));
+  else localStorage.removeItem('rackbuilder_shortcuts');
+}
+
+function matchesShortcut(e, sc) {
+  return (e.ctrlKey || e.metaKey) === (sc.ctrl || false) && e.shiftKey === (sc.shift || false) && e.key === sc.key;
+}
+
+function formatShortcut(sc) {
+  const parts = [];
+  if (sc.ctrl) parts.push('Ctrl');
+  if (sc.shift) parts.push('Shift');
+  parts.push(sc.key === ' ' ? 'Space' : sc.key);
+  return parts;
+}
+
 function initKeyboardShortcuts() {
+  loadShortcuts();
   document.addEventListener('keydown', (e) => {
-    // Undo/Redo work even in inputs
-    if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
-      e.preventDefault();
-      undo();
-      return;
-    }
-    if ((e.ctrlKey || e.metaKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
-      e.preventDefault();
-      redo();
-      return;
-    }
-
+    if (matchesShortcut(e, shortcuts.undo)) { e.preventDefault(); undo(); return; }
+    if (matchesShortcut(e, shortcuts.redo) || ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'z')) { e.preventDefault(); redo(); return; }
     if (e.target.matches('input, textarea, select')) return;
-
     const state = getState();
+    if (matchesShortcut(e, shortcuts.delete) && state.selectedDeviceId) dispatch('REMOVE_DEVICE', state.selectedDeviceId);
+    if (matchesShortcut(e, shortcuts.escape) && state.selectedDeviceId) dispatch('SELECT_DEVICE', null);
+  });
+}
 
-    if (e.key === 'Delete' || e.key === 'Backspace') {
-      if (state.selectedDeviceId) {
-        dispatch('REMOVE_DEVICE', state.selectedDeviceId);
-      }
-    }
+let recordingCleanup = null;
 
-    if (e.key === 'Escape') {
-      if (state.selectedDeviceId) {
-        dispatch('SELECT_DEVICE', null);
-      }
+function renderShortcutsPanel() {
+  const container = document.getElementById('shortcuts-list');
+  if (!container) return;
+  container.innerHTML = Object.entries(shortcuts).map(([id, sc]) => {
+    const keys = formatShortcut(sc);
+    const kbdHtml = keys.map(k => `<kbd>${k}</kbd>`).join('<span class="shortcut-plus">+</span>');
+    return `<div class="shortcut-row" data-shortcut-id="${id}">
+      <span class="shortcut-label">${t(sc.label)}</span>
+      <div class="shortcut-binding">${kbdHtml}</div>
+      <button type="button" class="btn btn-secondary btn-sm shortcut-record-btn" data-id="${id}">${t('shortcut_record')}</button>
+    </div>`;
+  }).join('');
+  container.querySelectorAll('.shortcut-record-btn').forEach(btn => {
+    btn.addEventListener('click', () => startRecording(btn.dataset.id));
+  });
+}
+
+function startRecording(id) {
+  if (recordingCleanup) recordingCleanup();
+  const btn = document.querySelector(`.shortcut-record-btn[data-id="${id}"]`);
+  if (btn) btn.textContent = t('shortcut_recording');
+  function onKey(e) {
+    if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
+    e.preventDefault(); e.stopPropagation();
+    if (e.key === 'Escape' && !e.ctrlKey && !e.shiftKey) { cleanup(); return; }
+    const newSc = { key: e.key, ctrl: e.ctrlKey || e.metaKey, shift: e.shiftKey };
+    const conflict = Object.entries(shortcuts).find(([oid, sc]) => oid !== id && sc.key === newSc.key && (sc.ctrl || false) === newSc.ctrl && (sc.shift || false) === newSc.shift);
+    shortcuts[id] = { ...shortcuts[id], ...newSc };
+    saveShortcuts(); cleanup(); renderShortcutsPanel();
+    if (conflict) {
+      const row = document.querySelector(`.shortcut-row[data-shortcut-id="${id}"]`);
+      if (row) { const w = document.createElement('span'); w.className = 'shortcut-conflict'; w.textContent = t('shortcut_conflict'); row.appendChild(w); setTimeout(() => w.remove(), 2500); }
     }
+  }
+  function cleanup() {
+    document.removeEventListener('keydown', onKey, true); recordingCleanup = null;
+    if (btn && btn.isConnected) btn.textContent = t('shortcut_record');
+  }
+  recordingCleanup = cleanup;
+  document.addEventListener('keydown', onKey, true);
+}
+
+function initShortcutsPanel() {
+  document.getElementById('shortcuts-reset-btn')?.addEventListener('click', () => {
+    localStorage.removeItem('rackbuilder_shortcuts'); loadShortcuts(); renderShortcutsPanel();
   });
 }
 
@@ -4061,16 +4460,27 @@ function updateStats(state) {
   const devices = getActiveDevices(state);
   const stats = getRackUtilization(devices, cfg.totalUnits);
   const el = document.getElementById('rack-stats');
-  if (el) {
-    el.textContent = `${stats.totalPercent}% ${t('stat_used')} (F: ${stats.frontPercent}% | R: ${stats.rearPercent}%)`;
+  if (el) el.textContent = `${stats.totalPercent}% ${t('stat_used')} (F: ${stats.frontPercent}% | R: ${stats.rearPercent}%)`;
+  const utilEl = document.getElementById('rack-utilization');
+  if (utilEl) {
+    utilEl.style.display = devices.length > 0 ? 'flex' : 'none';
+    const fW = stats.front / (cfg.totalUnits * 2) * 100;
+    const rW = stats.rear  / (cfg.totalUnits * 2) * 100;
+    const fb = document.getElementById('util-bar-front'); if (fb) fb.style.width = fW + '%';
+    const rb = document.getElementById('util-bar-rear');  if (rb) rb.style.width = rW + '%';
+    const lb = document.getElementById('util-label');
+    if (lb) lb.textContent = `${stats.front + stats.rear}/${cfg.totalUnits * 2}U (${stats.totalPercent}%)`;
   }
 }
 
 // ─── NetBox Autocomplete ─────────────────────────────────────────────────────
 
-const STORAGE_KEY_TYPES = 'rackbuilder_netbox_device_types';
-const STORAGE_KEY_ROLES = 'rackbuilder_netbox_roles';
+const STORAGE_KEY_TYPES         = 'rackbuilder_netbox_device_types';
+const STORAGE_KEY_ROLES         = 'rackbuilder_netbox_roles';
 const STORAGE_KEY_MANUFACTURERS = 'rackbuilder_netbox_manufacturers';
+const STORAGE_KEY_API_URL       = 'rackbuilder_netbox_api_url';
+const STORAGE_KEY_API_TOKEN     = 'rackbuilder_netbox_api_token';
+const STORAGE_KEY_MODE          = 'rackbuilder_netbox_mode';
 
 function loadNetboxEntries(key) {
   try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : []; }
@@ -4083,10 +4493,18 @@ function extractNameSlug(items) {
   if (!Array.isArray(items)) return null;
   const result = items
     .filter(e => e && (e.name || e.slug || e.display || e.model))
-    .map(e => ({
-      name: e.model || e.name || e.display || e.slug,
-      slug: e.slug || (e.model || e.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
-    }));
+    .map(e => {
+      const obj = {
+        name: e.model || e.name || e.display || e.slug,
+        slug: e.slug || (e.model || e.name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+      };
+      if (e.u_height !== undefined) obj.uHeight = parseInt(e.u_height) || 1;
+      const fd = e.full_depth ?? e.is_full_depth;
+      if (fd !== undefined) obj.fullDepth = fd === true || fd === 'true';
+      const mfr = e.manufacturer;
+      if (mfr) obj.manufacturer = typeof mfr === 'object' ? (mfr.name || mfr.display || '') : String(mfr);
+      return obj;
+    });
   return result.length > 0 ? result : null;
 }
 
@@ -4243,14 +4661,25 @@ function acFilterEntries(entries, query) {
   return [...starts, ...contains].slice(0, AC_MAX_VISIBLE * 2);
 }
 
-function acCreateDropdown(input) {
+function acCreateDropdown() {
   const dropdown = document.createElement('div');
   dropdown.className = 'ac-dropdown';
   dropdown.setAttribute('role', 'listbox');
-  const parent = input.closest('.form-group') || input.parentElement;
-  parent.style.position = 'relative';
-  parent.appendChild(dropdown);
+  // Append to body to escape overflow clipping in sidebars
+  document.body.appendChild(dropdown);
   return dropdown;
+}
+
+function acPositionDropdown(inputId) {
+  const state = acDropdowns.get(inputId);
+  if (!state) return;
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const rect = input.getBoundingClientRect();
+  const dd = state.dropdown;
+  dd.style.top      = rect.bottom + 'px';
+  dd.style.left     = rect.left + 'px';
+  dd.style.minWidth = rect.width + 'px';
 }
 
 function acRenderDropdown(inputId, query) {
@@ -4264,21 +4693,29 @@ function acRenderDropdown(inputId, query) {
     state.dropdown.innerHTML = '';
     return;
   }
-  state.dropdown.innerHTML = filtered.map((e, i) =>
-    `<div class="ac-option" data-index="${i}" role="option">
+  state.dropdown.innerHTML = filtered.map((e, i) => {
+    const metaParts = [];
+    if (e.uHeight) metaParts.push(`${e.uHeight}U`);
+    if (e.fullDepth) metaParts.push('Full');
+    const metaHtml = metaParts.length ? `<span class="ac-option-meta">${metaParts.join(' · ')}</span>` : '';
+    return `<div class="ac-option" data-index="${i}" role="option">
       <span class="ac-option-name">${acHighlightMatch(e.name, query)}</span>
+      ${metaHtml}
       <span class="ac-option-slug">${acHighlightMatch(e.slug, query)}</span>
-    </div>`
-  ).join('');
+    </div>`;
+  }).join('');
+  acPositionDropdown(inputId);
   state.dropdown.classList.add('visible');
 }
 
 function acSelectOption(inputId, index) {
   const state = acDropdowns.get(inputId);
   if (!state || !state.filtered || !state.filtered[index]) return;
+  const entry = state.filtered[index];
   const input = document.getElementById(inputId);
-  input.value = state.filtered[index].name;
+  input.value = entry.name;
   input.dispatchEvent(new Event('input', { bubbles: true }));
+  input.dispatchEvent(new CustomEvent('ac:select', { detail: entry, bubbles: true }));
   acCloseDropdown(inputId);
 }
 
@@ -4304,8 +4741,20 @@ function attachAutocomplete(inputId, entries) {
   input.removeAttribute('list');
   if (acDropdowns.has(inputId)) { acDropdowns.get(inputId).entries = entries; return; }
 
-  const dropdown = acCreateDropdown(input);
+  const dropdown = acCreateDropdown();
   acDropdowns.set(inputId, { dropdown, entries, filtered: [], selectedIdx: -1 });
+
+  // Reposition on scroll of any scrollable ancestor
+  const scrollHandler = () => {
+    const st = acDropdowns.get(inputId);
+    if (st?.dropdown.classList.contains('visible')) acPositionDropdown(inputId);
+  };
+  window.addEventListener('scroll', scrollHandler, { passive: true });
+  let el = input.parentElement;
+  while (el && el !== document.body) {
+    if (el.scrollHeight > el.clientHeight) { el.addEventListener('scroll', scrollHandler, { passive: true }); break; }
+    el = el.parentElement;
+  }
 
   input.addEventListener('input', () => {
     if ((acDropdowns.get(inputId)?.entries || []).length === 0) return;
@@ -4332,18 +4781,52 @@ function attachAutocomplete(inputId, entries) {
 
 function updateNetboxUploadStatus() {
   const data = [
-    { entries: loadNetboxEntries(STORAGE_KEY_TYPES), statusId: 'netbox-types-status', clearId: 'netbox-clear-types-btn' },
-    { entries: loadNetboxEntries(STORAGE_KEY_ROLES), statusId: 'netbox-roles-status', clearId: 'netbox-clear-roles-btn' },
-    { entries: loadNetboxEntries(STORAGE_KEY_MANUFACTURERS), statusId: 'netbox-mfr-status', clearId: 'netbox-clear-mfr-btn' },
+    { entries: loadNetboxEntries(STORAGE_KEY_TYPES),         statusIds: ['netbox-types-status', 'netbox-api-types-status'], clearId: 'netbox-clear-types-btn' },
+    { entries: loadNetboxEntries(STORAGE_KEY_ROLES),         statusIds: ['netbox-roles-status', 'netbox-api-roles-status'], clearId: 'netbox-clear-roles-btn' },
+    { entries: loadNetboxEntries(STORAGE_KEY_MANUFACTURERS), statusIds: ['netbox-mfr-status',   'netbox-api-mfr-status'],   clearId: 'netbox-clear-mfr-btn' },
   ];
-  for (const { entries, statusId, clearId } of data) {
-    const statusEl = document.getElementById(statusId);
+  for (const { entries, statusIds, clearId } of data) {
+    const text = entries.length > 0 ? t('netbox_loaded', { count: entries.length }) : t('netbox_not_loaded');
+    const cls  = 'netbox-status ' + (entries.length > 0 ? 'loaded' : 'empty');
+    for (const id of statusIds) { const el = document.getElementById(id); if (el) { el.textContent = text; el.className = cls; } }
     const clearBtn = document.getElementById(clearId);
-    if (statusEl) {
-      statusEl.textContent = entries.length > 0 ? t('netbox_loaded', { count: entries.length }) : t('netbox_not_loaded');
-      statusEl.className = 'netbox-status ' + (entries.length > 0 ? 'loaded' : 'empty');
-    }
     if (clearBtn) clearBtn.style.display = entries.length > 0 ? '' : 'none';
+  }
+}
+
+async function apiFetchPages(baseUrl, token, endpoint) {
+  const results = [];
+  let url = `${baseUrl.replace(/\/+$/, '')}/api/${endpoint}/?limit=200&format=json`;
+  while (url) {
+    const res = await fetch(url, { headers: { 'Authorization': `Token ${token}`, 'Accept': 'application/json' } });
+    if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+    const data = await res.json();
+    results.push(...(data.results || []));
+    url = data.next || null;
+  }
+  return results;
+}
+
+async function apiFetchAndStore(endpoint, storageKey, inputId, btnId) {
+  const baseUrl = localStorage.getItem(STORAGE_KEY_API_URL)   || '';
+  const token   = localStorage.getItem(STORAGE_KEY_API_TOKEN) || '';
+  if (!baseUrl || !token) { alert(t('netbox_api_missing_creds')); return false; }
+  const btn = document.getElementById(btnId);
+  const orig = btn?.textContent;
+  if (btn) { btn.disabled = true; btn.textContent = t('netbox_api_fetching'); }
+  try {
+    const items   = await apiFetchPages(baseUrl, token, endpoint);
+    const entries = extractNameSlug(items);
+    if (!entries || entries.length === 0) { alert(t('netbox_api_empty')); return false; }
+    saveNetboxEntries(storageKey, entries);
+    attachAutocomplete(inputId, entries);
+    updateNetboxUploadStatus();
+    return true;
+  } catch (err) {
+    alert(`${t('netbox_api_error')}: ${err.message}`);
+    return false;
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = orig; }
   }
 }
 
@@ -4384,6 +4867,71 @@ function initNetboxAutocomplete() {
   attachAutocomplete('dev-role', loadNetboxEntries(STORAGE_KEY_ROLES));
   attachAutocomplete('dev-manufacturer', loadNetboxEntries(STORAGE_KEY_MANUFACTURERS));
   updateNetboxUploadStatus();
+
+  // ── Mode toggle ──
+  const uploadSection = document.getElementById('netbox-upload-section');
+  const apiSection    = document.getElementById('netbox-api-section');
+  const modeUploadBtn = document.getElementById('netbox-mode-upload');
+  const modeApiBtn    = document.getElementById('netbox-mode-api');
+  function setNetboxMode(mode, save = true) {
+    const isApi = mode === 'api';
+    if (uploadSection) uploadSection.style.display = isApi ? 'none' : '';
+    if (apiSection)    apiSection.style.display    = isApi ? '' : 'none';
+    modeUploadBtn?.classList.toggle('active', !isApi);
+    modeApiBtn?.classList.toggle('active',    isApi);
+    if (save) localStorage.setItem(STORAGE_KEY_MODE, mode);
+  }
+  modeUploadBtn?.addEventListener('click', () => setNetboxMode('upload'));
+  modeApiBtn?.addEventListener('click',    () => setNetboxMode('api'));
+
+  // Restore saved credentials
+  const urlInput   = document.getElementById('netbox-api-url-input');
+  const tokenInput = document.getElementById('netbox-api-token-input');
+  if (urlInput)   urlInput.value   = localStorage.getItem(STORAGE_KEY_API_URL)   || '';
+  if (tokenInput) tokenInput.value = localStorage.getItem(STORAGE_KEY_API_TOKEN) || '';
+  urlInput?.addEventListener('input',   () => localStorage.setItem(STORAGE_KEY_API_URL,   urlInput.value.trim()));
+  tokenInput?.addEventListener('input', () => localStorage.setItem(STORAGE_KEY_API_TOKEN, tokenInput.value.trim()));
+
+  // Show/hide token
+  document.getElementById('netbox-api-token-toggle')?.addEventListener('click', () => {
+    if (tokenInput) tokenInput.type = tokenInput.type === 'password' ? 'text' : 'password';
+  });
+
+  // Test connection
+  document.getElementById('netbox-api-test-btn')?.addEventListener('click', async () => {
+    const baseUrl = urlInput?.value.trim();
+    const token   = tokenInput?.value.trim();
+    const status  = document.getElementById('netbox-api-conn-status');
+    if (!baseUrl || !token) { if (status) { status.textContent = t('netbox_api_missing_creds'); status.className = 'netbox-api-conn-status error'; } return; }
+    if (status) { status.textContent = t('netbox_api_connecting'); status.className = 'netbox-api-conn-status'; }
+    const btn = document.getElementById('netbox-api-test-btn');
+    if (btn) btn.disabled = true;
+    try {
+      const res = await fetch(`${baseUrl.replace(/\/+$/, '')}/api/`, { headers: { 'Authorization': `Token ${token}`, 'Accept': 'application/json' } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (status) { status.textContent = t('netbox_api_connected'); status.className = 'netbox-api-conn-status success'; }
+    } catch (err) {
+      if (status) { status.textContent = `${t('netbox_api_error')}: ${err.message}`; status.className = 'netbox-api-conn-status error'; }
+    } finally { if (btn) btn.disabled = false; }
+  });
+
+  // Fetch buttons
+  document.getElementById('netbox-api-fetch-types-btn')?.addEventListener('click', () =>
+    apiFetchAndStore('dcim/device-types',  STORAGE_KEY_TYPES,         'dev-type',        'netbox-api-fetch-types-btn'));
+  document.getElementById('netbox-api-fetch-roles-btn')?.addEventListener('click', () =>
+    apiFetchAndStore('dcim/device-roles',  STORAGE_KEY_ROLES,         'dev-role',        'netbox-api-fetch-roles-btn'));
+  document.getElementById('netbox-api-fetch-mfr-btn')?.addEventListener('click',   () =>
+    apiFetchAndStore('dcim/manufacturers', STORAGE_KEY_MANUFACTURERS, 'dev-manufacturer', 'netbox-api-fetch-mfr-btn'));
+  document.getElementById('netbox-api-fetch-all-btn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('netbox-api-fetch-all-btn');
+    if (btn) { btn.disabled = true; btn.textContent = t('netbox_api_fetching'); }
+    await apiFetchAndStore('dcim/device-types',  STORAGE_KEY_TYPES,         'dev-type',        'netbox-api-fetch-types-btn');
+    await apiFetchAndStore('dcim/device-roles',  STORAGE_KEY_ROLES,         'dev-role',        'netbox-api-fetch-roles-btn');
+    await apiFetchAndStore('dcim/manufacturers', STORAGE_KEY_MANUFACTURERS, 'dev-manufacturer', 'netbox-api-fetch-mfr-btn');
+    if (btn) { btn.disabled = false; btn.textContent = t('netbox_api_fetch_all'); }
+  });
+
+  setNetboxMode(localStorage.getItem(STORAGE_KEY_MODE) || 'upload', false);
 }
 
 // ─── Accordion animations ────────────────────────────────────────────────────
@@ -4642,6 +5190,96 @@ function initUndoRedo() {
 function updateUndoRedoButtons() {
   document.getElementById('undo-btn').disabled = !canUndo();
   document.getElementById('redo-btn').disabled = !canRedo();
+}
+
+// ─── Search Filter ───────────────────────────────────────────────────────────
+
+let searchFilter = '';
+function setSearchFilter(term) { searchFilter = term; }
+
+// ─── Responsive Sidebar Drawers ──────────────────────────────────────────────
+
+function initResponsiveSidebars() {
+  const leftToggle  = document.getElementById('sidebar-toggle-left');
+  const rightToggle = document.getElementById('sidebar-toggle-right');
+  const backdrop    = document.getElementById('sidebar-backdrop');
+  const sidebar      = document.querySelector('.sidebar');
+  const sidebarRight = document.querySelector('.sidebar-right');
+  function closeSidebars() {
+    sidebar?.classList.remove('sidebar--open');
+    sidebarRight?.classList.remove('sidebar--open');
+    backdrop?.classList.remove('visible');
+  }
+  leftToggle?.addEventListener('click', () => {
+    const wasOpen = sidebar?.classList.contains('sidebar--open');
+    closeSidebars();
+    if (!wasOpen) { sidebar?.classList.add('sidebar--open'); backdrop?.classList.add('visible'); }
+  });
+  rightToggle?.addEventListener('click', () => {
+    const wasOpen = sidebarRight?.classList.contains('sidebar--open');
+    closeSidebars();
+    if (!wasOpen) { sidebarRight?.classList.add('sidebar--open'); backdrop?.classList.add('visible'); }
+  });
+  backdrop?.addEventListener('click', closeSidebars);
+}
+
+// ─── PNG Export ──────────────────────────────────────────────────────────────
+
+function downloadPNG() {
+  const state = getState();
+  const cfg = getActiveRackConfig(state);
+  const devices = getActiveDevices(state);
+  const { totalUnits, numberingDirection } = cfg;
+  const UH = 28, FACE_W = 220, LABEL_W = 36, HEADER_H = 22, TITLE_H = 32, PAD = 12;
+  const DPR = window.devicePixelRatio || 1;
+  const W = PAD * 2 + FACE_W * 2 + LABEL_W;
+  const H = TITLE_H + HEADER_H + totalUnits * UH + PAD;
+  const canvas = document.createElement('canvas');
+  canvas.width = W * DPR; canvas.height = H * DPR;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(DPR, DPR);
+  const isDark = document.documentElement.dataset.theme === 'dark';
+  const bg = isDark ? '#0f172a' : '#f8fafc', bgCell = isDark ? '#1e293b' : '#f1f5f9';
+  const bgHead = isDark ? '#1e293b' : '#e2e8f0', border = isDark ? '#334155' : '#cbd5e1';
+  const txtMut = isDark ? '#64748b' : '#94a3b8', txtMain = isDark ? '#e2e8f0' : '#1e293b';
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = txtMain; ctx.font = 'bold 13px system-ui,sans-serif'; ctx.textAlign = 'left';
+  ctx.fillText(cfg.name, PAD, TITLE_H - 8);
+  const unitOrder = [];
+  if (numberingDirection === 'bottom-to-top') { for (let u = totalUnits; u >= 1; u--) unitOrder.push(u); }
+  else { for (let u = 1; u <= totalUnits; u++) unitOrder.push(u); }
+  const frontX = PAD, labelX = PAD + FACE_W, rearX = PAD + FACE_W + LABEL_W, bodyY = TITLE_H + HEADER_H;
+  ctx.fillStyle = bgHead; ctx.fillRect(frontX, TITLE_H, FACE_W, HEADER_H); ctx.fillRect(rearX, TITLE_H, FACE_W, HEADER_H);
+  ctx.fillStyle = txtMain; ctx.font = '11px system-ui,sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Front', frontX + FACE_W / 2, TITLE_H + 15); ctx.fillText('Rear', rearX + FACE_W / 2, TITLE_H + 15);
+  for (let i = 0; i < unitOrder.length; i++) {
+    const y = bodyY + i * UH;
+    ctx.fillStyle = i % 2 === 0 ? bgCell : bg;
+    ctx.fillRect(frontX, y, FACE_W, UH); ctx.fillRect(rearX, y, FACE_W, UH);
+    ctx.strokeStyle = border; ctx.lineWidth = 0.5;
+    ctx.strokeRect(frontX, y, FACE_W, UH); ctx.strokeRect(rearX, y, FACE_W, UH);
+    ctx.fillStyle = txtMut; ctx.font = '9px system-ui,sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(String(unitOrder[i]), labelX + LABEL_W / 2, y + UH / 2 + 3);
+  }
+  for (const face of ['front', 'rear']) {
+    const faceX = face === 'front' ? frontX : rearX;
+    for (const device of devices.filter(d => d.face === face)) {
+      const topIdx = unitOrder.indexOf(device.position + device.height - 1);
+      if (topIdx === -1) continue;
+      const y = bodyY + topIdx * UH, h = device.height * UH - 1;
+      ctx.fillStyle = device._color || (face === 'front' ? '#3b82f6' : '#f97316');
+      ctx.beginPath(); ctx.roundRect(faceX + 1, y + 1, FACE_W - 2, h - 1, 3); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = `${h < 20 ? 9 : 11}px system-ui,sans-serif`; ctx.textAlign = 'center';
+      ctx.save(); ctx.beginPath(); ctx.rect(faceX + 1, y + 1, FACE_W - 2, h - 1); ctx.clip();
+      ctx.fillText(device.name || '(unnamed)', faceX + FACE_W / 2, y + Math.min(h / 2 + 4, h - 3));
+      ctx.restore();
+    }
+  }
+  canvas.toBlob(blob => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${cfg.name}_rack.png`; a.click(); URL.revokeObjectURL(a.href);
+  });
 }
 
 // Start
