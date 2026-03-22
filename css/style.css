@@ -756,6 +756,18 @@ body {
   background: rgba(239, 68, 68, 0.15);
 }
 
+.device-rack-select {
+  font-size: 11px;
+  padding: 2px 4px;
+  background: var(--bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  max-width: 90px;
+  flex-shrink: 0;
+}
+
 /* Sidebar Accordion */
 .sidebar-accordion {
   border: 1px solid var(--color-border);

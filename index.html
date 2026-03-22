@@ -214,6 +214,9 @@
       <div class="sidebar-accordion-body">
         <button class="btn btn-secondary btn-block" id="import-btn" data-i18n="btn_import">Import JSON</button>
         <input type="file" id="import-file" accept=".json" style="display:none">
+        <button class="btn btn-secondary btn-block" id="import-csv-btn" data-i18n="btn_import_csv" style="margin-top:6px">Import CSV</button>
+        <input type="file" id="import-csv-file" accept=".csv" style="display:none">
+        <p class="form-hint" data-i18n="import_csv_hint" style="margin-top:6px"></p>
       </div>
     </details>
 
@@ -255,6 +258,22 @@
     </details>
   </aside>
 </main>
+
+<!-- Import Preview Dialog -->
+<dialog id="import-preview-dialog">
+  <h2 data-i18n="import_preview_title">Import Preview</h2>
+  <div style="margin: 12px 0">
+    <p id="import-preview-summary" style="margin-bottom:10px"></p>
+    <div id="import-preview-conflicts-wrap" style="display:none">
+      <p id="import-preview-conflicts-label" style="color:var(--color-warning,#f59e0b);margin-bottom:6px;font-size:13px"></p>
+      <ul id="import-preview-conflict-list" style="font-size:12px;color:var(--color-text-muted);padding-left:16px;max-height:160px;overflow-y:auto;margin:0"></ul>
+    </div>
+  </div>
+  <div class="dialog-actions">
+    <button class="btn btn-secondary" id="import-preview-cancel" data-i18n="btn_dialog_cancel">Cancel</button>
+    <button class="btn btn-primary" id="import-preview-confirm" data-i18n="import_preview_ok">Import</button>
+  </div>
+</dialog>
 
 <!-- Settings Modal -->
 <dialog id="settings-modal">

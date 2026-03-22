@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --check js/state.js)",
+      "Bash(node --check js/app.js)",
+      "Bash(node --check js/export.js)",
+      "Bash(node --check js/netbox-autocomplete.js)",
+      "Bash(node --check js/i18n.js)"
+    ]
+  }
+}

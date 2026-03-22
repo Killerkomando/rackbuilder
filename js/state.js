@@ -390,6 +390,28 @@ export function dispatch(action, payload) {
       return { ok: true };
     }
 
+    case 'MOVE_TO_RACK': {
+      pushHistory();
+      const { id: moveId, targetRackId } = payload;
+      const movingDevice = state.devices.find(d => d.id === moveId);
+      if (!movingDevice) return { ok: false, reason: 'Device not found.' };
+      if (movingDevice.rackId === targetRackId) return { ok: true };
+      const targetRack = state.racks.find(r => r.id === targetRackId);
+      if (!targetRack) return { ok: false, reason: 'Target rack not found.' };
+      const targetDevices = state.devices.filter(d => d.rackId === targetRackId);
+      const result = canPlace(
+        targetDevices, movingDevice.position, movingDevice.height,
+        movingDevice.face, targetRack.totalUnits, null, movingDevice.fullDepth
+      );
+      if (!result.ok) return result;
+      state = {
+        ...state,
+        devices: state.devices.map(d => d.id === moveId ? { ...d, rackId: targetRackId } : d),
+      };
+      notify();
+      return { ok: true };
+    }
+
     case 'UPDATE_RACK': {
       pushHistory();
       const { rackId, ...changes } = payload;

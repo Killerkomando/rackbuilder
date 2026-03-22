@@ -16,12 +16,80 @@ export function initExport() {
   });
   document.getElementById('import-file').addEventListener('change', importJSON);
 
+  // CSV import
+  document.getElementById('import-csv-btn').addEventListener('click', () => {
+    document.getElementById('import-csv-file').click();
+  });
+  document.getElementById('import-csv-file').addEventListener('change', importCSV);
+
+  // Import preview dialog buttons
+  document.getElementById('import-preview-cancel').addEventListener('click', () => {
+    document.getElementById('import-preview-dialog').close();
+    pendingImportDevices = null;
+  });
+  document.getElementById('import-preview-confirm').addEventListener('click', () => {
+    document.getElementById('import-preview-dialog').close();
+    if (pendingImportDevices) {
+      const result = dispatch('BULK_ADD_DEVICES', { devices: pendingImportDevices });
+      if (result.ok) {
+        const placed = result.results.filter(r => r.ok).length;
+        alert(t('msg_import_success', { placed, total: pendingImportDevices.length }));
+      }
+      pendingImportDevices = null;
+    }
+  });
+
   // Project save/load
   document.getElementById('save-project-btn').addEventListener('click', saveProject);
   document.getElementById('load-project-btn').addEventListener('click', () => {
     document.getElementById('load-project-file').click();
   });
   document.getElementById('load-project-file').addEventListener('change', loadProject);
+}
+
+// ─── Import preview ──────────────────────────────────────────────────────────
+
+let pendingImportDevices = null;
+
+function showImportPreview(devices) {
+  if (!devices || devices.length === 0) { alert(t('msg_import_invalid')); return; }
+
+  const state = getState();
+  const existing = getActiveDevices(state);
+
+  // Check for position conflicts
+  const conflicts = [];
+  for (const d of devices) {
+    const pos = parseInt(d.position) || 1;
+    const h = parseInt(d.height) || 1;
+    const face = d.face || 'front';
+    const clash = existing.find(ex =>
+      ex.face === face && pos < ex.position + ex.height && pos + h > ex.position
+    );
+    if (clash) conflicts.push({ d, clash });
+  }
+
+  const dialog = document.getElementById('import-preview-dialog');
+  document.getElementById('import-preview-summary').textContent =
+    t('import_preview_summary', { count: devices.length });
+
+  const conflictsWrap = document.getElementById('import-preview-conflicts-wrap');
+  if (conflicts.length > 0) {
+    conflictsWrap.style.display = '';
+    document.getElementById('import-preview-conflicts-label').textContent =
+      t('import_preview_conflicts', { count: conflicts.length });
+    document.getElementById('import-preview-conflict-list').innerHTML =
+      conflicts.map(({ d, clash }) =>
+        `<li>U${d.position} ${d.face}: <strong>${d.name || '(unnamed)'}</strong> ↔ ${clash.name || '(unnamed)'}</li>`
+      ).join('');
+    document.getElementById('import-preview-confirm').textContent = t('import_preview_confirm');
+  } else {
+    conflictsWrap.style.display = 'none';
+    document.getElementById('import-preview-confirm').textContent = t('import_preview_ok');
+  }
+
+  pendingImportDevices = devices;
+  dialog.showModal();
 }
 
 function getExportData() {
@@ -217,6 +285,24 @@ function loadProject(e) {
 
 // ─── NetBox Import ──────────────────────────────────────────────────────────
 
+function parseNetBoxDevices(data) {
+  return data.map(d => ({
+    name: d.name || '',
+    manufacturer: d.manufacturer || '',
+    deviceType: d.device_type || '',
+    role: d.role || '',
+    position: d.position || 1,
+    height: d.u_height || d.height || 1,
+    face: d.face || 'front',
+    status: d.status || 'planned',
+    serial: d.serial || '',
+    assetTag: d.asset_tag || '',
+    fullDepth: d.full_depth || false,
+    comments: d.comments || '',
+    _color: (d.face === 'rear') ? '#f97316' : '#3b82f6',
+  }));
+}
+
 function importJSON(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -225,45 +311,84 @@ function importJSON(e) {
   reader.onload = (event) => {
     try {
       const data = JSON.parse(event.target.result);
-
-      // Auto-detect: project format vs NetBox array
-      if (data._format === 'rackbuilder-project') {
-        alert(t('msg_use_load_project'));
-        return;
-      }
-
-      if (!Array.isArray(data)) {
-        alert(t('msg_import_invalid'));
-        return;
-      }
-
-      const devices = data.map(d => ({
-        name: d.name || '',
-        manufacturer: d.manufacturer || '',
-        deviceType: d.device_type || '',
-        role: d.role || '',
-        position: d.position || 1,
-        height: d.u_height || d.height || 1,
-        face: d.face || 'front',
-        status: d.status || 'planned',
-        serial: d.serial || '',
-        assetTag: d.asset_tag || '',
-        fullDepth: d.full_depth || false,
-        comments: d.comments || '',
-        _color: d.face === 'rear' ? '#f97316' : '#3b82f6',
-      }));
-
-      const result = dispatch('BULK_ADD_DEVICES', { devices });
-      if (result.ok) {
-        const placed = result.results.filter(r => r.ok).length;
-        alert(t('msg_import_success', { placed, total: devices.length }));
-      }
+      if (data._format === 'rackbuilder-project') { alert(t('msg_use_load_project')); return; }
+      if (!Array.isArray(data)) { alert(t('msg_import_invalid')); return; }
+      showImportPreview(parseNetBoxDevices(data));
     } catch (err) {
       alert('Failed to parse JSON file: ' + err.message);
     }
   };
   reader.readAsText(file);
   e.target.value = '';
+}
+
+function importCSV(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const devices = parseImportCSV(event.target.result);
+      if (!devices || devices.length === 0) { alert(t('msg_import_invalid')); return; }
+      showImportPreview(devices);
+    } catch (err) {
+      alert('Failed to parse CSV file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function parseImportCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return null;
+  const sep = lines[0].includes('\t') ? '\t' : lines[0].includes(';') ? ';' : ',';
+
+  function splitCSVLine(line) {
+    const fields = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && line[i + 1] === '"') { cur += '"'; i++; }
+        else { inQuotes = !inQuotes; }
+      } else if (ch === sep && !inQuotes) {
+        fields.push(cur.trim()); cur = '';
+      } else {
+        cur += ch;
+      }
+    }
+    fields.push(cur.trim());
+    return fields;
+  }
+
+  const headers = splitCSVLine(lines[0]).map(h => h.toLowerCase().replace(/^["']|["']$/g, ''));
+  const devices = [];
+  for (let i = 1; i < lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    const vals = splitCSVLine(lines[i]);
+    const row = {};
+    headers.forEach((h, idx) => { row[h] = vals[idx] ?? ''; });
+    const face = row.face === 'rear' ? 'rear' : 'front';
+    devices.push({
+      name: row.name || '',
+      manufacturer: row.manufacturer || '',
+      deviceType: row.device_type || row.devicetype || '',
+      role: row.role || '',
+      position: parseInt(row.position) || 1,
+      height: parseInt(row.height || row.u_height) || 1,
+      face,
+      status: row.status || 'planned',
+      serial: row.serial || '',
+      assetTag: row.asset_tag || row.assettag || '',
+      fullDepth: row.full_depth === 'true' || row.full_depth === '1',
+      comments: row.comments || '',
+      _color: face === 'rear' ? '#f97316' : '#3b82f6',
+    });
+  }
+  return devices.length > 0 ? devices : null;
 }
 
 // ─── PNG Export ─────────────────────────────────────────────────────────────

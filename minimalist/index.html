@@ -756,6 +756,18 @@ body {
   background: rgba(239, 68, 68, 0.15);
 }
 
+.device-rack-select {
+  font-size: 11px;
+  padding: 2px 4px;
+  background: var(--bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  max-width: 90px;
+  flex-shrink: 0;
+}
+
 /* Sidebar Accordions */
 .sidebar-accordion {
   border: 1px solid var(--color-border);
@@ -1555,6 +1567,9 @@ kbd { display: inline-block; padding: 2px 6px; font-family: 'SF Mono','Fira Code
       <div class="sidebar-accordion-body">
         <button class="btn btn-secondary btn-block" id="import-btn" data-i18n="btn_import">Import JSON</button>
         <input type="file" id="import-file" accept=".json" style="display:none">
+        <button class="btn btn-secondary btn-block" id="import-csv-btn" data-i18n="btn_import_csv" style="margin-top:6px">Import CSV</button>
+        <input type="file" id="import-csv-file" accept=".csv" style="display:none">
+        <p class="form-hint" data-i18n="import_csv_hint" style="margin-top:6px"></p>
       </div>
     </details>
 
@@ -1596,6 +1611,22 @@ kbd { display: inline-block; padding: 2px 6px; font-family: 'SF Mono','Fira Code
     </details>
   </aside>
 </main>
+
+<!-- Import Preview Dialog -->
+<dialog id="import-preview-dialog">
+  <h2 data-i18n="import_preview_title">Import Preview</h2>
+  <div style="margin: 12px 0">
+    <p id="import-preview-summary" style="margin-bottom:10px"></p>
+    <div id="import-preview-conflicts-wrap" style="display:none">
+      <p id="import-preview-conflicts-label" style="color:var(--color-warning,#f59e0b);margin-bottom:6px;font-size:13px"></p>
+      <ul id="import-preview-conflict-list" style="font-size:12px;color:var(--color-text-muted);padding-left:16px;max-height:160px;overflow-y:auto;margin:0"></ul>
+    </div>
+  </div>
+  <div class="dialog-actions">
+    <button class="btn btn-secondary" id="import-preview-cancel" data-i18n="btn_dialog_cancel">Cancel</button>
+    <button class="btn btn-primary" id="import-preview-confirm" data-i18n="import_preview_ok">Import</button>
+  </div>
+</dialog>
 
 <!-- Settings Modal -->
 <dialog id="settings-modal">
@@ -1995,6 +2026,16 @@ const translations = {
     netbox_api_fetching: 'Loading…', netbox_api_missing_creds: 'Please enter URL and API token first.',
     netbox_api_empty: 'No entries received from API.',
     netbox_api_cors_hint: 'Note: NetBox must allow CORS for this origin, or you must be on the same network.',
+    netbox_api_cors_error: 'Connection failed — likely a CORS or network error. Ensure NetBox allows requests from this origin, or open the app from the same network.',
+    btn_import_csv: 'Import CSV',
+    import_preview_title: 'Import Preview',
+    import_preview_summary: '{count} device(s) ready to import.',
+    import_preview_conflicts: '{count} conflict(s) — these positions are already occupied:',
+    import_preview_confirm: 'Import Anyway',
+    import_preview_ok: 'Import',
+    move_to_rack: 'Move to rack',
+    move_rack_conflict: 'Cannot move: position conflict in "{rack}".',
+    import_csv_hint: 'Accepts CSV with headers: name, device_type, role, position, height, face, status, serial, asset_tag, full_depth, manufacturer, comments.',
   },
   de: {
     app_title: 'Rack Builder',
@@ -2140,6 +2181,16 @@ const translations = {
     netbox_api_fetching: 'Lade…', netbox_api_missing_creds: 'Bitte zuerst URL und API-Token eingeben.',
     netbox_api_empty: 'Keine Einträge von der API erhalten.',
     netbox_api_cors_hint: 'Hinweis: NetBox muss CORS für diese Origin erlauben oder du musst im selben Netzwerk sein.',
+    netbox_api_cors_error: 'Verbindung fehlgeschlagen — vermutlich CORS- oder Netzwerkfehler. Stelle sicher, dass NetBox Anfragen von dieser Origin erlaubt oder öffne die App im selben Netzwerk.',
+    btn_import_csv: 'CSV importieren',
+    import_preview_title: 'Import-Vorschau',
+    import_preview_summary: '{count} Gerät(e) bereit zum Importieren.',
+    import_preview_conflicts: '{count} Konflikt(e) — diese Positionen sind bereits belegt:',
+    import_preview_confirm: 'Trotzdem importieren',
+    import_preview_ok: 'Importieren',
+    move_to_rack: 'In Rack verschieben',
+    move_rack_conflict: 'Verschieben nicht möglich: Positionskonflikt in „{rack}".',
+    import_csv_hint: 'Akzeptiert CSV mit Spalten: name, device_type, role, position, height, face, status, serial, asset_tag, full_depth, manufacturer, comments.',
   },
 };
 
@@ -2765,6 +2816,28 @@ function dispatch(action, payload) {
     case 'SET_ACTIVE_RACK': {
       if (state.activeRackId === payload) return { ok: true };
       state = { ...state, activeRackId: payload, selectedDeviceId: null };
+      notify();
+      return { ok: true };
+    }
+
+    case 'MOVE_TO_RACK': {
+      pushHistory();
+      const { id: moveId, targetRackId } = payload;
+      const movingDevice = state.devices.find(d => d.id === moveId);
+      if (!movingDevice) return { ok: false, reason: 'Device not found.' };
+      if (movingDevice.rackId === targetRackId) return { ok: true };
+      const targetRack = state.racks.find(r => r.id === targetRackId);
+      if (!targetRack) return { ok: false, reason: 'Target rack not found.' };
+      const targetDevices = state.devices.filter(d => d.rackId === targetRackId);
+      const result = canPlace(
+        targetDevices, movingDevice.position, movingDevice.height,
+        movingDevice.face, targetRack.totalUnits, null, movingDevice.fullDepth
+      );
+      if (!result.ok) return result;
+      state = {
+        ...state,
+        devices: state.devices.map(d => d.id === moveId ? { ...d, rackId: targetRackId } : d),
+      };
       notify();
       return { ok: true };
     }
@@ -3632,6 +3705,29 @@ function initExport() {
   });
   document.getElementById('import-file').addEventListener('change', importJSON);
 
+  // CSV import
+  document.getElementById('import-csv-btn').addEventListener('click', () => {
+    document.getElementById('import-csv-file').click();
+  });
+  document.getElementById('import-csv-file').addEventListener('change', importCSV);
+
+  // Import preview dialog
+  document.getElementById('import-preview-cancel').addEventListener('click', () => {
+    document.getElementById('import-preview-dialog').close();
+    pendingImportDevices = null;
+  });
+  document.getElementById('import-preview-confirm').addEventListener('click', () => {
+    document.getElementById('import-preview-dialog').close();
+    if (pendingImportDevices) {
+      const result = dispatch('BULK_ADD_DEVICES', { devices: pendingImportDevices });
+      if (result.ok) {
+        const placed = result.results.filter(r => r.ok).length;
+        alert(t('msg_import_success', { placed, total: pendingImportDevices.length }));
+      }
+      pendingImportDevices = null;
+    }
+  });
+
   // Project save/load
   document.getElementById('save-project-btn').addEventListener('click', saveProject);
   document.getElementById('load-project-btn').addEventListener('click', () => {
@@ -3833,53 +3929,130 @@ function loadProject(e) {
 
 // ─── NetBox Import ──────────────────────────────────────────────────────────
 
+let pendingImportDevices = null;
+
+function parseNetBoxDevices(data) {
+  return data.map(d => ({
+    name: d.name || '',
+    manufacturer: d.manufacturer || '',
+    deviceType: d.device_type || '',
+    role: d.role || '',
+    position: d.position || 1,
+    height: d.u_height || d.height || 1,
+    face: d.face || 'front',
+    status: d.status || 'planned',
+    serial: d.serial || '',
+    assetTag: d.asset_tag || '',
+    fullDepth: d.full_depth || false,
+    comments: d.comments || '',
+    _color: (d.face === 'rear') ? '#f97316' : '#3b82f6',
+  }));
+}
+
+function showImportPreview(devices) {
+  if (!devices || devices.length === 0) { alert(t('msg_import_invalid')); return; }
+  const state = getState();
+  const existing = getActiveDevices(state);
+  const conflicts = [];
+  for (const d of devices) {
+    const pos = parseInt(d.position) || 1;
+    const h = parseInt(d.height) || 1;
+    const face = d.face || 'front';
+    const clash = existing.find(ex =>
+      ex.face === face && pos < ex.position + ex.height && pos + h > ex.position
+    );
+    if (clash) conflicts.push({ d, clash });
+  }
+  const dialog = document.getElementById('import-preview-dialog');
+  document.getElementById('import-preview-summary').textContent =
+    t('import_preview_summary', { count: devices.length });
+  const conflictsWrap = document.getElementById('import-preview-conflicts-wrap');
+  if (conflicts.length > 0) {
+    conflictsWrap.style.display = '';
+    document.getElementById('import-preview-conflicts-label').textContent =
+      t('import_preview_conflicts', { count: conflicts.length });
+    document.getElementById('import-preview-conflict-list').innerHTML =
+      conflicts.map(({ d, clash }) =>
+        `<li>U${d.position} ${d.face}: <strong>${d.name || '(unnamed)'}</strong> ↔ ${clash.name || '(unnamed)'}</li>`
+      ).join('');
+    document.getElementById('import-preview-confirm').textContent = t('import_preview_confirm');
+  } else {
+    conflictsWrap.style.display = 'none';
+    document.getElementById('import-preview-confirm').textContent = t('import_preview_ok');
+  }
+  pendingImportDevices = devices;
+  dialog.showModal();
+}
+
 function importJSON(e) {
   const file = e.target.files[0];
   if (!file) return;
-
   const reader = new FileReader();
   reader.onload = (event) => {
     try {
       const data = JSON.parse(event.target.result);
-
-      // Auto-detect: project format vs NetBox array
-      if (data._format === 'rackbuilder-project') {
-        alert(t('msg_use_load_project'));
-        return;
-      }
-
-      if (!Array.isArray(data)) {
-        alert(t('msg_import_invalid'));
-        return;
-      }
-
-      const devices = data.map(d => ({
-        name: d.name || '',
-        manufacturer: d.manufacturer || '',
-        deviceType: d.device_type || '',
-        role: d.role || '',
-        position: d.position || 1,
-        height: d.u_height || d.height || 1,
-        face: d.face || 'front',
-        status: d.status || 'planned',
-        serial: d.serial || '',
-        assetTag: d.asset_tag || '',
-        fullDepth: d.full_depth || false,
-        comments: d.comments || '',
-        _color: d.face === 'rear' ? '#f97316' : '#3b82f6',
-      }));
-
-      const result = dispatch('BULK_ADD_DEVICES', { devices });
-      if (result.ok) {
-        const placed = result.results.filter(r => r.ok).length;
-        alert(t('msg_import_success', { placed, total: devices.length }));
-      }
+      if (data._format === 'rackbuilder-project') { alert(t('msg_use_load_project')); return; }
+      if (!Array.isArray(data)) { alert(t('msg_import_invalid')); return; }
+      showImportPreview(parseNetBoxDevices(data));
     } catch (err) {
       alert('Failed to parse JSON file: ' + err.message);
     }
   };
   reader.readAsText(file);
   e.target.value = '';
+}
+
+function importCSV(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    try {
+      const devices = parseImportCSV(event.target.result);
+      if (!devices || devices.length === 0) { alert(t('msg_import_invalid')); return; }
+      showImportPreview(devices);
+    } catch (err) {
+      alert('Failed to parse CSV file: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+function parseImportCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return null;
+  const sep = lines[0].includes('\t') ? '\t' : lines[0].includes(';') ? ';' : ',';
+  function splitCSVLine(line) {
+    const fields = []; let cur = ''; let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { if (inQuotes && line[i+1] === '"') { cur += '"'; i++; } else { inQuotes = !inQuotes; } }
+      else if (ch === sep && !inQuotes) { fields.push(cur.trim()); cur = ''; }
+      else { cur += ch; }
+    }
+    fields.push(cur.trim());
+    return fields;
+  }
+  const headers = splitCSVLine(lines[0]).map(h => h.toLowerCase().replace(/^["']|["']$/g, ''));
+  const devices = [];
+  for (let i = 1; i < lines.length; i++) {
+    if (!lines[i].trim()) continue;
+    const vals = splitCSVLine(lines[i]);
+    const row = {};
+    headers.forEach((h, idx) => { row[h] = vals[idx] ?? ''; });
+    const face = row.face === 'rear' ? 'rear' : 'front';
+    devices.push({
+      name: row.name || '', manufacturer: row.manufacturer || '',
+      deviceType: row.device_type || row.devicetype || '', role: row.role || '',
+      position: parseInt(row.position) || 1, height: parseInt(row.height || row.u_height) || 1,
+      face, status: row.status || 'planned', serial: row.serial || '',
+      assetTag: row.asset_tag || row.assettag || '',
+      fullDepth: row.full_depth === 'true' || row.full_depth === '1',
+      comments: row.comments || '', _color: face === 'rear' ? '#f97316' : '#3b82f6',
+    });
+  }
+  return devices.length > 0 ? devices : null;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -4004,19 +4177,26 @@ function renderDeviceList(state) {
     container.innerHTML = `<p style="color: var(--color-text-muted); font-size: 12px;">—</p>`;
     return;
   }
-  container.innerHTML = filtered.map(d => `
-    <div class="device-list-item${d.id === selectedDeviceId ? ' selected' : ''}" data-device-id="${d.id}">
+  const multiRack = state.multiRackEnabled && state.racks.length > 1;
+  container.innerHTML = filtered.map(d => {
+    const rackSelect = multiRack
+      ? `<select class="device-rack-select" data-device-id="${d.id}" title="${t('move_to_rack')}">
+          ${state.racks.map(r => `<option value="${r.id}"${r.id === d.rackId ? ' selected' : ''}>${r.name}</option>`).join('')}
+         </select>`
+      : '';
+    return `<div class="device-list-item${d.id === selectedDeviceId ? ' selected' : ''}" data-device-id="${d.id}">
       <div class="device-info">
         <span class="device-color" style="background: ${d._color || '#3b82f6'}"></span>
         <span>${d.name || '(unnamed)'}</span>
       </div>
       <span class="device-pos">U${d.position}${d.height > 1 ? '-' + (d.position + d.height - 1) : ''} ${d.face}</span>
+      ${rackSelect}
       <button class="device-delete" data-device-id="${d.id}" title="Delete">&times;</button>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
   container.querySelectorAll('.device-list-item').forEach(item => {
     item.addEventListener('click', (e) => {
-      if (e.target.closest('.device-delete')) return;
+      if (e.target.closest('.device-delete') || e.target.closest('.device-rack-select')) return;
       const id = item.dataset.deviceId;
       dispatch('SELECT_DEVICE', id === state.selectedDeviceId ? null : id);
     });
@@ -4025,6 +4205,20 @@ function renderDeviceList(state) {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       dispatch('REMOVE_DEVICE', btn.dataset.deviceId);
+    });
+  });
+  container.querySelectorAll('.device-rack-select').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      e.stopPropagation();
+      const id = sel.dataset.deviceId;
+      const targetRackId = sel.value;
+      const result = dispatch('MOVE_TO_RACK', { id, targetRackId });
+      if (!result.ok) {
+        const rack = state.racks.find(r => r.id === targetRackId);
+        alert(t('move_rack_conflict', { rack: rack?.name || targetRackId }));
+        const device = state.devices.find(d => d.id === id);
+        if (device) sel.value = device.rackId;
+      }
     });
   });
 }
@@ -4480,7 +4674,52 @@ const STORAGE_KEY_ROLES         = 'rackbuilder_netbox_roles';
 const STORAGE_KEY_MANUFACTURERS = 'rackbuilder_netbox_manufacturers';
 const STORAGE_KEY_API_URL       = 'rackbuilder_netbox_api_url';
 const STORAGE_KEY_API_TOKEN     = 'rackbuilder_netbox_api_token';
+const STORAGE_KEY_TOKEN_ENC     = 'rackbuilder_netbox_api_token_enc';
 const STORAGE_KEY_MODE          = 'rackbuilder_netbox_mode';
+const SESSION_CRYPTO_KEY        = 'rackbuilder_ck';
+
+async function getCryptoKey() {
+  const stored = sessionStorage.getItem(SESSION_CRYPTO_KEY);
+  if (stored) {
+    try {
+      const raw = Uint8Array.from(atob(stored), c => c.charCodeAt(0));
+      return await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']);
+    } catch { /* fall through */ }
+  }
+  const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
+  const raw = await crypto.subtle.exportKey('raw', key);
+  sessionStorage.setItem(SESSION_CRYPTO_KEY, btoa(String.fromCharCode(...new Uint8Array(raw))));
+  return key;
+}
+async function encryptApiToken(plaintext) {
+  const key = await getCryptoKey();
+  const iv  = crypto.getRandomValues(new Uint8Array(12));
+  const enc = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(plaintext));
+  const buf = new Uint8Array(12 + enc.byteLength);
+  buf.set(iv); buf.set(new Uint8Array(enc), 12);
+  return btoa(String.fromCharCode(...buf));
+}
+async function decryptApiToken(b64) {
+  try {
+    const key = await getCryptoKey();
+    const buf = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const dec = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: buf.slice(0, 12) }, key, buf.slice(12));
+    return new TextDecoder().decode(dec);
+  } catch { return null; }
+}
+async function saveApiToken(token) {
+  if (!token) { localStorage.removeItem(STORAGE_KEY_API_TOKEN); localStorage.removeItem(STORAGE_KEY_TOKEN_ENC); return; }
+  localStorage.setItem(STORAGE_KEY_API_TOKEN, await encryptApiToken(token));
+  localStorage.setItem(STORAGE_KEY_TOKEN_ENC, '1');
+}
+async function loadApiToken() {
+  const raw = localStorage.getItem(STORAGE_KEY_API_TOKEN);
+  if (!raw) return '';
+  if (localStorage.getItem(STORAGE_KEY_TOKEN_ENC) !== '1') { await saveApiToken(raw); return raw; }
+  const dec = await decryptApiToken(raw);
+  if (dec === null) { localStorage.removeItem(STORAGE_KEY_API_TOKEN); localStorage.removeItem(STORAGE_KEY_TOKEN_ENC); return ''; }
+  return dec;
+}
 
 function loadNetboxEntries(key) {
   try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : []; }
@@ -4520,7 +4759,7 @@ function parseNetboxJSON(text) {
 function parseNetboxCSV(text) {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return null;
-  const sep = lines[0].includes('\t') ? '\t' : ',';
+  const sep = lines[0].includes('\t') ? '\t' : lines[0].includes(';') ? ';' : ',';
   const headers = lines[0].split(sep).map(h => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
   const items = [];
   for (let i = 1; i < lines.length; i++) {
@@ -4808,8 +5047,9 @@ async function apiFetchPages(baseUrl, token, endpoint) {
 }
 
 async function apiFetchAndStore(endpoint, storageKey, inputId, btnId) {
-  const baseUrl = localStorage.getItem(STORAGE_KEY_API_URL)   || '';
-  const token   = localStorage.getItem(STORAGE_KEY_API_TOKEN) || '';
+  const baseUrl    = localStorage.getItem(STORAGE_KEY_API_URL) || '';
+  const tokenInput = document.getElementById('netbox-api-token-input');
+  const token      = tokenInput?.value.trim() || '';
   if (!baseUrl || !token) { alert(t('netbox_api_missing_creds')); return false; }
   const btn = document.getElementById(btnId);
   const orig = btn?.textContent;
@@ -4823,7 +5063,10 @@ async function apiFetchAndStore(endpoint, storageKey, inputId, btnId) {
     updateNetboxUploadStatus();
     return true;
   } catch (err) {
-    alert(`${t('netbox_api_error')}: ${err.message}`);
+    const msg = (err instanceof TypeError)
+      ? t('netbox_api_cors_error')
+      : `${t('netbox_api_error')}: ${err.message}`;
+    alert(msg);
     return false;
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = orig; }
@@ -4887,10 +5130,10 @@ function initNetboxAutocomplete() {
   // Restore saved credentials
   const urlInput   = document.getElementById('netbox-api-url-input');
   const tokenInput = document.getElementById('netbox-api-token-input');
-  if (urlInput)   urlInput.value   = localStorage.getItem(STORAGE_KEY_API_URL)   || '';
-  if (tokenInput) tokenInput.value = localStorage.getItem(STORAGE_KEY_API_TOKEN) || '';
-  urlInput?.addEventListener('input',   () => localStorage.setItem(STORAGE_KEY_API_URL,   urlInput.value.trim()));
-  tokenInput?.addEventListener('input', () => localStorage.setItem(STORAGE_KEY_API_TOKEN, tokenInput.value.trim()));
+  if (urlInput)   urlInput.value   = localStorage.getItem(STORAGE_KEY_API_URL) || '';
+  if (tokenInput) loadApiToken().then(t => { tokenInput.value = t; });
+  urlInput?.addEventListener('input', () => localStorage.setItem(STORAGE_KEY_API_URL, urlInput.value.trim()));
+  tokenInput?.addEventListener('input', () => saveApiToken(tokenInput.value.trim()));
 
   // Show/hide token
   document.getElementById('netbox-api-token-toggle')?.addEventListener('click', () => {
@@ -4911,7 +5154,8 @@ function initNetboxAutocomplete() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       if (status) { status.textContent = t('netbox_api_connected'); status.className = 'netbox-api-conn-status success'; }
     } catch (err) {
-      if (status) { status.textContent = `${t('netbox_api_error')}: ${err.message}`; status.className = 'netbox-api-conn-status error'; }
+      const msg = (err instanceof TypeError) ? t('netbox_api_cors_error') : `${t('netbox_api_error')}: ${err.message}`;
+      if (status) { status.textContent = msg; status.className = 'netbox-api-conn-status error'; }
     } finally { if (btn) btn.disabled = false; }
   });
 

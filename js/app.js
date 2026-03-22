@@ -125,20 +125,28 @@ function renderDeviceList(state) {
     return;
   }
 
-  container.innerHTML = filtered.map(d => `
-    <div class="device-list-item${d.id === selectedDeviceId ? ' selected' : ''}" data-device-id="${d.id}">
+  const multiRack = state.multiRackEnabled && state.racks.length > 1;
+
+  container.innerHTML = filtered.map(d => {
+    const rackSelect = multiRack
+      ? `<select class="device-rack-select" data-device-id="${d.id}" title="${t('move_to_rack')}">
+          ${state.racks.map(r => `<option value="${r.id}"${r.id === d.rackId ? ' selected' : ''}>${r.name}</option>`).join('')}
+         </select>`
+      : '';
+    return `<div class="device-list-item${d.id === selectedDeviceId ? ' selected' : ''}" data-device-id="${d.id}">
       <div class="device-info">
         <span class="device-color" style="background: ${d._color || '#3b82f6'}"></span>
         <span>${d.name || '(unnamed)'}</span>
       </div>
       <span class="device-pos">U${d.position}${d.height > 1 ? '-' + (d.position + d.height - 1) : ''} ${d.face}</span>
+      ${rackSelect}
       <button class="device-delete" data-device-id="${d.id}" title="Delete">&times;</button>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 
   container.querySelectorAll('.device-list-item').forEach(item => {
     item.addEventListener('click', (e) => {
-      if (e.target.closest('.device-delete')) return;
+      if (e.target.closest('.device-delete') || e.target.closest('.device-rack-select')) return;
       const id = item.dataset.deviceId;
       dispatch('SELECT_DEVICE', id === state.selectedDeviceId ? null : id);
     });
@@ -148,6 +156,22 @@ function renderDeviceList(state) {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       dispatch('REMOVE_DEVICE', btn.dataset.deviceId);
+    });
+  });
+
+  container.querySelectorAll('.device-rack-select').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      e.stopPropagation();
+      const id = sel.dataset.deviceId;
+      const targetRackId = sel.value;
+      const result = dispatch('MOVE_TO_RACK', { id, targetRackId });
+      if (!result.ok) {
+        const rack = state.racks.find(r => r.id === targetRackId);
+        alert(t('move_rack_conflict', { rack: rack?.name || targetRackId }));
+        // Reset select back to current rack
+        const device = state.devices.find(d => d.id === id);
+        if (device) sel.value = device.rackId;
+      }
     });
   });
 }

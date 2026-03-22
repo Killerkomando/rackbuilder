@@ -9,7 +9,75 @@ const STORAGE_KEY_ROLES         = 'rackbuilder_netbox_roles';
 const STORAGE_KEY_MANUFACTURERS = 'rackbuilder_netbox_manufacturers';
 const STORAGE_KEY_API_URL       = 'rackbuilder_netbox_api_url';
 const STORAGE_KEY_API_TOKEN     = 'rackbuilder_netbox_api_token';
+const STORAGE_KEY_TOKEN_ENC     = 'rackbuilder_netbox_api_token_enc'; // encryption flag
 const STORAGE_KEY_MODE          = 'rackbuilder_netbox_mode'; // 'upload' | 'api'
+const SESSION_CRYPTO_KEY        = 'rackbuilder_ck'; // AES-GCM key (session only)
+
+// ─── API token encryption (AES-GCM, key lives only in sessionStorage) ────────
+
+async function getCryptoKey() {
+  const stored = sessionStorage.getItem(SESSION_CRYPTO_KEY);
+  if (stored) {
+    try {
+      const raw = Uint8Array.from(atob(stored), c => c.charCodeAt(0));
+      return await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']);
+    } catch { /* fall through */ }
+  }
+  const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
+  const raw = await crypto.subtle.exportKey('raw', key);
+  sessionStorage.setItem(SESSION_CRYPTO_KEY, btoa(String.fromCharCode(...new Uint8Array(raw))));
+  return key;
+}
+
+async function encryptApiToken(plaintext) {
+  const key = await getCryptoKey();
+  const iv  = crypto.getRandomValues(new Uint8Array(12));
+  const enc = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(plaintext));
+  const buf = new Uint8Array(12 + enc.byteLength);
+  buf.set(iv);
+  buf.set(new Uint8Array(enc), 12);
+  return btoa(String.fromCharCode(...buf));
+}
+
+async function decryptApiToken(b64) {
+  try {
+    const key = await getCryptoKey();
+    const buf = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    const dec = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: buf.slice(0, 12) }, key, buf.slice(12));
+    return new TextDecoder().decode(dec);
+  } catch {
+    return null; // wrong key (new session) or corrupted data
+  }
+}
+
+async function saveApiToken(token) {
+  if (!token) {
+    localStorage.removeItem(STORAGE_KEY_API_TOKEN);
+    localStorage.removeItem(STORAGE_KEY_TOKEN_ENC);
+    return;
+  }
+  const encrypted = await encryptApiToken(token);
+  localStorage.setItem(STORAGE_KEY_API_TOKEN, encrypted);
+  localStorage.setItem(STORAGE_KEY_TOKEN_ENC, '1');
+}
+
+async function loadApiToken() {
+  const raw = localStorage.getItem(STORAGE_KEY_API_TOKEN);
+  if (!raw) return '';
+  if (localStorage.getItem(STORAGE_KEY_TOKEN_ENC) !== '1') {
+    // Legacy plain-text token — re-encrypt it
+    await saveApiToken(raw);
+    return raw;
+  }
+  const decrypted = await decryptApiToken(raw);
+  if (decrypted === null) {
+    // New session — key gone, stored ciphertext is now unreadable
+    localStorage.removeItem(STORAGE_KEY_API_TOKEN);
+    localStorage.removeItem(STORAGE_KEY_TOKEN_ENC);
+    return '';
+  }
+  return decrypted;
+}
 
 // ─── Storage helpers ─────────────────────────────────────────────────────────
 
@@ -72,7 +140,7 @@ function parseJSON(text) {
 function parseCSV(text) {
   const lines = text.trim().split(/\r?\n/);
   if (lines.length < 2) return null;
-  const sep = lines[0].includes('\t') ? '\t' : ',';
+  const sep = lines[0].includes('\t') ? '\t' : lines[0].includes(';') ? ';' : ',';
   const headers = lines[0].split(sep).map(h => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
   const items = [];
   for (let i = 1; i < lines.length; i++) {
@@ -428,8 +496,9 @@ async function apiFetchPages(baseUrl, token, endpoint) {
 }
 
 async function apiFetchAndStore(endpoint, storageKey, inputId, btnId) {
-  const baseUrl = localStorage.getItem(STORAGE_KEY_API_URL)   || '';
-  const token   = localStorage.getItem(STORAGE_KEY_API_TOKEN) || '';
+  const baseUrl    = localStorage.getItem(STORAGE_KEY_API_URL) || '';
+  const tokenInput = document.getElementById('netbox-api-token-input');
+  const token      = tokenInput?.value.trim() || '';
   if (!baseUrl || !token) { alert(t('netbox_api_missing_creds')); return false; }
 
   const btn = document.getElementById(btnId);
@@ -445,7 +514,10 @@ async function apiFetchAndStore(endpoint, storageKey, inputId, btnId) {
     updateUploadStatus();
     return true;
   } catch (err) {
-    alert(`${t('netbox_api_error')}: ${err.message}`);
+    const msg = (err instanceof TypeError)
+      ? t('netbox_api_cors_error')
+      : `${t('netbox_api_error')}: ${err.message}`;
+    alert(msg);
     return false;
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = origText; }
@@ -482,7 +554,7 @@ function wireClear(clearBtnId, storageKey, inputId, statusId) {
   });
 }
 
-export function initNetboxAutocomplete() {
+export async function initNetboxAutocomplete() {
   wireUpload('netbox-upload-types-btn', 'netbox-types-file', STORAGE_KEY_TYPES, () => {
     attachAutocomplete('dev-type', getDeviceTypes());
     updateUploadStatus();
@@ -525,11 +597,11 @@ export function initNetboxAutocomplete() {
   // Restore saved credentials
   const urlInput   = document.getElementById('netbox-api-url-input');
   const tokenInput = document.getElementById('netbox-api-token-input');
-  if (urlInput)   urlInput.value   = localStorage.getItem(STORAGE_KEY_API_URL)   || '';
-  if (tokenInput) tokenInput.value = localStorage.getItem(STORAGE_KEY_API_TOKEN) || '';
+  if (urlInput)   urlInput.value   = localStorage.getItem(STORAGE_KEY_API_URL) || '';
+  if (tokenInput) tokenInput.value = await loadApiToken();
 
-  urlInput?.addEventListener('input',   () => localStorage.setItem(STORAGE_KEY_API_URL,   urlInput.value.trim()));
-  tokenInput?.addEventListener('input', () => localStorage.setItem(STORAGE_KEY_API_TOKEN, tokenInput.value.trim()));
+  urlInput?.addEventListener('input', () => localStorage.setItem(STORAGE_KEY_API_URL, urlInput.value.trim()));
+  tokenInput?.addEventListener('input', () => saveApiToken(tokenInput.value.trim()));
 
   // Show / hide token
   document.getElementById('netbox-api-token-toggle')?.addEventListener('click', () => {
@@ -556,7 +628,10 @@ export function initNetboxAutocomplete() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       if (status) { status.textContent = t('netbox_api_connected'); status.className = 'netbox-api-conn-status success'; }
     } catch (err) {
-      if (status) { status.textContent = `${t('netbox_api_error')}: ${err.message}`; status.className = 'netbox-api-conn-status error'; }
+      const msg = (err instanceof TypeError)
+        ? t('netbox_api_cors_error')
+        : `${t('netbox_api_error')}: ${err.message}`;
+      if (status) { status.textContent = msg; status.className = 'netbox-api-conn-status error'; }
     } finally {
       if (btn) btn.disabled = false;
     }
