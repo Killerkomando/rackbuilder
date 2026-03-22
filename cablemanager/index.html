@@ -329,9 +329,15 @@
     }
 
     // ─── Connect Dialog ───────────────────────────────────────────────────────────
-    // NOTE: This initial badge listener will be REPLACED in Task 9 Step 2.
-    // It is a temporary placeholder until the smart reload/connect logic is added.
-    document.getElementById('netbox-badge').addEventListener('click', openConnectDialog);
+    // Badge-Listener: wenn verbunden → Reload-Confirm, sonst → Connect-Dialog
+    const _oldBadge = document.getElementById('netbox-badge');
+    const _newBadge = _oldBadge.cloneNode(true);
+    _oldBadge.parentNode.replaceChild(_newBadge, _oldBadge);
+    _newBadge.addEventListener('click', () => {
+      if (state.connected) {
+        if (confirm('NetBox-Daten neu laden?')) { sessionStorage.removeItem(SS_CACHE_KEY); loadSitesAndLocations(); }
+      } else { openConnectDialog(); }
+    });
 
     document.getElementById('btn-dialog-cancel').addEventListener('click', () => {
       document.getElementById('connect-dialog').classList.remove('active');
@@ -998,6 +1004,20 @@
     }
 
     document.getElementById('btn-export-yaml').addEventListener('click', exportYAML);
+
+    // ─── Theme ────────────────────────────────────────────────────────────────────
+    (function() {
+      const saved = localStorage.getItem('cm_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', saved);
+      document.getElementById('btn-theme').textContent = saved === 'dark' ? '🌙' : '☀️';
+    })();
+
+    document.getElementById('btn-theme').addEventListener('click', () => {
+      const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('cm_theme', next);
+      document.getElementById('btn-theme').textContent = next === 'dark' ? '🌙' : '☀️';
+    });
 
     document.addEventListener('DOMContentLoaded', init);
   </script>
