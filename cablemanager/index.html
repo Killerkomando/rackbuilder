@@ -217,9 +217,9 @@
   <script>
     // ─── Constants ────────────────────────────────────────────────────────────────
     const SESSION_CRYPTO_KEY  = 'rackbuilder_ck';
-    const LS_TOKEN_KEY        = 'rackbuilder_netbox_api_token';
+    const LS_TOKEN_KEY        = 'rackbuilder_netbox_api_token'; // shared with Rack Builder (same origin)
     const LS_TOKEN_ENC_FLAG   = 'rackbuilder_netbox_api_token_enc';
-    const LS_URL_KEY          = 'rackbuilder_netbox_api_url';
+    const LS_URL_KEY          = 'rackbuilder_netbox_api_url';   // shared with Rack Builder — known trade-off: connecting to a different URL here overwrites Rack Builder's URL too
     const SS_CACHE_KEY        = 'cablemanager_cache';
 
     // ─── Crypto ───────────────────────────────────────────────────────────────────
@@ -292,7 +292,7 @@
       plannedCables: [],
       // Rack Builder import
       importedDevices: [],
-      // Cable planning state
+      // Cable planning state (set by Task 6 inline search; null = no planning in progress)
       _planningPortId: null,
       _planningObjectType: null,
     };
@@ -346,13 +346,16 @@
     }
 
     async function connectNetBox() {
+      const btn   = document.getElementById('btn-dialog-connect');
       const url   = document.getElementById('input-url').value.trim().replace(/\/$/, '');
       const token = document.getElementById('input-token').value.trim();
       const errEl = document.getElementById('dialog-error');
       errEl.classList.remove('visible');
+      btn.disabled = true;
       if (!url || !token) {
         errEl.textContent = 'URL und Token erforderlich.';
         errEl.classList.add('visible');
+        btn.disabled = false;
         return;
       }
       try {
@@ -373,6 +376,8 @@
       } catch(e) {
         errEl.textContent = e.message;
         errEl.classList.add('visible');
+      } finally {
+        btn.disabled = false;
       }
     }
 
@@ -407,9 +412,11 @@
           }
           if (res.status === 401 || res.status === 403) {
             setBadge('warn', 'NetBox ?', 'Token evtl. abgelaufen — bitte neu verbinden');
-            openConnectDialog();
-            return;
+          } else {
+            setBadge('warn', 'NetBox ?', `Verbindungsfehler: ${res.status} ${res.statusText}`);
           }
+          openConnectDialog();
+          return;
         } catch {
           setBadge('err', 'NetBox ✕', 'NetBox nicht erreichbar: ' + url);
           openConnectDialog();
