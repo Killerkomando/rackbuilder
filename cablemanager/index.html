@@ -669,7 +669,7 @@
       const badge = objectType === 'dcim.powerport' ? 'power' : objectType.includes('console') ? 'console' : '';
       card.innerHTML = `
         <div class="port-name">${port.name}</div>
-        ${otherSide ? `<div class="port-target" data-device-id="${otherSide.deviceId}">→ ${otherSide.deviceName} / ${otherSide.portName}</div>` : ''}
+        ${otherSide ? `<div class="port-target"${otherSide.deviceId ? ` data-device-id="${otherSide.deviceId}"` : ''}>→ ${otherSide.deviceName} / ${otherSide.portName}</div>` : ''}
         ${typeStr ? `<span class="port-type-badge ${badge}">${typeStr}</span>` : ''}
       `;
       if (!cable) {
@@ -695,6 +695,17 @@
           }
         });
       });
+      if (isPlanned && otherSide) {
+        const delBtn = document.createElement('button');
+        delBtn.style.cssText = 'margin-top:3px;padding:1px 6px;font-size:8px;background:var(--color-error);color:white;border:none;border-radius:3px;cursor:pointer;';
+        delBtn.textContent = '✕ löschen';
+        delBtn.addEventListener('click', () => {
+          state.plannedCables = state.plannedCables.filter(c => c.id !== cable.id);
+          renderRack();
+          renderPortPanel(state.selectedDeviceId);
+        });
+        card.appendChild(delBtn);
+      }
       return card;
     }
 
@@ -749,12 +760,111 @@
       document.querySelector('#port-body .port-col:last-child').innerHTML = '<div class="port-col-label rear">Rear ▶</div>';
     }
 
-    // Stub — implemented in Task 6
-    function buildCablePlanForm(port, objectType) {
-      const div = document.createElement('div');
-      div.className = 'cable-plan-form';
-      div.textContent = `Kabel planen: ${port.name} (wird in Task 6 implementiert)`;
-      return div;
+    // UUID-Hilfsfunktion
+    function uuid() {
+      return crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c==='x'?r:(r&0x3|0x8)).toString(16); });
+    }
+
+    function fuzzyMatch(str, query) {
+      str = str.toLowerCase(); query = query.toLowerCase();
+      let qi = 0;
+      for (let i = 0; i < str.length && qi < query.length; i++) { if (str[i] === query[qi]) qi++; }
+      return qi === query.length;
+    }
+
+    // BEKANNTE EINSCHRÄNKUNG: Durchsucht nur Ports von Geräten die der User
+    // bereits angeklickt hat (state.ports ist ein Lazy-Cache).
+    function allPortsFlat() {
+      const result = [];
+      Object.entries(state.ports).forEach(([deviceId, portGroups]) => {
+        const device = state.devices.find(d => d.id === parseInt(deviceId));
+        if (!device) return;
+        const add = (ports, type) => ports.forEach(p => {
+          result.push({ port: p, device, objectType: type, label: `${device.name} / ${p.name}`, sublabel: `${device.rack?.name || ''} U${device.position ?? '?'} · ${p.type?.label || ''}` });
+        });
+        add(portGroups.interfaces, 'dcim.interface');
+        add(portGroups.frontPorts, 'dcim.frontport');
+        add(portGroups.rearPorts, 'dcim.rearport');
+        add(portGroups.powerPorts, 'dcim.powerport');
+        add(portGroups.consolePorts, 'dcim.consoleport');
+        add(portGroups.consoleServerPorts, 'dcim.consoleserverport');
+      });
+      return result;
+    }
+
+    function buildCablePlanForm(sourcePort, sourceObjectType) {
+      const form = document.createElement('div');
+      form.className = 'cable-plan-form';
+      form.innerHTML = `
+        <div style="font-weight:600;margin-bottom:6px;font-size:10px;">Kabel planen: ${sourcePort.name}</div>
+        <input type="text" class="plan-search" placeholder="Gerät oder Port suchen…">
+        <div class="cable-plan-results"></div>
+        <select class="plan-type">
+          <option value="cat6">Ethernet (Cat6)</option>
+          <option value="mmf-om4">Fiber (MMF OM4)</option>
+          <option value="smf-os2">Fiber (SMF OS2)</option>
+          <option value="dac-passive">DAC (passiv)</option>
+          <option value="aoc">AOC</option>
+          <option value="power">Power</option>
+          <option value="usb-a">Console (USB)</option>
+          <option value="db-9">Console (DB-9)</option>
+        </select>
+        <div class="cable-plan-actions">
+          <button class="btn-cancel">Abbrechen</button>
+          <button class="btn-confirm">Verbinden</button>
+        </div>
+      `;
+
+      let selectedResult = null;
+      const searchInput = form.querySelector('.plan-search');
+      const resultsEl   = form.querySelector('.cable-plan-results');
+
+      searchInput.addEventListener('input', () => {
+        const q = searchInput.value.trim();
+        resultsEl.innerHTML = '';
+        selectedResult = null;
+        if (q.length < 2) return;
+        const matches = allPortsFlat().filter(r => fuzzyMatch(r.label, q) || fuzzyMatch(r.sublabel, q)).slice(0, 10);
+        matches.forEach(m => {
+          const div = document.createElement('div');
+          div.className = 'cable-plan-result';
+          div.innerHTML = `<strong>${m.device.name}</strong> / ${m.port.name} <span style="color:var(--color-text-muted);font-size:8px;"> · ${m.sublabel}</span>`;
+          div.addEventListener('click', () => {
+            resultsEl.querySelectorAll('.cable-plan-result').forEach(r => r.classList.remove('selected-result'));
+            div.classList.add('selected-result');
+            selectedResult = m;
+          });
+          resultsEl.appendChild(div);
+        });
+      });
+
+      form.querySelector('.btn-cancel').addEventListener('click', () => {
+        state._planningPortId = null;
+        state._planningObjectType = null;
+        renderPortPanel(state.selectedDeviceId);
+      });
+
+      form.querySelector('.btn-confirm').addEventListener('click', () => {
+        if (!selectedResult) { searchInput.style.borderColor = 'var(--color-error)'; return; }
+        const srcDevice = state.devices.find(d => d.id === state.selectedDeviceId);
+        const cable = {
+          id: uuid(),
+          status: 'planned',
+          type: form.querySelector('.plan-type').value,
+          label: '',
+          color: '',
+          a_terminations: [{ object_type: sourceObjectType, object_id: sourcePort.id, device_name: srcDevice?.name || '', port_name: sourcePort.name, device_id: srcDevice?.id }],
+          b_terminations: [{ object_type: selectedResult.objectType, object_id: selectedResult.port.id, device_name: selectedResult.device.name, port_name: selectedResult.port.name, device_id: selectedResult.device.id }],
+        };
+        state.plannedCables.push(cable);
+        state._planningPortId = null;
+        state._planningObjectType = null;
+        renderRack();
+        renderPortPanel(state.selectedDeviceId);
+      });
+
+      setTimeout(() => searchInput.focus(), 50);
+      return form;
     }
 
     // ─── Init ─────────────────────────────────────────────────────────────────────
