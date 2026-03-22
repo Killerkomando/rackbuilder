@@ -67,7 +67,7 @@ Vanilla HTML/CSS/JS, keine Abhängigkeiten — konsistent mit dem Hauptprojekt. 
 |---|---|
 | Breadcrumb-Dropdowns | Standort → Raum → Rack; kaskadierend (Raum-Liste filtert nach gewähltem Standort) |
 | Quick-Switch-Tabs | Alle Racks des aktuellen Raums als Tabs — ein Klick wechselt ohne Dropdown |
-| Kabeltyp-Filter | Toggle-Buttons: Alle / Netzwerk / Power / Console. Filtert Port-Panel und Rack-Badges |
+| Kabeltyp-Filter | Toggle-Buttons: Alle / Netzwerk / Power / Console. "Netzwerk" umfasst: Ethernet, Fiber, DAC, AOC. Filtert Port-Panel und Rack-Badges |
 | Projekt laden | File-Picker für Rack Builder `.json` Projektdateien |
 | NetBox-Badge | Grün = verbunden; Rot = Fehler mit Tooltip; Klick = Reload-Dialog |
 
@@ -121,26 +121,56 @@ Dreispaltig: **Front-Ports | Pass-Through-Indicator | Rear-Ports**
 - `GET /api/dcim/front-ports/` — Patch-Panel Front
 - `GET /api/dcim/rear-ports/` — Patch-Panel Rear
 - `GET /api/dcim/power-ports/` — Power
-- `GET /api/dcim/console-ports/` — Console
+- `GET /api/dcim/console-ports/` — Console (Geräteseite)
+- `GET /api/dcim/console-server-ports/` — Console (Serverseite, z.B. Console Server)
 
 **Token-Sharing:**
-Versucht `sessionStorage.getItem('netbox_key')` (gleicher Origin wie Rack Builder). Falls nicht vorhanden: eigenes Eingabefeld mit Verschlüsselung (gleiche AES-256-GCM Methode wie Rack Builder).
+Der Rack Builder speichert die Verbindungsdaten in zwei Stufen:
+- `sessionStorage['rackbuilder_ck']` — AES-256-GCM Schlüssel als Base64-String (nur in der aktuellen Browser-Session)
+- `localStorage['rackbuilder_netbox_api_token']` — verschlüsselter Token-Ciphertext (Base64)
+- `localStorage['rackbuilder_netbox_api_url']` — NetBox-Basis-URL (Klartext)
+
+Der Cable Manager liest alle drei Keys (gleicher Origin). Falls vorhanden: Schlüssel via `crypto.subtle.importKey` importieren, Ciphertext via `crypto.subtle.decrypt` (AES-GCM) entschlüsseln → Token direkt verwendbar. Falls nicht vorhanden (kein aktiver Rack Builder Tab): eigenes Eingabefeld mit identischem AES-256-GCM Verschlüsselungsflow.
+
+**NetBox-Badge Fehlerzustände:**
+- Grün: Verbindung erfolgreich
+- Gelb: Token aus sessionStorage nicht entschlüsselbar (Tab-Session abgelaufen) → Eingabefeld anzeigen
+- Rot / `401 Unauthorized`: Token ungültig → Eingabefeld anzeigen
+- Rot / `403 Forbidden`: Token gültig, fehlende Berechtigungen → Tooltip mit Hinweis
+- Rot / Netzwerkfehler (kein HTTP-Response): NetBox nicht erreichbar → Tooltip mit URL
+
+**Paginierung:**
+Alle Endpoints nutzen NetBox-Pagination (`limit=100&offset=N`, Response-Feld `next`). Ladeablauf: blockierend (alle Seiten werden sequenziell geladen bevor die UI gerendert wird), mit einem Ladeindikator. Bei Fehler während der Pagination: bisher geladene Daten verwerfen, Fehlermeldung im Badge. Maximale Seiten pro Endpoint: 50 (= 5000 Objekte) als Sicherheitsgrenze.
 
 **Caching:**
-Alle NetBox-Daten in `sessionStorage` gecacht. Manueller Reload via NetBox-Badge. Kein automatisches Polling.
+Alle geladenen NetBox-Daten in `sessionStorage` gecacht (Key: `cablemanager_cache`). Gültig nur für die aktuelle Browser-Session — kein `localStorage`-Persistenz (Daten können sich in NetBox ändern). Manueller Reload via NetBox-Badge. Kein automatisches Polling.
 
 ### 6. Rack Builder Import
 
 - `Projekt laden` öffnet File-Picker (`.json`)
-- Liest `_format: "rackbuilder-project"` Dateien
+- Liest `_format: "rackbuilder-project"` Dateien (alle `_version` Werte akzeptiert — kein Versionscheck)
 - Lokal geplante Geräte werden über NetBox-Geräte gelegt (gleiche Rack-Ansicht, andere Darstellung)
-- Bei Namensübereinstimmung mit NetBox-Gerät: Zusammenführung (NetBox-Ports + lokale Position)
-- Bei reinen Planungsgeräten (nicht in NetBox): grau dargestellt, keine NetBox-Ports
+- **Merge-Logik:** Abgleich über `device.name` (Feld im Rack Builder Projektformat). Bei Übereinstimmung: NetBox-Ports werden verwendet, NetBox-U-Position gewinnt (NetBox ist Ist-Stand). Das lokale Gerät liefert nur Metadaten (Farbe, Kommentare). Bei mehreren NetBox-Geräten mit gleichem Namen: kein Merge, beide werden unabhängig dargestellt.
+- Bei reinen Planungsgeräten (Name nicht in NetBox): gestrichelte Border, keine Port-Daten, kein Port-Panel
 
 ### 7. Export
 
 - **JSON:** Array von geplanten Kabel-Objekten im NetBox-`POST /api/dcim/cables/`-Format (vorbereitet für späteren Push)
-- **YAML:** Gleiche Struktur, YAML-serialisiert
+- **YAML:** Flache Darstellung pro Kabel als YAML-Objekt-Liste. Die verschachtelte `a_terminations`/`b_terminations`-Struktur wird für den YAML-Export in ein flaches Format umgewandelt:
+  ```yaml
+  - id: "uuid"
+    type: "cat6"
+    status: "planned"
+    a_device: "Server-01"
+    a_port: "eth0"
+    a_port_type: "dcim.interface"
+    a_object_id: 123
+    b_device: "Patch-Panel-01"
+    b_port: "Port 2"
+    b_port_type: "dcim.frontport"
+    b_object_id: 456
+  ```
+  Für den späteren NetBox-Push ist das JSON-Format maßgeblich. Ein eigener schlichter YAML-Serializer wird im Cable Manager implementiert (kein Rückgriff auf den Rack Builder `toYAML` — dieser unterstützt keine verschachtelten Objekte).
 - Export nur für geplante (lokale) Kabel — NetBox-Kabel nicht re-exportiert
 
 ---
@@ -154,7 +184,9 @@ Alle NetBox-Daten in `sessionStorage` gecacht. Manueller Reload via NetBox-Badge
   status: "planned",           // immer "planned" für lokale Kabel
   type: "cat6",                // ethernet | power | console | fiber | dac | aoc
   a_terminations: [{
-    object_type: "dcim.interface",  // oder front-port, rear-port, power-port, console-port
+    object_type: "dcim.interface",  // exakte NetBox Content-Type Strings:
+                                    // "dcim.interface" | "dcim.frontport" | "dcim.rearport"
+                                    // "dcim.powerport" | "dcim.consoleport" | "dcim.consoleserverport"
     object_id: 123,                 // NetBox ID oder null für lokale Geräte
     // Fallback-Felder für lokale Geräte:
     device_name: "Server-01",
