@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cable Manager</title>
+  <style>
+    /* --- CSS Variables (identical to minimalist/index.html) --- */
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --color-text: #e2e8f0;
+      --color-text-muted: #94a3b8;
+      --color-border: #334155;
+      --color-success: #22c55e;
+      --color-warning: #facc15;
+      --color-error: #ef4444;
+      --color-accent: #6366f1;
+      --radius: 6px;
+      /* Cable Manager specific */
+      --port-connected: #22c55e;
+      --port-planned: #facc15;
+      --port-free: #334155;
+    }
+    [data-theme="light"] {
+      --bg-primary: #f1f5f9;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #e2e8f0;
+      --color-text: #1e293b;
+      --color-text-muted: #64748b;
+      --color-border: #cbd5e1;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: var(--bg-primary); color: var(--color-text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* --- Toolbar --- */
+    #toolbar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--bg-secondary); border-bottom: 1px solid var(--color-border); flex-shrink: 0; flex-wrap: wrap; }
+    .toolbar-title { font-weight: 700; font-size: 15px; margin-right: 6px; white-space: nowrap; }
+    .toolbar-sep { width: 1px; height: 20px; background: var(--color-border); }
+    .breadcrumb { display: flex; align-items: center; gap: 4px; }
+    .breadcrumb-arrow { color: var(--color-text-muted); font-size: 12px; }
+    .nav-select { background: var(--bg-tertiary); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 4px 10px; font-size: 11px; color: var(--color-text); cursor: pointer; }
+    .nav-select.active { border-color: var(--color-accent); color: var(--color-accent); }
+    .quick-tabs { display: flex; gap: 2px; background: var(--bg-primary); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 2px; }
+    .quick-tab { padding: 3px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; color: var(--color-text-muted); background: transparent; border: none; }
+    .quick-tab.active { background: var(--color-accent); color: white; font-weight: 600; }
+    .filter-group { display: flex; gap: 2px; background: var(--bg-primary); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 2px; }
+    .filter-btn { padding: 3px 9px; border-radius: 4px; font-size: 10px; cursor: pointer; color: var(--color-text-muted); background: transparent; border: none; }
+    .filter-btn.active { background: var(--color-accent); color: white; }
+    .toolbar-spacer { flex: 1; }
+    .btn-sm { padding: 4px 10px; border-radius: var(--radius); font-size: 10px; cursor: pointer; border: 1px solid var(--color-border); background: var(--bg-tertiary); color: var(--color-text); }
+    .netbox-badge { padding: 4px 10px; border-radius: var(--radius); font-size: 10px; cursor: pointer; font-weight: 600; border: none; }
+    .netbox-badge.ok  { background: #15803d22; border: 1px solid var(--color-success); color: var(--color-success); }
+    .netbox-badge.warn { background: #a1620722; border: 1px solid var(--color-warning); color: var(--color-warning); }
+    .netbox-badge.err  { background: #7f1d1d22; border: 1px solid var(--color-error); color: var(--color-error); }
+
+    /* --- Main Layout --- */
+    #main { display: flex; flex: 1; overflow: hidden; }
+    #rack-panel { width: 52%; border-right: 1px solid var(--color-border); display: flex; flex-direction: column; overflow: hidden; }
+    #port-panel { width: 48%; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* --- Rack Panel --- */
+    #rack-header { padding: 8px 12px; font-size: 11px; color: var(--color-text-muted); border-bottom: 1px solid var(--color-border); background: var(--bg-secondary); flex-shrink: 0; }
+    #rack-list { flex: 1; overflow-y: auto; padding: 10px; background: var(--bg-primary); }
+    .rack-row { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: var(--radius); cursor: pointer; border: 1px solid transparent; margin-bottom: 2px; font-size: 11px; }
+    .rack-row:hover { background: var(--bg-tertiary); }
+    .rack-row.selected { border-color: var(--color-warning); background: var(--bg-secondary); }
+    .rack-row.local-only { border-style: dashed; border-color: var(--color-text-muted); }
+    .rack-unit { min-width: 28px; color: var(--color-text-muted); font-size: 10px; }
+    .rack-device { flex: 1; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; color: white; }
+    .cable-badge { font-size: 10px; white-space: nowrap; color: var(--color-text-muted); }
+
+    /* --- Port Panel --- */
+    #port-header { padding: 8px 12px; font-size: 11px; border-bottom: 1px solid var(--color-border); background: var(--bg-secondary); flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+    #port-body { flex: 1; display: flex; overflow: hidden; }
+    .port-col { flex: 1; padding: 8px; overflow-y: auto; background: var(--bg-primary); }
+    .port-col-front { border-right: 1px solid var(--color-border); }
+    .port-col-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+    .port-col-label.front { color: var(--color-accent); }
+    .port-col-label.rear  { color: #f97316; }
+    .port-passthrough { width: 24px; display: flex; flex-direction: column; align-items: center; padding-top: 32px; gap: 14px; background: var(--bg-secondary); border-right: 1px solid var(--color-border); flex-shrink: 0; }
+    .pt-arrow { color: var(--color-text-muted); font-size: 11px; }
+    .port-card { border: 1px solid var(--port-free); border-radius: var(--radius); padding: 5px 7px; font-size: 9px; margin-bottom: 4px; background: var(--bg-secondary); }
+    .port-card.connected { border-color: var(--port-connected); }
+    .port-card.planned   { border-color: var(--port-planned); }
+    .port-name { font-weight: 600; margin-bottom: 2px; }
+    .port-target { color: var(--color-text-muted); font-size: 8px; line-height: 1.4; cursor: pointer; }
+    .port-target:hover { color: var(--color-text); text-decoration: underline; }
+    .port-type-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 8px; margin-top: 3px; background: #1e3a5f; color: #93c5fd; }
+    .port-type-badge.power   { background: #3a2d1e; color: #fdba74; }
+    .port-type-badge.console { background: #2d1e3a; color: #c4b5fd; }
+    .port-free-btn { border: 1px dashed var(--color-border); border-radius: var(--radius); padding: 5px 7px; font-size: 9px; margin-bottom: 4px; color: var(--color-text-muted); cursor: pointer; text-align: center; background: transparent; width: 100%; }
+    .port-free-btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
+    .no-rear-msg { font-size: 9px; color: var(--color-text-muted); font-style: italic; padding: 8px; text-align: center; }
+
+    /* --- Cable Plan Search --- */
+    .cable-plan-form { border: 1px solid var(--color-warning); border-radius: var(--radius); padding: 7px; font-size: 9px; margin-bottom: 4px; background: var(--bg-secondary); }
+    .cable-plan-form input, .cable-plan-form select { width: 100%; background: var(--bg-primary); border: 1px solid var(--color-border); border-radius: 4px; padding: 4px 6px; color: var(--color-text); font-size: 9px; margin-bottom: 4px; }
+    .cable-plan-results { max-height: 100px; overflow-y: auto; border: 1px solid var(--color-border); border-radius: 4px; margin-bottom: 4px; }
+    .cable-plan-result { padding: 4px 6px; font-size: 9px; cursor: pointer; }
+    .cable-plan-result:hover, .cable-plan-result.selected-result { background: var(--bg-tertiary); }
+    .cable-plan-result.selected-result { background: var(--color-accent); color: white; }
+    .cable-plan-actions { display: flex; gap: 4px; justify-content: flex-end; }
+    .btn-confirm  { padding: 3px 10px; border-radius: 4px; font-size: 9px; background: var(--color-warning); color: #000; border: none; cursor: pointer; font-weight: 600; }
+    .btn-cancel   { padding: 3px 8px; border-radius: 4px; font-size: 9px; background: var(--bg-tertiary); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: pointer; }
+
+    /* --- Status Bar --- */
+    #statusbar { padding: 4px 14px; background: var(--bg-secondary); border-top: 1px solid var(--color-border); font-size: 10px; color: var(--color-text-muted); display: flex; gap: 12px; flex-shrink: 0; }
+    .status-nb      { color: var(--color-success); }
+    .status-planned { color: var(--color-warning); }
+
+    /* --- Loading Overlay --- */
+    #loading { display: none; position: fixed; inset: 0; background: #0008; z-index: 100; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
+    #loading.active { display: flex; }
+    .spinner { width: 32px; height: 32px; border: 3px solid var(--color-border); border-top-color: var(--color-accent); border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading-msg { font-size: 12px; color: var(--color-text-muted); }
+
+    /* --- NetBox Connect Dialog --- */
+    #connect-dialog { display: none; position: fixed; inset: 0; background: #0008; z-index: 200; align-items: center; justify-content: center; }
+    #connect-dialog.active { display: flex; }
+    .dialog-box { background: var(--bg-secondary); border: 1px solid var(--color-border); border-radius: 10px; padding: 24px; width: 380px; max-width: 90vw; }
+    .dialog-box h3 { margin-bottom: 12px; font-size: 14px; }
+    .dialog-box label { font-size: 11px; color: var(--color-text-muted); display: block; margin-bottom: 4px; }
+    .dialog-box input { width: 100%; background: var(--bg-primary); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 7px 10px; color: var(--color-text); font-size: 12px; margin-bottom: 12px; }
+    .dialog-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .btn-primary   { padding: 7px 16px; border-radius: var(--radius); background: var(--color-accent); color: white; border: none; cursor: pointer; font-size: 12px; font-weight: 600; }
+    .btn-secondary { padding: 7px 16px; border-radius: var(--radius); background: var(--bg-tertiary); color: var(--color-text); border: 1px solid var(--color-border); cursor: pointer; font-size: 12px; }
+    .dialog-error { font-size: 11px; color: var(--color-error); margin-bottom: 10px; display: none; }
+    .dialog-error.visible { display: block; }
+
+    /* --- Responsive --- */
+    @media (max-width: 700px) {
+      #main { flex-direction: column; }
+      #rack-panel, #port-panel { width: 100%; }
+      #rack-panel { height: 45%; border-right: none; border-bottom: 1px solid var(--color-border); }
+      #port-panel { height: 55%; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Toolbar -->
+  <div id="toolbar">
+    <span class="toolbar-title">🔌 Cable Manager</span>
+    <div class="toolbar-sep"></div>
+    <div class="breadcrumb">
+      <select id="sel-site" class="nav-select"><option value="">Standort…</option></select>
+      <span class="breadcrumb-arrow">›</span>
+      <select id="sel-location" class="nav-select"><option value="">Raum…</option></select>
+      <span class="breadcrumb-arrow">›</span>
+      <select id="sel-rack" class="nav-select active"><option value="">Rack…</option></select>
+    </div>
+    <div id="quick-tabs" class="quick-tabs"></div>
+    <div class="filter-group">
+      <button class="filter-btn active" data-filter="all">Alle</button>
+      <button class="filter-btn" data-filter="network">🔵 Netz</button>
+      <button class="filter-btn" data-filter="power">⚡ Power</button>
+      <button class="filter-btn" data-filter="console">🖥 Console</button>
+    </div>
+    <div class="toolbar-spacer"></div>
+    <button class="btn-sm" id="btn-load-project">📥 Projekt laden</button>
+    <button class="btn-sm" id="btn-export-json">⬇ JSON</button>
+    <button class="btn-sm" id="btn-export-yaml">⬇ YAML</button>
+    <button class="netbox-badge err" id="netbox-badge">NetBox ✕</button>
+    <button class="btn-sm" id="btn-theme">🌙</button>
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+    <div id="rack-panel">
+      <div id="rack-header">Kein Rack ausgewählt</div>
+      <div id="rack-list"><p style="padding:16px;font-size:11px;color:var(--color-text-muted)">Verbinde NetBox und wähle ein Rack.</p></div>
+    </div>
+    <div id="port-panel">
+      <div id="port-header"><span id="port-device-name" style="font-size:11px;font-weight:600;">Kein Gerät ausgewählt</span></div>
+      <div id="port-body">
+        <div class="port-col port-col-front"><div class="port-col-label front">◀ Front</div></div>
+        <div class="port-passthrough"></div>
+        <div class="port-col"><div class="port-col-label rear">Rear ▶</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Bar -->
+  <div id="statusbar">
+    <span id="status-rack">–</span>
+    <span class="status-nb" id="status-nb">● 0 NetBox</span>
+    <span class="status-planned" id="status-planned">● 0 geplant</span>
+    <span style="margin-left:auto;" id="status-loaded">–</span>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loading"><div class="spinner"></div><div id="loading-msg">Lade Daten…</div></div>
+
+  <!-- Connect Dialog -->
+  <div id="connect-dialog">
+    <div class="dialog-box">
+      <h3>NetBox verbinden</h3>
+      <label>NetBox URL</label>
+      <input type="url" id="input-url" placeholder="https://netbox.example.com">
+      <label>API Token</label>
+      <input type="password" id="input-token" placeholder="Token eingeben">
+      <div class="dialog-error" id="dialog-error"></div>
+      <div class="dialog-actions">
+        <button class="btn-secondary" id="btn-dialog-cancel">Abbrechen</button>
+        <button class="btn-primary" id="btn-dialog-connect">Verbinden</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="file-input" accept=".json" style="display:none">
+
+  <script>
+    // JS implemented in Tasks 2–9
+  </script>
+</body>
+</html>
