@@ -900,6 +900,105 @@
       openConnectDialog();
     }
 
+    // ─── Rack Builder Import ───────────────────────────────────────────────────────
+    document.getElementById('btn-load-project').addEventListener('click', () => {
+      document.getElementById('file-input').click();
+    });
+
+    document.getElementById('file-input').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = evt => {
+        try {
+          const data = JSON.parse(evt.target.result);
+          if (data._format !== 'rackbuilder-project') { alert('Keine gültige Rack Builder Projektdatei.'); return; }
+          let devices = data.devices || [];
+          if (data.racks && Array.isArray(data.racks)) {
+            data.racks.forEach(r => { if (r.devices) devices = devices.concat(r.devices); });
+          }
+          state.importedDevices = devices.map(d => ({
+            id: d.id || d.name,
+            name: d.name,
+            position: d.position || d.u || null,
+            color: d.color,
+            comments: d.comments || '',
+            _localOnly: true,
+          }));
+          state.importedDevices.forEach(ld => {
+            const nb = state.devices.find(d => d.name === ld.name);
+            if (nb) {
+              nb._importColor    = ld.color;
+              nb._importComments = ld.comments;
+            }
+          });
+          renderRack();
+          alert(`${devices.length} Geräte aus Projektdatei geladen.`);
+        } catch(e) { alert('Fehler beim Lesen der Datei: ' + e.message); }
+        e.target.value = '';
+      };
+      reader.readAsText(file);
+    });
+
+    // ─── Export ───────────────────────────────────────────────────────────────────
+    function exportJSON() {
+      if (!state.plannedCables.length) { alert('Keine geplanten Kabel vorhanden.'); return; }
+      const payload = state.plannedCables.map(c => ({
+        status:         c.status,
+        type:           c.type,
+        label:          c.label,
+        color:          c.color,
+        a_terminations: c.a_terminations.map(t => ({ object_type: t.object_type, object_id: t.object_id })).filter(t => t.object_id),
+        b_terminations: c.b_terminations.map(t => ({ object_type: t.object_type, object_id: t.object_id })).filter(t => t.object_id),
+      }));
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'planned-cables.json'; a.click();
+    }
+
+    document.getElementById('btn-export-json').addEventListener('click', exportJSON);
+
+    function toYamlValue(v) {
+      if (v === null || v === undefined) return 'null';
+      if (typeof v === 'boolean') return v ? 'true' : 'false';
+      if (typeof v === 'number') return String(v);
+      if (typeof v === 'string') {
+        if (!v || /[:#\[\]{}&*!,|>'"@`]/.test(v) || /^\s|\s$/.test(v)) return `"${v.replace(/"/g, '\\"')}"`;
+        return v;
+      }
+      return `"${String(v)}"`;
+    }
+
+    function cablesToYaml(cables) {
+      return cables.map(c => {
+        const a = c.a_terminations[0] || {};
+        const b = c.b_terminations[0] || {};
+        const fields = [
+          `- id: ${toYamlValue(c.id)}`,
+          `  type: ${toYamlValue(c.type)}`,
+          `  status: ${toYamlValue(c.status)}`,
+          `  a_device: ${toYamlValue(a.device_name || '')}`,
+          `  a_port: ${toYamlValue(a.port_name || '')}`,
+          `  a_port_type: ${toYamlValue(a.object_type || '')}`,
+          `  a_object_id: ${a.object_id ?? 'null'}`,
+          `  b_device: ${toYamlValue(b.device_name || '')}`,
+          `  b_port: ${toYamlValue(b.port_name || '')}`,
+          `  b_port_type: ${toYamlValue(b.object_type || '')}`,
+          `  b_object_id: ${b.object_id ?? 'null'}`,
+        ];
+        if (c.label) fields.push(`  label: ${toYamlValue(c.label)}`);
+        return fields.join('\n');
+      }).join('\n');
+    }
+
+    function exportYAML() {
+      if (!state.plannedCables.length) { alert('Keine geplanten Kabel vorhanden.'); return; }
+      const yaml = cablesToYaml(state.plannedCables);
+      const blob = new Blob([yaml], { type: 'text/yaml' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'planned-cables.yaml'; a.click();
+    }
+
+    document.getElementById('btn-export-yaml').addEventListener('click', exportYAML);
+
     document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
