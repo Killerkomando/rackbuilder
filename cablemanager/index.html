@@ -215,7 +215,211 @@
   <input type="file" id="file-input" accept=".json" style="display:none">
 
   <script>
-    // JS implemented in Tasks 2–9
+    // ─── Constants ────────────────────────────────────────────────────────────────
+    const SESSION_CRYPTO_KEY  = 'rackbuilder_ck';
+    const LS_TOKEN_KEY        = 'rackbuilder_netbox_api_token';
+    const LS_TOKEN_ENC_FLAG   = 'rackbuilder_netbox_api_token_enc';
+    const LS_URL_KEY          = 'rackbuilder_netbox_api_url';
+    const SS_CACHE_KEY        = 'cablemanager_cache';
+
+    // ─── Crypto ───────────────────────────────────────────────────────────────────
+    async function getCryptoKey() {
+      const stored = sessionStorage.getItem(SESSION_CRYPTO_KEY);
+      if (stored) {
+        try {
+          const raw = Uint8Array.from(atob(stored), c => c.charCodeAt(0));
+          return await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']);
+        } catch { /* fall through */ }
+      }
+      const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
+      const raw = await crypto.subtle.exportKey('raw', key);
+      sessionStorage.setItem(SESSION_CRYPTO_KEY, btoa(String.fromCharCode(...new Uint8Array(raw))));
+      return key;
+    }
+
+    async function encryptToken(plaintext) {
+      const key = await getCryptoKey();
+      const iv  = crypto.getRandomValues(new Uint8Array(12));
+      const enc = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(plaintext));
+      const buf = new Uint8Array(12 + enc.byteLength);
+      buf.set(iv); buf.set(new Uint8Array(enc), 12);
+      return btoa(String.fromCharCode(...buf));
+    }
+
+    async function decryptToken(b64) {
+      try {
+        const key = await getCryptoKey();
+        const buf = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        const dec = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: buf.slice(0, 12) }, key, buf.slice(12));
+        return new TextDecoder().decode(dec);
+      } catch { return null; }
+    }
+
+    async function loadToken() {
+      const raw = localStorage.getItem(LS_TOKEN_KEY);
+      if (!raw) return '';
+      if (localStorage.getItem(LS_TOKEN_ENC_FLAG) !== '1') { await saveToken(raw); return raw; }
+      const dec = await decryptToken(raw);
+      if (dec === null) { localStorage.removeItem(LS_TOKEN_KEY); localStorage.removeItem(LS_TOKEN_ENC_FLAG); return ''; }
+      return dec;
+    }
+
+    async function saveToken(token) {
+      if (!token) { localStorage.removeItem(LS_TOKEN_KEY); localStorage.removeItem(LS_TOKEN_ENC_FLAG); return; }
+      localStorage.setItem(LS_TOKEN_KEY, await encryptToken(token));
+      localStorage.setItem(LS_TOKEN_ENC_FLAG, '1');
+    }
+
+    // ─── App State ────────────────────────────────────────────────────────────────
+    const state = {
+      token: '',
+      baseUrl: '',
+      connected: false,
+      // NetBox data
+      sites: [],
+      locations: [],
+      racks: [],
+      devices: [],
+      ports: {},          // { deviceId: { interfaces:[], frontPorts:[], rearPorts:[], powerPorts:[], consolePorts:[], consoleServerPorts:[] } }
+      cables: [],
+      // UI state
+      selectedSiteId: null,
+      selectedLocationId: null,
+      selectedRackId: null,
+      selectedDeviceId: null,
+      cableFilter: 'all',
+      // Planned cables (local)
+      plannedCables: [],
+      // Rack Builder import
+      importedDevices: [],
+      // Cable planning state
+      _planningPortId: null,
+      _planningObjectType: null,
+    };
+
+    // ─── Paginated API Client ─────────────────────────────────────────────────────
+    async function nbFetchAll(path, params = {}) {
+      const results = [];
+      let offset = 0;
+      const limit = 100;
+      const maxPages = 50;
+      let page = 0;
+      while (page < maxPages) {
+        const qs = new URLSearchParams({ ...params, limit, offset }).toString();
+        const url = `${state.baseUrl}${path}?${qs}`;
+        const res = await fetch(url, {
+          headers: { Authorization: `Token ${state.token}`, Accept: 'application/json' }
+        });
+        if (!res.ok) throw Object.assign(new Error(res.statusText), { status: res.status });
+        const data = await res.json();
+        results.push(...(data.results ?? []));
+        if (!data.next) break;
+        offset += limit;
+        page++;
+      }
+      return results;
+    }
+
+    // ─── Badge helpers ────────────────────────────────────────────────────────────
+    function setBadge(status, text, tooltip = '') {
+      const b = document.getElementById('netbox-badge');
+      b.className = `netbox-badge ${status}`;
+      b.textContent = text;
+      b.title = tooltip;
+    }
+
+    // ─── Connect Dialog ───────────────────────────────────────────────────────────
+    // NOTE: This initial badge listener will be REPLACED in Task 9 Step 2.
+    // It is a temporary placeholder until the smart reload/connect logic is added.
+    document.getElementById('netbox-badge').addEventListener('click', openConnectDialog);
+
+    document.getElementById('btn-dialog-cancel').addEventListener('click', () => {
+      document.getElementById('connect-dialog').classList.remove('active');
+    });
+    document.getElementById('btn-dialog-connect').addEventListener('click', connectNetBox);
+
+    function openConnectDialog() {
+      document.getElementById('input-url').value = state.baseUrl || localStorage.getItem(LS_URL_KEY) || '';
+      document.getElementById('input-token').value = '';
+      document.getElementById('dialog-error').classList.remove('visible');
+      document.getElementById('connect-dialog').classList.add('active');
+    }
+
+    async function connectNetBox() {
+      const url   = document.getElementById('input-url').value.trim().replace(/\/$/, '');
+      const token = document.getElementById('input-token').value.trim();
+      const errEl = document.getElementById('dialog-error');
+      errEl.classList.remove('visible');
+      if (!url || !token) {
+        errEl.textContent = 'URL und Token erforderlich.';
+        errEl.classList.add('visible');
+        return;
+      }
+      try {
+        const res = await fetch(`${url}/api/dcim/sites/?limit=1`, {
+          headers: { Authorization: `Token ${token}`, Accept: 'application/json' }
+        });
+        if (res.status === 401) throw new Error('Token ungültig (401 Unauthorized)');
+        if (res.status === 403) throw new Error('Fehlende Berechtigungen (403 Forbidden)');
+        if (!res.ok) throw new Error(`Fehler: ${res.status} ${res.statusText}`);
+        state.token = token;
+        state.baseUrl = url;
+        state.connected = true;
+        localStorage.setItem(LS_URL_KEY, url);
+        await saveToken(token);
+        document.getElementById('connect-dialog').classList.remove('active');
+        setBadge('ok', 'NetBox ✓');
+        await loadSitesAndLocations();
+      } catch(e) {
+        errEl.textContent = e.message;
+        errEl.classList.add('visible');
+      }
+    }
+
+    // ─── Loading helpers ──────────────────────────────────────────────────────────
+    function showLoading(msg = 'Lade Daten…') {
+      document.getElementById('loading-msg').textContent = msg;
+      document.getElementById('loading').classList.add('active');
+    }
+    function hideLoading() {
+      document.getElementById('loading').classList.remove('active');
+    }
+
+    // Placeholder — will be implemented fully in Task 3
+    async function loadSitesAndLocations() {}
+
+    // ─── Init ─────────────────────────────────────────────────────────────────────
+    async function init() {
+      const url = localStorage.getItem(LS_URL_KEY);
+      const token = await loadToken();
+      if (url && token) {
+        state.token = token;
+        state.baseUrl = url;
+        try {
+          const res = await fetch(`${url}/api/dcim/sites/?limit=1`, {
+            headers: { Authorization: `Token ${token}`, Accept: 'application/json' }
+          });
+          if (res.ok) {
+            state.connected = true;
+            setBadge('ok', 'NetBox ✓');
+            await loadSitesAndLocations();
+            return;
+          }
+          if (res.status === 401 || res.status === 403) {
+            setBadge('warn', 'NetBox ?', 'Token evtl. abgelaufen — bitte neu verbinden');
+            openConnectDialog();
+            return;
+          }
+        } catch {
+          setBadge('err', 'NetBox ✕', 'NetBox nicht erreichbar: ' + url);
+          openConnectDialog();
+          return;
+        }
+      }
+      openConnectDialog();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
   </script>
 </body>
 </html>
