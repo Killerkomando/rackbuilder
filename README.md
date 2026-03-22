@@ -24,6 +24,16 @@ open minimalist/index.html
 
 This is useful for quick deployment, embedding, or environments where multiple files are impractical.
 
+### Cable Manager
+
+Port-to-port cable management with NetBox integration. Available under `cablemanager/index.html`:
+
+```
+open cablemanager/index.html
+```
+
+Loads live data from a NetBox instance (uses the same API token as the main app). Lets you visualize existing cables and plan new port-to-port connections across all cable types (Ethernet, Fiber, Power, Console). Planned cables can be exported as JSON (NetBox-compatible) or YAML.
+
 ## Features
 
 ### Rack Visualization
