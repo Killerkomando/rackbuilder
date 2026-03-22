@@ -2,4 +2,4 @@
 Thumbs.db
 *.log
 node_modules/
-.idea/
+.idea/.worktrees/
