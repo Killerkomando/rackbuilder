@@ -593,9 +593,169 @@
       document.getElementById('status-planned').textContent = `● ${plannedCount} geplant`;
     }
 
-    // Stub — implemented in Task 5
-    async function loadAndRenderPortPanel(device) {}
-    function renderPortPanel(deviceId) {}
+    async function loadAndRenderPortPanel(device) {
+      if (device._localOnly) {
+        document.getElementById('port-device-name').textContent = `${device.name} (lokal geplant — keine Port-Daten)`;
+        renderPortPanelEmpty();
+        return;
+      }
+      document.getElementById('port-device-name').textContent = `${device.name} · U${device.position ?? '?'}`;
+      if (state.ports[device.id]) { renderPortPanel(device.id); return; } // Cache-Hit
+      showLoading(`Lade Ports für ${device.name}…`);
+      try {
+        const [ifaces, frontPorts, rearPorts, powerPorts, consolePorts, consoleServerPorts] = await Promise.all([
+          nbFetchAll('/api/dcim/interfaces/', { device_id: device.id }),
+          nbFetchAll('/api/dcim/front-ports/', { device_id: device.id }),
+          nbFetchAll('/api/dcim/rear-ports/', { device_id: device.id }),
+          nbFetchAll('/api/dcim/power-ports/', { device_id: device.id }),
+          nbFetchAll('/api/dcim/console-ports/', { device_id: device.id }),
+          nbFetchAll('/api/dcim/console-server-ports/', { device_id: device.id }),
+        ]);
+        state.ports[device.id] = { interfaces: ifaces, frontPorts, rearPorts, powerPorts, consolePorts, consoleServerPorts };
+        renderPortPanel(device.id);
+      } catch(e) {
+        setBadge('err', 'NetBox ✕', e.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function findCableForPort(objectType, objectId) {
+      const nb = state.cables.find(c => {
+        const check = side => c[`${side}_terminations`]?.some(t => t.object_type === objectType && t.object?.id === objectId);
+        return check('a') || check('b');
+      });
+      if (nb) return { ...nb, _source: 'netbox' };
+      const pl = state.plannedCables.find(c => {
+        const checkSide = s => s.object_type === objectType && s.object_id === objectId;
+        return checkSide(c.a_terminations[0]) || checkSide(c.b_terminations[0]);
+      });
+      if (pl) return { ...pl, _source: 'planned' };
+      return null;
+    }
+
+    function getOtherSide(cable, objectType, objectId) {
+      const isA = cable.a_terminations?.some(t => t.object_type === objectType && (t.object?.id === objectId || t.object_id === objectId));
+      const terms = isA ? cable.b_terminations : cable.a_terminations;
+      if (!terms?.length) return null;
+      const t = terms[0];
+      return { deviceName: t.object?.device?.name || t.device_name || '', portName: t.object?.name || t.port_name || '', deviceId: t.object?.device?.id };
+    }
+
+    function portTypeFilter(objectType) {
+      if (state.cableFilter === 'all') return true;
+      const networkTypes = ['dcim.interface', 'dcim.frontport', 'dcim.rearport'];
+      const powerTypes   = ['dcim.powerport'];
+      const consoleTypes = ['dcim.consoleport', 'dcim.consoleserverport'];
+      if (state.cableFilter === 'network') return networkTypes.includes(objectType);
+      if (state.cableFilter === 'power')   return powerTypes.includes(objectType);
+      if (state.cableFilter === 'console') return consoleTypes.includes(objectType);
+      return true;
+    }
+
+    function renderPortCard(port, objectType, isPlanningActive, planningPortId) {
+      const cable = findCableForPort(objectType, port.id);
+      const otherSide = cable ? getOtherSide(cable, objectType, port.id) : null;
+      const isPlanned = cable?._source === 'planned';
+      const card = document.createElement('div');
+      card.className = 'port-card' + (cable ? (isPlanned ? ' planned' : ' connected') : '');
+
+      if (isPlanningActive && planningPortId === port.id) {
+        card.appendChild(buildCablePlanForm(port, objectType));
+        return card;
+      }
+
+      const typeStr = port.type?.label || port.type?.value || '';
+      const badge = objectType === 'dcim.powerport' ? 'power' : objectType.includes('console') ? 'console' : '';
+      card.innerHTML = `
+        <div class="port-name">${port.name}</div>
+        ${otherSide ? `<div class="port-target" data-device-id="${otherSide.deviceId}">→ ${otherSide.deviceName} / ${otherSide.portName}</div>` : ''}
+        ${typeStr ? `<span class="port-type-badge ${badge}">${typeStr}</span>` : ''}
+      `;
+      if (!cable) {
+        const planBtn = document.createElement('div');
+        planBtn.className = 'port-free-btn';
+        planBtn.textContent = '+ Kabel planen';
+        planBtn.addEventListener('click', () => {
+          state._planningPortId = port.id;
+          state._planningObjectType = objectType;
+          renderPortPanel(state.selectedDeviceId);
+        });
+        card.innerHTML = `<div class="port-name">${port.name} <span style="color:var(--color-text-muted);font-size:8px;">${typeStr}</span></div>`;
+        card.appendChild(planBtn);
+      }
+      card.querySelectorAll('.port-target[data-device-id]').forEach(el => {
+        el.addEventListener('click', () => {
+          const devId = parseInt(el.dataset.deviceId);
+          const dev = state.devices.find(d => d.id === devId);
+          if (dev) {
+            state.selectedDeviceId = devId;
+            document.querySelectorAll('.rack-row').forEach(r => { r.classList.toggle('selected', parseInt(r.dataset.deviceId) === devId); });
+            loadAndRenderPortPanel(dev);
+          }
+        });
+      });
+      return card;
+    }
+
+    function renderPortPanel(deviceId) {
+      const ports = state.ports[deviceId];
+      if (!ports) return;
+      const hasFrontPorts = ports.frontPorts.length > 0;
+      const hasRearPorts  = ports.rearPorts.length > 0;
+      const isPatchPanel  = hasFrontPorts || hasRearPorts;
+
+      const frontPortGroups = [
+        ...ports.interfaces.map(p => ({ port: p, type: 'dcim.interface' })),
+        ...ports.frontPorts.map(p => ({ port: p, type: 'dcim.frontport' })),
+        ...ports.powerPorts.map(p => ({ port: p, type: 'dcim.powerport' })),
+        ...ports.consolePorts.map(p => ({ port: p, type: 'dcim.consoleport' })),
+        ...ports.consoleServerPorts.map(p => ({ port: p, type: 'dcim.consoleserverport' })),
+      ].filter(({ type }) => portTypeFilter(type));
+
+      const rearPortGroups = ports.rearPorts.map(p => ({ port: p, type: 'dcim.rearport' }))
+        .filter(({ type }) => portTypeFilter(type));
+
+      const frontCol = document.querySelector('#port-body .port-col-front');
+      const passCol  = document.querySelector('#port-body .port-passthrough');
+      const rearCol  = document.querySelector('#port-body .port-col:last-child');
+
+      frontCol.innerHTML = '<div class="port-col-label front">◀ Front</div>';
+      passCol.innerHTML  = '<div style="font-size:8px;color:var(--color-text-muted);writing-mode:vertical-rl;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Pass</div>';
+      rearCol.innerHTML  = '<div class="port-col-label rear">Rear ▶</div>';
+
+      frontPortGroups.forEach(({ port, type }) => {
+        frontCol.appendChild(renderPortCard(port, type, !!state._planningPortId && state._planningObjectType === type, state._planningPortId));
+      });
+
+      if (isPatchPanel) {
+        rearPortGroups.forEach(() => {
+          const arrow = document.createElement('div');
+          arrow.className = 'pt-arrow';
+          arrow.textContent = '↔';
+          passCol.appendChild(arrow);
+        });
+        rearPortGroups.forEach(({ port, type }) => {
+          rearCol.appendChild(renderPortCard(port, type, false, null));
+        });
+      } else {
+        rearCol.innerHTML += '<div class="no-rear-msg">Kein Rear-Port<br>nur bei Patch-Panels</div>';
+      }
+    }
+
+    function renderPortPanelEmpty() {
+      document.querySelector('#port-body .port-col-front').innerHTML = '<div class="port-col-label front">◀ Front</div>';
+      document.querySelector('#port-body .port-passthrough').innerHTML = '';
+      document.querySelector('#port-body .port-col:last-child').innerHTML = '<div class="port-col-label rear">Rear ▶</div>';
+    }
+
+    // Stub — implemented in Task 6
+    function buildCablePlanForm(port, objectType) {
+      const div = document.createElement('div');
+      div.className = 'cable-plan-form';
+      div.textContent = `Kabel planen: ${port.name} (wird in Task 6 implementiert)`;
+      return div;
+    }
 
     // ─── Init ─────────────────────────────────────────────────────────────────────
     async function init() {
