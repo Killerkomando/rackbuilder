@@ -390,8 +390,134 @@
       document.getElementById('loading').classList.remove('active');
     }
 
-    // Placeholder — will be implemented fully in Task 3
-    async function loadSitesAndLocations() {}
+    async function loadSitesAndLocations() {
+      // Check sessionStorage cache first
+      const cached = sessionStorage.getItem(SS_CACHE_KEY);
+      if (cached) {
+        try {
+          const { sites, locations, racks, ts } = JSON.parse(cached);
+          state.sites = sites;
+          state.locations = locations;
+          state.racks = racks;
+          renderSiteSelect();
+          document.getElementById('status-loaded').textContent = `Cache: ${new Date(ts).toLocaleTimeString()}`;
+          return;
+        } catch { /* corrupt cache, reload */ }
+      }
+      showLoading('Lade Standorte…');
+      try {
+        [state.sites, state.locations, state.racks] = await Promise.all([
+          nbFetchAll('/api/dcim/sites/'),
+          nbFetchAll('/api/dcim/locations/'),
+          nbFetchAll('/api/dcim/racks/'),
+        ]);
+        sessionStorage.setItem(SS_CACHE_KEY, JSON.stringify({
+          sites: state.sites, locations: state.locations, racks: state.racks, ts: Date.now()
+        }));
+        renderSiteSelect();
+      } catch(e) {
+        setBadge('err', 'NetBox ✕', e.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function renderSiteSelect() {
+      const sel = document.getElementById('sel-site');
+      sel.innerHTML = '<option value="">Standort…</option>';
+      state.sites.forEach(s => {
+        const o = document.createElement('option');
+        o.value = s.id;
+        o.textContent = s.name;
+        sel.appendChild(o);
+      });
+      if (state.selectedSiteId) sel.value = state.selectedSiteId;
+    }
+
+    function renderLocationSelect(siteId) {
+      const locs = siteId
+        ? state.locations.filter(l => l.site?.id == siteId)
+        : state.locations;
+      const sel = document.getElementById('sel-location');
+      sel.innerHTML = '<option value="">Raum…</option>';
+      locs.forEach(l => {
+        const o = document.createElement('option');
+        o.value = l.id;
+        o.textContent = l.name;
+        sel.appendChild(o);
+      });
+      if (state.selectedLocationId) sel.value = state.selectedLocationId;
+    }
+
+    function renderRackSelect(locationId) {
+      const racks = locationId
+        ? state.racks.filter(r => r.location?.id == locationId)
+        : state.racks;
+      const sel = document.getElementById('sel-rack');
+      sel.innerHTML = '<option value="">Rack…</option>';
+      racks.forEach(r => {
+        const o = document.createElement('option');
+        o.value = r.id;
+        o.textContent = r.name;
+        sel.appendChild(o);
+      });
+      renderQuickTabs(racks);
+    }
+
+    function renderQuickTabs(racks) {
+      const ct = document.getElementById('quick-tabs');
+      ct.innerHTML = '';
+      racks.slice(0, 8).forEach(r => {
+        const b = document.createElement('button');
+        b.className = 'quick-tab' + (r.id == state.selectedRackId ? ' active' : '');
+        b.textContent = r.name;
+        b.addEventListener('click', () => selectRack(r.id));
+        ct.appendChild(b);
+      });
+    }
+
+    document.getElementById('sel-site').addEventListener('change', e => {
+      state.selectedSiteId = e.target.value ? parseInt(e.target.value) : null;
+      state.selectedLocationId = null;
+      state.selectedRackId = null;
+      renderLocationSelect(state.selectedSiteId);
+      renderRackSelect(null);
+    });
+
+    document.getElementById('sel-location').addEventListener('change', e => {
+      state.selectedLocationId = e.target.value ? parseInt(e.target.value) : null;
+      state.selectedRackId = null;
+      renderRackSelect(state.selectedLocationId);
+    });
+
+    document.getElementById('sel-rack').addEventListener('change', e => {
+      if (e.target.value) selectRack(parseInt(e.target.value));
+    });
+
+    // Cable type filter
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.cableFilter = btn.dataset.filter;
+        if (state.selectedRackId) renderRack();
+        if (state.selectedDeviceId) renderPortPanel(state.selectedDeviceId);
+      });
+    });
+
+    // Stub — implemented fully in Task 4
+    async function selectRack(rackId) {
+      state.selectedRackId = rackId;
+      document.getElementById('sel-rack').value = rackId;
+      const racks = state.selectedLocationId
+        ? state.racks.filter(r => r.location?.id == state.selectedLocationId)
+        : state.racks;
+      renderQuickTabs(racks);
+    }
+
+    // Stubs for Task 4+
+    function renderRack() {}
+    function renderPortPanel(deviceId) {}
 
     // ─── Init ─────────────────────────────────────────────────────────────────────
     async function init() {
