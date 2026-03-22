@@ -505,18 +505,96 @@
       });
     });
 
-    // Stub — implemented fully in Task 4
     async function selectRack(rackId) {
       state.selectedRackId = rackId;
+      state.selectedDeviceId = null;
       document.getElementById('sel-rack').value = rackId;
+      // Quick-Tabs aktualisieren
       const racks = state.selectedLocationId
         ? state.racks.filter(r => r.location?.id == state.selectedLocationId)
         : state.racks;
       renderQuickTabs(racks);
+      // Rack-Daten laden
+      showLoading('Lade Geräte und Kabel…');
+      try {
+        const [devices, cables] = await Promise.all([
+          nbFetchAll('/api/dcim/devices/', { rack_id: rackId }),
+          nbFetchAll('/api/dcim/cables/', { rack_id: rackId }),
+        ]);
+        state.devices  = devices;
+        state.cables   = cables;
+        state.ports    = {};
+        document.getElementById('status-loaded').textContent = `Geladen: ${new Date().toLocaleTimeString()}`;
+        renderRack();
+      } catch(e) {
+        setBadge('err', 'NetBox ✕', e.message);
+      } finally {
+        hideLoading();
+      }
     }
 
-    // Stubs for Task 4+
-    function renderRack() {}
+    // Zähle Kabel pro Gerät (nach Filter)
+    function cableCountForDevice(deviceId) {
+      return state.cables.filter(c => {
+        const matchesSide = side => c[`${side}_terminations`]?.some(t => t.object?.device?.id === deviceId || t.object?.id === deviceId);
+        const connected = matchesSide('a') || matchesSide('b');
+        if (!connected) return false;
+        if (state.cableFilter === 'all') return true;
+        const networkTypes = ['cat3','cat5','cat5e','cat6','cat6a','cat7','cat7a','cat8','dac-active','dac-passive','mrj21-trunk','coaxial','mmf','mmf-om1','mmf-om2','mmf-om3','mmf-om4','mmf-om5','smf','smf-os1','smf-os2','aoc'];
+        const t = c.type?.value || '';
+        if (state.cableFilter === 'network') return networkTypes.includes(t) || t.startsWith('mmf') || t.startsWith('smf') || t === 'aoc';
+        if (state.cableFilter === 'power') return t === 'power';
+        if (state.cableFilter === 'console') return !networkTypes.includes(t) && t !== 'power';
+        return true;
+      }).length + state.plannedCables.filter(pc => {
+        const sides = [pc.a_terminations[0], pc.b_terminations[0]];
+        return sides.some(s => s?.device_id === deviceId || s?.object_id === deviceId);
+      }).length;
+    }
+
+    function renderRack() {
+      const rack = state.racks.find(r => r.id === state.selectedRackId);
+      if (!rack) return;
+      document.getElementById('rack-header').textContent = `${rack.name} · ${rack.u_height}U · ${state.devices.length} Geräte`;
+      const listEl = document.getElementById('rack-list');
+      listEl.innerHTML = '';
+      // Geräte nach U-Position sortieren
+      const sorted = [...state.devices].sort((a, b) => (a.position || 0) - (b.position || 0));
+      // Importierte lokale Geräte (die nicht in NetBox sind) anhängen
+      const localOnly = state.importedDevices.filter(ld => !state.devices.some(d => d.name === ld.name));
+      sorted.push(...localOnly.map(ld => ({ ...ld, _localOnly: true })));
+
+      sorted.forEach(device => {
+        const count = cableCountForDevice(device.id);
+        const row = document.createElement('div');
+        row.className = 'rack-row' + (device.id === state.selectedDeviceId ? ' selected' : '') + (device._localOnly ? ' local-only' : '');
+        row.dataset.deviceId = device.id;
+        const colors = { active: '#3b82f6', planned: '#22c55e', staged: '#a855f7', decommissioning: '#f97316', offline: '#64748b', inventory: '#64748b' };
+        const color = colors[device.status?.value] || '#3b82f6';
+        row.innerHTML = `
+          <span class="rack-unit">U${device.position ?? '?'}</span>
+          <span class="rack-device" style="background:${color}">${device.name}</span>
+          ${count > 0 ? `<span class="cable-badge">🔌 ${count}</span>` : ''}
+        `;
+        row.addEventListener('click', () => {
+          document.querySelectorAll('.rack-row').forEach(r => r.classList.remove('selected'));
+          row.classList.add('selected');
+          state.selectedDeviceId = device.id;
+          loadAndRenderPortPanel(device);
+        });
+        listEl.appendChild(row);
+      });
+
+      // Statusleiste
+      const nbCount = state.cables.length;
+      const plannedCount = state.plannedCables.length;
+      document.getElementById('status-rack').textContent = `${rack.name} · ${rack.u_height}U · ${state.devices.length} Geräte · ${nbCount + plannedCount} Kabel`;
+      document.getElementById('status-nb').textContent = `● ${nbCount} NetBox`;
+      document.getElementById('status-planned').textContent = `● ${plannedCount} geplant`;
+    }
+
+    // Stub — implemented in Task 5
+    async function loadAndRenderPortPanel(device) {}
     function renderPortPanel(deviceId) {}
 
     // ─── Init ─────────────────────────────────────────────────────────────────────
