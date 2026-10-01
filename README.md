@@ -1,4 +1,4 @@
-# Rack Builder v0.7.0
+# Rack Builder v0.8.0
 
 Visual rack planning tool for creating NetBox-compatible JSON imports. Plan your server rack layouts with drag & drop, collision detection, and bulk device creation — then export directly as JSON, YAML, CSV, or PNG.
 
@@ -16,7 +16,7 @@ Works offline as a PWA after the first visit.
 
 ### Minimalist Version
 
-A single-file version with all CSS and JS inlined is available under `minimalist/index.html`. It has **full feature parity** with the main app — including NetBox autocomplete (Device Types, Roles, Manufacturers), the modern custom autocomplete dropdown, accordion sidebar, and all other features. No external dependencies and no service worker — just open the file directly:
+A single-file version with all CSS and JS inlined is available under `minimalist/index.html`. It has **full feature parity** with the main app — including NetBox autocomplete (Device Types, Roles, Manufacturers, Module Types), the module import, the modern custom autocomplete dropdown, accordion sidebar, and all other features. No external dependencies and no service worker — just open the file directly:
 
 ```
 open minimalist/index.html
@@ -77,13 +77,27 @@ Loads live data from a NetBox instance (uses the same API token as the main app)
 
 ### NetBox Autocomplete (Optional)
 
-- **NetBox Data Upload** — Upload exported Device Types, Roles, and Manufacturers from NetBox (JSON, YAML, or CSV) in Settings to enable autocomplete; supports comma-, semicolon-, and tab-separated files
+- **NetBox Data Upload** — Upload exported Device Types, Roles, Manufacturers, and Module Types from NetBox (JSON, YAML, or CSV) in Settings to enable autocomplete; supports comma-, semicolon-, and tab-separated files
 - **NetBox Live API** — Alternatively connect directly to a running NetBox instance via URL + API token; test the connection and fetch Device Types, Roles, and Manufacturers with paginated API calls (no CORS proxy required when NetBox is on the same network)
 - **Encrypted API Token Storage** — The NetBox API token is encrypted with AES-256-GCM before being written to `localStorage`; the encryption key lives only in `sessionStorage` and is never persisted to disk
 - **Multi-Document YAML Support** — Supports the NetBox direct-export YAML format where multiple device types are separated by `---` document markers; each entry is parsed as an individual device type
 - **Modern Autocomplete Dropdown** — Custom-styled dropdown with fuzzy search, highlighted matches, keyboard navigation (Arrow Up/Down, Enter, Escape), and two-column layout showing name + slug. Dropdown is body-appended and repositions on scroll, so it is never clipped by sidebar overflow.
 - **Autocomplete Meta Badges** — Device Type entries show U height and Full Depth badges in the dropdown. Selecting a device type auto-fills the height and depth fields in the form.
 - **Per-Field Autocomplete** — Device Type, Role, and Manufacturer fields each get their own autocomplete backed by uploaded or API-fetched NetBox data
+- **Module Types** — A fourth category (upload or `dcim/module-types` via API) supplies the module type suggestions for the module import profiles
+
+### NetBox Module Import (CSV)
+
+Generates the NetBox module assignments for devices with several module bays (e.g. twelve) from a CSV file. Open it via **NetBox Import → Module import (CSV)…**.
+
+- **Import profiles** — One profile per device variant, stored in `localStorage` (`rackbuilder_import_profiles`, separate from the undo state, kept when you clear the cache unless you confirm deleting them). A default profile ("NetBox Standard (12-Bay)") is bundled as a starting point; duplicate, edit, import and export profiles as JSON.
+- **Rules instead of hard-wired logic** — Mapping rules (priority, conditions on `category`, `port_count`, `socket_color`, `block`, `row`; target module type; `min_bay`/`max_bay`), port splits (explicit module sequence for a total port count), block mappings (count column, prefix pattern, free block sequence like `A-K` or `1-12`) and column mappings (`{prefix}`, `{block}`, `{n}` placeholders).
+- **One device per occupied block** — A CSV row can yield several devices; the count column says how many blocks are occupied. `x` in numeric columns counts as empty, `#NAME?` columns are ignored, LAN port names are taken 1:1 from the file.
+- **No guessing** — Rows without a matching rule, port counts that cannot be split exactly, or exhausted bay ranges are flagged as errors and block the export. Default split strategies: largest modules first, smallest first, fewest modules.
+- **12-bay slot preview** — Per device a colour-coded slot view (red = error), plus a summary and an errors-only filter. Go back, adjust the profile and analyse again without re-uploading.
+- **Output** — `module-import.csv` (`device, module_bay, module_type, status`; one row per bay that receives a module) for *Dcim → Modules → Import*, then `interface-rename.csv` (`id, name`) for *Dcim → Interfaces → Import* in update mode. Download single files or as ZIP.
+- **Interface IDs** — Either fetched read-only from the NetBox API (URL and token from Settings → NetBox; needs CORS) or from an interface export (CSV with `id`, `device`, `name`) that you upload. Interfaces are matched by device and the expected generated name (`interface_name_template`, default `Gi{module}/0/{n}` with the bay position as `{module}`).
+- Rackbuilder never writes to NetBox; both files are imported manually.
 
 ### Live Feedback
 
@@ -137,7 +151,7 @@ The "Save Project" function exports a self-contained file that preserves all dat
 ```json
 {
   "_format": "rackbuilder-project",
-  "_version": "0.7.0",
+  "_version": "0.8.0",
   "rackConfig": {
     "name": "Rack-01",
     "totalUnits": 42,
@@ -178,18 +192,36 @@ js/
   device-form.js    — Add/edit form + bulk creation logic
   drag-drop.js      — HTML5 drag & drop with rAF throttle + snap guides
   export.js         — JSON, YAML, CSV export + project save/load + NetBox import
-  netbox-autocomplete.js — NetBox data upload, parsing, custom autocomplete dropdown
+  netbox-autocomplete.js — NetBox data upload, parsing, custom autocomplete dropdown, API helpers
+  csv.js            — RFC 4180 CSV reader/writer
+  zip.js            — Store-only ZIP writer (CRC-32)
+  import-profiles.js — Module import profiles: model, validation, localStorage persistence
+  import-engine.js  — Module import logic: blocks, port splits, bay allocation, CSV output
+  module-import.js  — Module import wizard UI (profile editor, slot preview, exports)
   i18n.js           — German/English translations
   utils.js          — UUID generation, naming sequences, storage utilities
 sw.js               — Service worker (cache-first offline)
 manifest.json       — PWA manifest
+testing/
+  csv-zip.test.mjs  — Node tests for the CSV and ZIP libraries
+  module-import.test.mjs — Node tests for profiles, engine, i18n completeness
+  module-import-sample.csv — Sample source file for the module import
 minimalist/
   index.html        — Single-file version (all CSS + JS inlined, no dependencies)
 ```
 
+## Tests
+
+The pure logic (CSV, ZIP, profiles, import engine) has dependency-free Node tests:
+
+```
+node testing/csv-zip.test.mjs
+node testing/module-import.test.mjs
+```
+
 ## Tech Stack
 
-Zero-dependency vanilla HTML/CSS/JS with ES modules. No framework, no bundler, no Node.js.
+Zero-dependency vanilla HTML/CSS/JS with ES modules. No framework, no bundler, no Node.js (Node is only used to run the optional tests).
 
 ## License
 

@@ -198,4 +198,44 @@ test('interface export without required columns is reported', () => {
   assert.deepEqual(missing, ['id', 'device', 'name']);
 });
 
+// ── i18n completeness ──
+const i18nSrc = readFileSync(join(dir, '../js/i18n.js'), 'utf8');
+const cut = i18nSrc.indexOf('\n  de: {');
+const keysOf = src => new Set([...src.matchAll(/^ {4}(\w+):/gm)].map(m => m[1]));
+const enKeys = keysOf(i18nSrc.slice(0, cut));
+const deKeys = keysOf(i18nSrc.slice(cut));
+
+test('EN and DE have the same keys', () => {
+  const onlyEn = [...enKeys].filter(k => !deKeys.has(k));
+  const onlyDe = [...deKeys].filter(k => !enKeys.has(k));
+  assert.deepEqual({ onlyEn, onlyDe }, { onlyEn: [], onlyDe: [] });
+});
+
+test('every literal t() key in the wizard and every data-i18n key in the dialog exists', () => {
+  const ui = readFileSync(join(dir, '../js/module-import.js'), 'utf8');
+  const html = readFileSync(join(dir, '../index.html'), 'utf8');
+  const dialog = html.slice(html.indexOf('id="module-import-dialog"'), html.indexOf('<!-- Settings Modal -->'));
+  const used = new Set([
+    ...[...ui.matchAll(/\bt\('([\w]+)'/g)].map(m => m[1]),
+    ...[...dialog.matchAll(/data-i18n="([\w]+)"/g)].map(m => m[1]),
+    ...[...ui.matchAll(/'(mi_\w+)'/g)].map(m => m[1]),
+  ]);
+  const missing = [...used].filter(k => !enKeys.has(k) && !k.endsWith('_'));
+  assert.deepEqual(missing, []);
+});
+
+test('every engine error code and validator code has a translation', () => {
+  const engine = readFileSync(join(dir, '../js/import-engine.js'), 'utf8');
+  const prof = readFileSync(join(dir, '../js/import-profiles.js'), 'utf8');
+  const engineCodes = new Set([
+    ...[...engine.matchAll(/(?:fail|reportFile)\('(\w+)'/g)].map(m => m[1]),
+    ...[...engine.matchAll(/code: '(\w+)'/g)].map(m => m[1]),
+    ...[...engine.matchAll(/fail\(allOutside \? '(\w+)' : '(\w+)'/g)].flatMap(m => [m[1], m[2]]),
+  ]);
+  const valCodes = new Set([...prof.matchAll(/\b(?:err|warn)\('(\w+)'/g)].map(m => m[1]));
+  assert.ok(engineCodes.size >= 8 && valCodes.size >= 20, `${engineCodes.size}/${valCodes.size}`);
+  assert.deepEqual([...engineCodes].filter(c => !enKeys.has('mi_err_' + c)), []);
+  assert.deepEqual([...valCodes].filter(c => !enKeys.has('mi_val_' + c)), []);
+});
+
 console.log(`\n${passed} tests passed`);
