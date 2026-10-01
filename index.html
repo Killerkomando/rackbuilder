@@ -390,6 +390,15 @@
             </div>
             <span class="netbox-status empty" id="netbox-mfr-status" data-i18n="netbox_not_loaded">Not loaded</span>
           </div>
+          <div class="netbox-upload-group">
+            <label data-i18n="netbox_module_types">Module Types</label>
+            <div class="netbox-upload-controls">
+              <button type="button" class="btn btn-secondary btn-sm" id="netbox-upload-modtypes-btn" data-i18n="netbox_btn_upload">Upload</button>
+              <button type="button" class="btn btn-danger btn-sm" id="netbox-clear-modtypes-btn" style="display:none" data-i18n="netbox_btn_clear">Clear</button>
+              <input type="file" id="netbox-modtypes-file" accept=".json,.yaml,.yml,.csv,.tsv" style="display:none">
+            </div>
+            <span class="netbox-status empty" id="netbox-modtypes-status" data-i18n="netbox_not_loaded">Not loaded</span>
+          </div>
         </div>
       </div>
 
@@ -432,6 +441,11 @@
               <label data-i18n="netbox_manufacturers">Manufacturers</label>
               <button type="button" class="btn btn-secondary btn-sm" id="netbox-api-fetch-mfr-btn" data-i18n="netbox_api_fetch">Fetch</button>
               <span class="netbox-status empty" id="netbox-api-mfr-status" data-i18n="netbox_not_loaded">Not loaded</span>
+            </div>
+            <div class="netbox-upload-group">
+              <label data-i18n="netbox_module_types">Module Types</label>
+              <button type="button" class="btn btn-secondary btn-sm" id="netbox-api-fetch-modtypes-btn" data-i18n="netbox_api_fetch">Fetch</button>
+              <span class="netbox-status empty" id="netbox-api-modtypes-status" data-i18n="netbox_not_loaded">Not loaded</span>
             </div>
           </div>
           <button type="button" class="btn btn-primary btn-sm" id="netbox-api-fetch-all-btn" style="width:100%;margin-top:10px" data-i18n="netbox_api_fetch_all">⬇ Fetch All</button>

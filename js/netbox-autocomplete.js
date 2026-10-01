@@ -3,10 +3,12 @@
 // Uses a custom dropdown instead of native <datalist> for modern look & feel.
 
 import { t } from './i18n.js';
+import { parseCsvTable } from './csv.js';
 
 const STORAGE_KEY_TYPES         = 'rackbuilder_netbox_device_types';
 const STORAGE_KEY_ROLES         = 'rackbuilder_netbox_roles';
 const STORAGE_KEY_MANUFACTURERS = 'rackbuilder_netbox_manufacturers';
+const STORAGE_KEY_MODULE_TYPES  = 'rackbuilder_netbox_module_types';
 const STORAGE_KEY_API_URL       = 'rackbuilder_netbox_api_url';
 const STORAGE_KEY_API_TOKEN     = 'rackbuilder_netbox_api_token';
 const STORAGE_KEY_TOKEN_ENC     = 'rackbuilder_netbox_api_token_enc'; // encryption flag
@@ -95,10 +97,12 @@ function saveEntries(key, entries) {
 export function getDeviceTypes() { return loadEntries(STORAGE_KEY_TYPES); }
 export function getRoles() { return loadEntries(STORAGE_KEY_ROLES); }
 export function getManufacturers() { return loadEntries(STORAGE_KEY_MANUFACTURERS); }
+export function getModuleTypes() { return loadEntries(STORAGE_KEY_MODULE_TYPES); }
 
 export function clearDeviceTypes() { localStorage.removeItem(STORAGE_KEY_TYPES); }
 export function clearRoles() { localStorage.removeItem(STORAGE_KEY_ROLES); }
 export function clearManufacturers() { localStorage.removeItem(STORAGE_KEY_MANUFACTURERS); }
+export function clearModuleTypes() { localStorage.removeItem(STORAGE_KEY_MODULE_TYPES); }
 
 // ─── Extract name + slug from parsed items ───────────────────────────────────
 
@@ -138,19 +142,14 @@ function parseJSON(text) {
 }
 
 function parseCSV(text) {
-  const lines = text.trim().split(/\r?\n/);
-  if (lines.length < 2) return null;
-  const sep = lines[0].includes('\t') ? '\t' : lines[0].includes(';') ? ';' : ',';
-  const headers = lines[0].split(sep).map(h => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
-  const items = [];
-  for (let i = 1; i < lines.length; i++) {
-    const vals = lines[i].split(sep).map(v => v.trim().replace(/^["']|["']$/g, ''));
-    if (vals.length < headers.length) continue;
+  const { rows } = parseCsvTable(text);
+  if (rows.length === 0) return null;
+  // Lower-case header keys, like the previous implementation
+  return rows.map(r => {
     const obj = {};
-    headers.forEach((h, idx) => { obj[h] = vals[idx]; });
-    items.push(obj);
-  }
-  return items.length > 0 ? items : null;
+    for (const [k, v] of Object.entries(r)) obj[k.toLowerCase()] = v;
+    return obj;
+  });
 }
 
 function parseYAML(text) {
@@ -480,9 +479,16 @@ export function attachAutocomplete(inputId, entries) {
 
 // ─── NetBox Live API ─────────────────────────────────────────────────────────
 
-async function apiFetchPages(baseUrl, token, endpoint) {
+/**
+ * Fetch all pages of a NetBox list endpoint.
+ * @param {string} baseUrl
+ * @param {string} token
+ * @param {string} endpoint e.g. "dcim/interfaces"
+ * @param {string} [query] extra query string without leading "&", e.g. "device=a&device=b"
+ */
+export async function apiFetchPages(baseUrl, token, endpoint, query = '') {
   const results = [];
-  let url = `${baseUrl.replace(/\/+$/, '')}/api/${endpoint}/?limit=200&format=json`;
+  let url = `${baseUrl.replace(/\/+$/, '')}/api/${endpoint}/?limit=200&format=json${query ? '&' + query : ''}`;
   while (url) {
     const res = await fetch(url, {
       headers: { 'Authorization': `Token ${token}`, 'Accept': 'application/json' },
@@ -493,6 +499,18 @@ async function apiFetchPages(baseUrl, token, endpoint) {
     url = data.next || null;
   }
   return results;
+}
+
+/**
+ * Current NetBox API credentials (URL from settings, token from the field or the
+ * encrypted store). Returns empty strings when not configured.
+ * @returns {Promise<{baseUrl: string, token: string}>}
+ */
+export async function getApiCredentials() {
+  const baseUrl = (localStorage.getItem(STORAGE_KEY_API_URL) || '').trim();
+  const fieldToken = document.getElementById('netbox-api-token-input')?.value.trim() || '';
+  const token = fieldToken || await loadApiToken();
+  return { baseUrl, token };
 }
 
 async function apiFetchAndStore(endpoint, storageKey, inputId, btnId) {
@@ -510,7 +528,7 @@ async function apiFetchAndStore(endpoint, storageKey, inputId, btnId) {
     const entries = extractNameSlug(items);
     if (!entries || entries.length === 0) { alert(t('netbox_api_empty')); return false; }
     saveEntries(storageKey, entries);
-    attachAutocomplete(inputId, entries);
+    if (inputId) attachAutocomplete(inputId, entries);
     updateUploadStatus();
     return true;
   } catch (err) {
@@ -549,7 +567,7 @@ function wireClear(clearBtnId, storageKey, inputId, statusId) {
   if (!btn) return;
   btn.addEventListener('click', () => {
     localStorage.removeItem(storageKey);
-    attachAutocomplete(inputId, []);
+    if (inputId) attachAutocomplete(inputId, []);
     updateUploadStatus();
   });
 }
@@ -568,9 +586,14 @@ export async function initNetboxAutocomplete() {
     updateUploadStatus();
   });
 
+  wireUpload('netbox-upload-modtypes-btn', 'netbox-modtypes-file', STORAGE_KEY_MODULE_TYPES, () => {
+    updateUploadStatus();
+  });
+
   wireClear('netbox-clear-types-btn', STORAGE_KEY_TYPES, 'dev-type');
   wireClear('netbox-clear-roles-btn', STORAGE_KEY_ROLES, 'dev-role');
   wireClear('netbox-clear-mfr-btn', STORAGE_KEY_MANUFACTURERS, 'dev-manufacturer');
+  wireClear('netbox-clear-modtypes-btn', STORAGE_KEY_MODULE_TYPES, null);
 
   // Populate on load
   refreshAutocompletes();
@@ -645,6 +668,9 @@ export async function initNetboxAutocomplete() {
   document.getElementById('netbox-api-fetch-mfr-btn')?.addEventListener('click', () =>
     apiFetchAndStore('dcim/manufacturers', STORAGE_KEY_MANUFACTURERS, 'dev-manufacturer', 'netbox-api-fetch-mfr-btn'));
 
+  document.getElementById('netbox-api-fetch-modtypes-btn')?.addEventListener('click', () =>
+    apiFetchAndStore('dcim/module-types', STORAGE_KEY_MODULE_TYPES, null, 'netbox-api-fetch-modtypes-btn'));
+
   // Fetch All
   document.getElementById('netbox-api-fetch-all-btn')?.addEventListener('click', async () => {
     const btn = document.getElementById('netbox-api-fetch-all-btn');
@@ -652,6 +678,7 @@ export async function initNetboxAutocomplete() {
     await apiFetchAndStore('dcim/device-types',  STORAGE_KEY_TYPES,         'dev-type',        'netbox-api-fetch-types-btn');
     await apiFetchAndStore('dcim/device-roles',  STORAGE_KEY_ROLES,         'dev-role',        'netbox-api-fetch-roles-btn');
     await apiFetchAndStore('dcim/manufacturers', STORAGE_KEY_MANUFACTURERS, 'dev-manufacturer', 'netbox-api-fetch-mfr-btn');
+    await apiFetchAndStore('dcim/module-types', STORAGE_KEY_MODULE_TYPES, null, 'netbox-api-fetch-modtypes-btn');
     if (btn) { btn.disabled = false; btn.textContent = t('netbox_api_fetch_all'); }
   });
 
@@ -677,6 +704,11 @@ export function updateUploadStatus() {
       entries: getManufacturers(),
       statusIds: ['netbox-mfr-status', 'netbox-api-mfr-status'],
       clearId: 'netbox-clear-mfr-btn',
+    },
+    {
+      entries: getModuleTypes(),
+      statusIds: ['netbox-modtypes-status', 'netbox-api-modtypes-status'],
+      clearId: 'netbox-clear-modtypes-btn',
     },
   ];
   for (const { entries, statusIds, clearId } of data) {
