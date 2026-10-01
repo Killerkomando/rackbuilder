@@ -2,7 +2,7 @@
 
 import { getState, subscribe, dispatch, undo, redo, canUndo, canRedo, getReservedUnits, setReservedUnits, clearReservedUnits, getActiveRackConfig, getActiveDevices } from './state.js';
 import { renderRack, setSearchFilter } from './rack-view.js';
-import { getLocalStorageUsage, parsePositionList, generateId } from './utils.js';
+import { getLocalStorageUsage, parsePositionList, generateId, closeDialogAnimated } from './utils.js';
 import { getRackUtilization, toNetBoxJSON } from './rack-model.js';
 import { initDeviceForm, populateFormForEdit } from './device-form.js';
 import { initDragDrop } from './drag-drop.js';
@@ -478,24 +478,6 @@ function initSettings() {
     }
     closeDialogAnimated(modal);
   });
-}
-
-// ─── Dialog animation helper ─────────────────────────────────────────────────
-
-function closeDialogAnimated(dialog) {
-  if (!dialog.open) return;
-  dialog.classList.add('dialog-closing');
-  const done = () => {
-    dialog.classList.remove('dialog-closing');
-    if (dialog.open) dialog.close();
-  };
-  dialog.addEventListener('animationend', function handler() {
-    dialog.removeEventListener('animationend', handler);
-    clearTimeout(fallback);
-    done();
-  });
-  // Fallback in case animationend never fires
-  const fallback = setTimeout(done, 300);
 }
 
 // ─── Keyboard shortcuts ──────────────────────────────────────────────────────

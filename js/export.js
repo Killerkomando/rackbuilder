@@ -3,6 +3,7 @@
 import { getState, dispatch, getActiveRackConfig, getActiveDevices } from './state.js';
 import { toNetBoxJSON } from './rack-model.js';
 import { t } from './i18n.js';
+import { triggerDownload } from './utils.js';
 
 export function initExport() {
   document.getElementById('export-json-btn').addEventListener('click', downloadJSON);
@@ -511,18 +512,4 @@ function downloadPNG() {
     a.click();
     URL.revokeObjectURL(a.href);
   });
-}
-
-// ─── Helpers ────────────────────────────────────────────────────────────────
-
-function triggerDownload(content, filename, mimeType) {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
 }
