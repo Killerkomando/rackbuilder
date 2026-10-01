@@ -1,0 +1,7 @@
+Raum,Anzahl Bodentanks,#NAME?,Bodentank A Steckdosen weiß,Bodentank A Steckdosen orange,Bodentank A Buchse 1,Bodentank A Buchse 2,Bodentank A Buchse 3,Bodentank A Buchse 4,Bodentank A Buchse 5,Bodentank A Buchse 6,Bodentank B Steckdosen weiß,Bodentank B Steckdosen orange,Bodentank B Buchse 1,Bodentank B Buchse 2,Bodentank B Buchse 3,Bodentank B Buchse 4,Bodentank B Buchse 5,Bodentank B Buchse 6
+"Raum 1, EG",2,#REF,5,2,P1,P2,P3,P4,P5,,x,3,Q1,Q2,,,,
+Raum 2,0,,,,,,,,,,,,,,,,,
+Raum 3,1,,1,x,,,,,,,,,,,,,,
+Raum 4,12,,,,,,,,,,,,,,,,,
+Raum 5,x,,,,,,,,,,,,,,,,,
+Raum 6,1,,12,11,,,,,,,,,,,,,,
