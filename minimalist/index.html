@@ -1360,6 +1360,217 @@ kbd { display: inline-block; padding: 2px 6px; font-family: 'SF Mono','Fira Code
   body { background: #fff; color: #000; }
 }
 
+/* ─── Module Import (v0.8) ──────────────────────────────────────────────── */
+
+dialog.dialog-wide {
+  max-width: 960px;
+  width: min(960px, 94vw);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.mi-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.mi-header h2 { margin-bottom: 0; }
+
+.mi-steps {
+  display: flex;
+  gap: 8px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 18px;
+}
+
+.mi-steps li {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius);
+  background: var(--bg-primary);
+  color: var(--color-text-muted);
+  font-size: 13px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.mi-steps li span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg-tertiary);
+  font-size: 12px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.mi-steps li em { font-style: normal; }
+.mi-steps li.active { background: var(--color-accent); color: #fff; }
+.mi-steps li.active span { background: rgba(255, 255, 255, 0.25); }
+.mi-steps li.done { color: var(--color-text); }
+.mi-steps li.done span { background: var(--color-success); color: #fff; }
+
+.mi-step { display: none; }
+.mi-step.active { display: block; animation: tab-panel-in 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) both; }
+
+.mi-toolbar { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 14px; }
+.mi-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
+.mi-file-row { display: flex; align-items: center; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+.mi-file-info { font-size: 13px; color: var(--color-text-muted); }
+.mi-summary { font-size: 14px; margin-bottom: 10px; }
+.mi-summary.mi-has-errors { color: var(--color-warning); }
+
+/* Profile editor */
+.mi-editor {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 14px;
+  background: var(--bg-primary);
+}
+
+.mi-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
+.mi-tabs button {
+  padding: 6px 12px;
+  font-size: 13px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--bg-secondary);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.mi-tabs button:hover { color: var(--color-text); }
+.mi-tabs button.active { background: var(--color-accent); color: #fff; }
+
+.mi-editor-body { max-height: 46vh; overflow-y: auto; padding-right: 4px; }
+.mi-editor .form-group input:not([type="checkbox"]),
+.mi-editor .form-group select,
+.mi-cond input, .mi-cond select, .mi-item--row input, .mi-item--row select, .mi-num {
+  background: var(--bg-secondary);
+}
+
+.mi-item {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 10px;
+  margin-bottom: 10px;
+  background: var(--bg-secondary);
+}
+.mi-item--row { display: flex; gap: 8px; align-items: center; padding: 8px; }
+.mi-item--row input { flex: 1; }
+.mi-item-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.mi-item-head label { margin: 0; }
+.mi-num { width: 80px; }
+.mi-narrow { flex: 0 0 100px; }
+.mi-conds { margin-bottom: 8px; }
+.mi-conds > label { display: block; font-size: 12px; color: var(--color-text-muted); margin-bottom: 4px; }
+.mi-cond { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+.mi-cond input { flex: 1; min-width: 0; }
+
+.mi-editor input[type="text"], .mi-editor input[type="number"], .mi-editor select {
+  padding: 6px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  font-size: 13px;
+  font-family: inherit;
+  width: 100%;
+}
+.mi-cond select, .mi-item--row select { width: auto; }
+.mi-item-head .mi-num { width: 80px; }
+
+.mi-x {
+  margin-left: auto;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.mi-x:hover { background: rgba(239, 68, 68, 0.15); color: var(--color-warning); }
+
+/* Preview */
+.mi-pv-controls { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.mi-legend { display: flex; flex-wrap: wrap; gap: 6px; }
+.mi-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-muted); }
+.mi-chip i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+.mi-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+.mi-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 10px;
+  background: var(--bg-primary);
+}
+.mi-card--error { border-color: var(--color-warning); box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.35); }
+.mi-card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 8px; font-size: 13px; }
+.mi-card-head small { color: var(--color-text-muted); white-space: nowrap; }
+.mi-card-issues { margin: 0 0 8px; padding-left: 18px; font-size: 12px; color: #fca5a5; }
+
+/* 12-bay slot view (same look as the rack cells / device blocks) */
+.slot-preview { background: var(--bg-rack); border: 2px solid #444; border-radius: 4px; }
+.slot-cell {
+  display: flex;
+  align-items: stretch;
+  height: 24px;
+  border-bottom: 1px solid #222;
+}
+.slot-cell:last-child { border-bottom: none; }
+.slot-no {
+  width: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+.slot-module {
+  flex: 1;
+  margin: 2px 3px 2px 0;
+  padding: 0 8px;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background-image: linear-gradient(180deg, rgba(255,255,255,0.12) 0%, transparent 40%, rgba(0,0,0,0.15) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.15), inset 0 -1px 0 rgba(0,0,0,0.2);
+}
+.slot-module small { font-weight: 400; opacity: 0.8; margin-left: 4px; }
+.slot-empty { background: transparent; box-shadow: none; }
+.slot-cell--error { background: rgba(239, 68, 68, 0.25); outline: 1px solid var(--color-warning); }
+[data-theme="light"] .slot-cell { border-bottom-color: #d1d5db; }
+[data-theme="light"] .slot-preview { border-color: #94a3b8; }
+
+/* Light theme: the shared message colours are tuned for dark backgrounds */
+[data-theme="light"] #module-import-dialog .message-error,
+[data-theme="light"] .mi-card-issues { color: #b91c1c; }
+[data-theme="light"] #module-import-dialog .message-info { color: #1d4ed8; }
+[data-theme="light"] #module-import-dialog .message-success { color: #15803d; }
+
+@media (max-width: 700px) {
+  .mi-steps li em { display: none; }
+  .mi-narrow { flex-basis: 70px; }
+}
+
   </style>
 </head>
 <body>
@@ -1567,6 +1778,7 @@ kbd { display: inline-block; padding: 2px 6px; font-family: 'SF Mono','Fira Code
       <div class="sidebar-accordion-body">
         <button class="btn btn-secondary btn-block" id="import-btn" data-i18n="btn_import">Import JSON</button>
         <input type="file" id="import-file" accept=".json" style="display:none">
+        <button class="btn btn-secondary btn-block" id="module-import-btn" data-i18n="mi_open_btn">Module import (CSV)…</button>
         <button class="btn btn-secondary btn-block" id="import-csv-btn" data-i18n="btn_import_csv" style="margin-top:6px">Import CSV</button>
         <input type="file" id="import-csv-file" accept=".csv" style="display:none">
         <p class="form-hint" data-i18n="import_csv_hint" style="margin-top:6px"></p>
@@ -1626,6 +1838,114 @@ kbd { display: inline-block; padding: 2px 6px; font-family: 'SF Mono','Fira Code
     <button class="btn btn-secondary" id="import-preview-cancel" data-i18n="btn_dialog_cancel">Cancel</button>
     <button class="btn btn-primary" id="import-preview-confirm" data-i18n="import_preview_ok">Import</button>
   </div>
+</dialog>
+
+<!-- Module Import Dialog (NetBox module types per bay from CSV) -->
+<dialog id="module-import-dialog" class="dialog-wide">
+  <div class="mi-header">
+    <h2 data-i18n="mi_title">NetBox Module Import</h2>
+    <button type="button" class="btn btn-secondary btn-sm" id="mi-close-btn" data-i18n="mi_btn_close">Close</button>
+  </div>
+  <ol class="mi-steps" id="mi-steps">
+    <li data-step="1" class="active"><span>1</span><em data-i18n="mi_step_profile">Profile &amp; file</em></li>
+    <li data-step="2"><span>2</span><em data-i18n="mi_step_preview">Preview</em></li>
+    <li data-step="3"><span>3</span><em data-i18n="mi_step_export">Export</em></li>
+    <li data-step="4"><span>4</span><em data-i18n="mi_step_interfaces">Interface IDs</em></li>
+  </ol>
+
+  <!-- Step 1: profile + file -->
+  <section class="mi-step active" data-step="1">
+    <div class="form-group">
+      <label for="mi-profile" data-i18n="mi_profile">Import profile</label>
+      <select id="mi-profile"></select>
+    </div>
+    <div class="mi-toolbar">
+      <button type="button" class="btn btn-secondary btn-sm" id="mi-profile-edit" data-i18n="mi_btn_edit">Edit</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="mi-profile-new" data-i18n="mi_btn_new">New</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="mi-profile-dup" data-i18n="mi_btn_duplicate">Duplicate</button>
+      <button type="button" class="btn btn-danger btn-sm" id="mi-profile-del" data-i18n="mi_btn_delete">Delete</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="mi-profile-import" data-i18n="mi_btn_import_profile">Import JSON</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="mi-profile-export" data-i18n="mi_btn_export_profile">Export JSON</button>
+      <input type="file" id="mi-profile-file" accept=".json" style="display:none">
+    </div>
+
+    <div class="mi-editor" id="mi-editor" hidden>
+      <div class="mi-tabs">
+        <button type="button" data-mi-tab="general" data-i18n="mi_ed_tab_general">General</button>
+        <button type="button" data-mi-tab="rules" data-i18n="mi_ed_tab_rules">Mapping rules</button>
+        <button type="button" data-mi-tab="splits" data-i18n="mi_ed_tab_splits">Port splits</button>
+        <button type="button" data-mi-tab="blocks" data-i18n="mi_ed_tab_blocks">Blocks</button>
+        <button type="button" data-mi-tab="columns" data-i18n="mi_ed_tab_columns">Columns</button>
+      </div>
+      <div id="mi-editor-body" class="mi-editor-body"></div>
+      <div id="mi-editor-msg"></div>
+      <div class="mi-actions">
+        <button type="button" class="btn btn-secondary btn-sm" id="mi-editor-cancel" data-i18n="mi_ed_cancel">Close editor</button>
+        <button type="button" class="btn btn-primary btn-sm" id="mi-editor-save" data-i18n="mi_ed_save">Save profile</button>
+      </div>
+    </div>
+
+    <div class="mi-file-row">
+      <button type="button" class="btn btn-secondary" id="mi-csv-btn" data-i18n="mi_choose_file">Choose CSV file</button>
+      <input type="file" id="mi-csv-file" accept=".csv,.tsv,.txt" style="display:none">
+      <span id="mi-file-info" class="mi-file-info"></span>
+    </div>
+    <div class="mi-actions">
+      <button type="button" class="btn btn-primary" id="mi-analyse-btn" disabled data-i18n="mi_analyse">Analyse</button>
+    </div>
+  </section>
+
+  <!-- Step 2: preview -->
+  <section class="mi-step" data-step="2">
+    <p id="mi-pv-summary" class="mi-summary"></p>
+    <div id="mi-pv-file-issues"></div>
+    <div id="mi-pv-row-issues"></div>
+    <div class="mi-pv-controls">
+      <label class="form-checkbox-label"><input type="checkbox" id="mi-pv-errors-only"><span data-i18n="mi_pv_errors_only">Errors only</span></label>
+      <div id="mi-pv-legend" class="mi-legend"></div>
+    </div>
+    <div id="mi-pv-cards" class="mi-cards"></div>
+    <div class="mi-actions">
+      <button type="button" class="btn btn-secondary" id="mi-pv-back" data-i18n="mi_pv_back">Back to rules</button>
+      <button type="button" class="btn btn-primary" id="mi-pv-continue" data-i18n="mi_pv_continue">Continue</button>
+    </div>
+  </section>
+
+  <!-- Step 3: export -->
+  <section class="mi-step" data-step="3">
+    <p id="mi-ex-summary" class="mi-summary"></p>
+    <p class="settings-section-desc" data-i18n="mi_ex_hint">Import module-import.csv in NetBox (Dcim → Modules → Import). Then continue to rename the LAN interfaces.</p>
+    <div class="mi-toolbar">
+      <button type="button" class="btn btn-success" id="mi-ex-csv" data-i18n="mi_ex_download_csv">Download module-import.csv</button>
+      <button type="button" class="btn btn-secondary" id="mi-ex-zip" data-i18n="mi_ex_download_zip">Download as ZIP</button>
+    </div>
+    <div class="mi-actions">
+      <button type="button" class="btn btn-secondary" id="mi-ex-back" data-i18n="mi_ex_back">Back</button>
+      <button type="button" class="btn btn-primary" id="mi-ex-next" data-i18n="mi_ex_next">Next: interface IDs</button>
+    </div>
+  </section>
+
+  <!-- Step 4: interface IDs -->
+  <section class="mi-step" data-step="4">
+    <p class="settings-section-desc" data-i18n="mi_if_intro">After NetBox created the modules, the LAN interfaces need their real port names. Get the interface IDs from NetBox:</p>
+    <p id="mi-if-none" class="message message-info" hidden data-i18n="mi_if_no_lan">None of the devices has LAN modules, so there is nothing to rename.</p>
+    <div id="mi-if-actions">
+      <div class="mi-toolbar">
+        <button type="button" class="btn btn-secondary" id="mi-if-api-btn" data-i18n="mi_if_api_btn">Fetch from NetBox API</button>
+        <button type="button" class="btn btn-secondary" id="mi-if-file-btn" data-i18n="mi_if_file_btn">Upload interface export (CSV)</button>
+        <input type="file" id="mi-if-file" accept=".csv,.tsv,.txt" style="display:none">
+      </div>
+      <p class="settings-section-desc" data-i18n="mi_if_api_hint">The API option uses the URL and token from Settings → NetBox and needs CORS to be allowed. The file upload always works: export the interfaces (with the ID column) from NetBox.</p>
+    </div>
+    <div id="mi-if-result"></div>
+    <div class="mi-toolbar">
+      <button type="button" class="btn btn-success" id="mi-if-download" disabled data-i18n="mi_if_download">Download interface-rename.csv</button>
+      <button type="button" class="btn btn-secondary" id="mi-if-zip" disabled data-i18n="mi_if_zip">Download both as ZIP</button>
+    </div>
+    <div class="mi-actions">
+      <button type="button" class="btn btn-secondary" id="mi-if-back" data-i18n="mi_ex_back">Back</button>
+    </div>
+  </section>
 </dialog>
 
 <!-- Settings Modal -->
@@ -1743,6 +2063,15 @@ kbd { display: inline-block; padding: 2px 6px; font-family: 'SF Mono','Fira Code
             </div>
             <span class="netbox-status empty" id="netbox-mfr-status" data-i18n="netbox_not_loaded">Not loaded</span>
           </div>
+          <div class="netbox-upload-group">
+            <label data-i18n="netbox_module_types">Module Types</label>
+            <div class="netbox-upload-controls">
+              <button type="button" class="btn btn-secondary btn-sm" id="netbox-upload-modtypes-btn" data-i18n="netbox_btn_upload">Upload</button>
+              <button type="button" class="btn btn-danger btn-sm" id="netbox-clear-modtypes-btn" style="display:none" data-i18n="netbox_btn_clear">Clear</button>
+              <input type="file" id="netbox-modtypes-file" accept=".json,.yaml,.yml,.csv,.tsv" style="display:none">
+            </div>
+            <span class="netbox-status empty" id="netbox-modtypes-status" data-i18n="netbox_not_loaded">Not loaded</span>
+          </div>
         </div>
       </div>
 
@@ -1781,6 +2110,11 @@ kbd { display: inline-block; padding: 2px 6px; font-family: 'SF Mono','Fira Code
               <label data-i18n="netbox_manufacturers">Manufacturers</label>
               <button type="button" class="btn btn-secondary btn-sm" id="netbox-api-fetch-mfr-btn" data-i18n="netbox_api_fetch">Fetch</button>
               <span class="netbox-status empty" id="netbox-api-mfr-status" data-i18n="netbox_not_loaded">Not loaded</span>
+            </div>
+            <div class="netbox-upload-group">
+              <label data-i18n="netbox_module_types">Module Types</label>
+              <button type="button" class="btn btn-secondary btn-sm" id="netbox-api-fetch-modtypes-btn" data-i18n="netbox_api_fetch">Fetch</button>
+              <span class="netbox-status empty" id="netbox-api-modtypes-status" data-i18n="netbox_not_loaded">Not loaded</span>
             </div>
           </div>
           <button type="button" class="btn btn-primary btn-sm" id="netbox-api-fetch-all-btn" style="width:100%;margin-top:10px" data-i18n="netbox_api_fetch_all">⬇ Fetch All</button>
@@ -2036,6 +2370,129 @@ const translations = {
     move_to_rack: 'Move to rack',
     move_rack_conflict: 'Cannot move: position conflict in "{rack}".',
     import_csv_hint: 'Accepts CSV with headers: name, device_type, role, position, height, face, status, serial, asset_tag, full_depth, manufacturer, comments.',
+    netbox_module_types: 'Module Types',
+    confirm_clear_profiles: 'Also delete your saved import profiles? (Cancel keeps them.)',
+    mi_open_btn: 'Module import (CSV)…',
+    mi_title: 'NetBox Module Import',
+    mi_btn_close: 'Close',
+    mi_step_profile: 'Profile & file',
+    mi_step_preview: 'Preview',
+    mi_step_export: 'Export',
+    mi_step_interfaces: 'Interface IDs',
+    mi_profile: 'Import profile',
+    mi_default_badge: 'default',
+    mi_btn_edit: 'Edit',
+    mi_btn_new: 'New',
+    mi_btn_duplicate: 'Duplicate',
+    mi_btn_delete: 'Delete',
+    mi_btn_import_profile: 'Import JSON',
+    mi_btn_export_profile: 'Export JSON',
+    mi_new_profile_name: 'New profile',
+    mi_cannot_delete_default: 'The default profile cannot be deleted. Duplicate it to create your own variant.',
+    mi_confirm_delete_profile: 'Delete profile "{name}"?',
+    mi_profile_import_invalid: 'Invalid profile file.',
+    mi_profile_invalid: 'The selected profile has errors. Fix them in the editor first:',
+    mi_choose_file: 'Choose CSV file',
+    mi_file_info: '{name}: {rows} rows, {cols} columns',
+    mi_file_ignored: '{count} "#NAME?" column(s) ignored',
+    mi_analyse: 'Analyse',
+    mi_no_file: 'Please choose a CSV file first.',
+    mi_ed_tab_general: 'General',
+    mi_ed_tab_rules: 'Mapping rules',
+    mi_ed_tab_splits: 'Port splits',
+    mi_ed_tab_blocks: 'Blocks',
+    mi_ed_tab_columns: 'Columns',
+    mi_ed_name: 'Profile name',
+    mi_ed_device_type: 'NetBox device type',
+    mi_ed_slots: 'Module bays',
+    mi_ed_strategy: 'Default split strategy',
+    mi_strategy_largest_first: 'Largest modules first',
+    mi_strategy_smallest_first: 'Smallest modules first',
+    mi_strategy_fewest_modules: 'Fewest modules',
+    mi_ed_bay_pattern: 'Module bay name ({n} = bay number)',
+    mi_ed_iface_template: 'Interface name template',
+    mi_ed_iface_hint: 'The interface template describes the names NetBox generates from the module type ({module} = bay position, {n} = port number). It is used to find the interfaces to rename.',
+    mi_ed_priority: 'Priority',
+    mi_ed_conditions: 'Conditions (all must match)',
+    mi_ed_module_type: 'NetBox module type',
+    mi_ed_min_bay: 'Min bay',
+    mi_ed_max_bay: 'Max bay',
+    mi_ed_add_rule: 'Add rule',
+    mi_ed_add_condition: 'Condition',
+    mi_ed_remove: 'Remove',
+    mi_ed_no_modtypes: 'No module types loaded yet. Upload or fetch them in Settings → NetBox to get suggestions; free text works too.',
+    mi_ed_splits_hint: 'Explicit split of a total port count into modules. Without a matching entry the default strategy is used.',
+    mi_ed_add_split: 'Add port split',
+    mi_ed_category: 'Category',
+    mi_ed_color: 'Colour',
+    mi_ed_total: 'Total ports',
+    mi_ed_sequence: 'Module types in order (comma separated)',
+    mi_ed_count_col: 'Count column (occupied blocks)',
+    mi_ed_row_col: 'Row name column (optional)',
+    mi_ed_prefix: 'Block prefix pattern',
+    mi_ed_block_seq: 'Block sequence',
+    mi_ed_block_seq_hint: 'Comma separated or ranges: A-K, 1-12, A, B, Nord. The first N entries are used, N = value of the count column.',
+    mi_ed_add_block: 'Add block mapping',
+    mi_ed_add_column: 'Add column',
+    mi_ed_pattern_hint: 'Column header relative to the block prefix. Placeholders: {prefix}, {block}, {n} (port number). Fields: sockets_white / sockets_orange = socket counts, lan_port_name = one column per LAN port.',
+    mi_ed_save: 'Save profile',
+    mi_ed_cancel: 'Close editor',
+    mi_ed_saved: 'Profile saved.',
+    mi_pv_summary: '{devices} devices · {bays} modules · {errors} errors · {warnings} warnings',
+    mi_pv_errors_only: 'Errors only',
+    mi_pv_back: 'Back to rules',
+    mi_pv_continue: 'Continue',
+    mi_pv_file_errors: 'Problems with the file or profile',
+    mi_pv_row: 'Row {row}',
+    mi_pv_bay: 'Bay {bay}',
+    mi_pv_none: 'No devices found. Check the block mapping and the count column.',
+    mi_pv_no_errors: 'No devices with errors.',
+    mi_ex_summary: '{devices} devices, {rows} module rows ready for export.',
+    mi_ex_hint: 'Import module-import.csv in NetBox (Dcim → Modules → Import). Then continue to rename the LAN interfaces.',
+    mi_ex_download_csv: 'Download module-import.csv',
+    mi_ex_download_zip: 'Download as ZIP',
+    mi_ex_back: 'Back',
+    mi_ex_next: 'Next: interface IDs',
+    mi_if_intro: 'After NetBox created the modules, the LAN interfaces need their real port names. Get the interface IDs from NetBox:',
+    mi_if_no_lan: 'None of the devices has LAN modules, so there is nothing to rename.',
+    mi_if_api_btn: 'Fetch from NetBox API',
+    mi_if_file_btn: 'Upload interface export (CSV)',
+    mi_if_api_hint: 'The API option uses the URL and token from Settings → NetBox and needs CORS to be allowed. The file upload always works: export the interfaces (with the ID column) from NetBox.',
+    mi_if_result: '{matched} renames · {unchanged} already correct · {unmatched} not found',
+    mi_if_unmatched_title: 'Not found in NetBox (device · expected name):',
+    mi_if_missing_cols: 'Missing columns in the file: {cols}',
+    mi_if_download: 'Download interface-rename.csv',
+    mi_if_zip: 'Download both as ZIP',
+    mi_err_no_rule: 'No rule matches {category} ({size} ports {color}).',
+    mi_err_bay_out_of_range: 'Rule matches, but its bay range is outside the device ({category}, {size} ports).',
+    mi_err_no_free_bay: 'No free bay left in the allowed range ({category}, {size} ports {color}).',
+    mi_err_split_unresolvable: '{total} {category} ports cannot be split into the available modules.',
+    mi_err_block_count_invalid: 'Invalid block count "{value}" (max {max}).',
+    mi_err_column_missing: 'Column not found: "{column}".',
+    mi_err_column_value_invalid: 'Invalid value "{value}" in "{column}".',
+    mi_err_device_no_modules: 'No modules needed for this device.',
+    mi_val_name_required: 'Profile name is required.',
+    mi_val_slot_count_invalid: 'Module bays must be a whole number from 1 to 99.',
+    mi_val_strategy_invalid: 'Unknown split strategy.',
+    mi_val_rule_module_required: 'Rule {rule}: module type is required.',
+    mi_val_rule_module_unknown: 'Rule {rule}: "{name}" is not in the loaded module types.',
+    mi_val_rule_bay_range: 'Rule {rule}: invalid bay range.',
+    mi_val_rule_bay_beyond_slots: 'Rule {rule}: max bay is larger than the number of bays.',
+    mi_val_rule_condition_invalid: 'Rule {rule}: invalid condition.',
+    mi_val_rule_priority_duplicate: 'Rule {rule}: priority {priority} is used more than once.',
+    mi_val_split_category_invalid: 'Port split {split}: invalid category.',
+    mi_val_split_total_invalid: 'Port split {split}: invalid total.',
+    mi_val_split_sequence_empty: 'Port split {split}: no module types.',
+    mi_val_split_size_unknown: 'Port split {split}: port count of a module type unknown (needs a rule with "port_count eq N").',
+    mi_val_split_sum_mismatch: 'Port split {split}: modules do not add up to the total.',
+    mi_val_block_count_column_required: 'Block {block}: count column is required.',
+    mi_val_block_prefix_required: 'Block {block}: prefix pattern is required.',
+    mi_val_block_sequence_empty: 'Block {block}: block sequence is empty.',
+    mi_val_block_sequence_duplicate: 'Block {block}: block sequence contains duplicates.',
+    mi_val_column_field_invalid: 'Column mapping: unknown field.',
+    mi_val_column_pattern_required: 'Column mapping "{field}": pattern is required.',
+    mi_val_no_blocks: 'No block mapping defined, no devices will be found.',
+    mi_val_no_columns: 'No column mapping defined.',
   },
   de: {
     app_title: 'Rack Builder',
@@ -2191,6 +2648,129 @@ const translations = {
     move_to_rack: 'In Rack verschieben',
     move_rack_conflict: 'Verschieben nicht möglich: Positionskonflikt in „{rack}".',
     import_csv_hint: 'Akzeptiert CSV mit Spalten: name, device_type, role, position, height, face, status, serial, asset_tag, full_depth, manufacturer, comments.',
+    netbox_module_types: 'Modultypen',
+    confirm_clear_profiles: 'Auch deine gespeicherten Import-Profile löschen? (Abbrechen behält sie.)',
+    mi_open_btn: 'Modul-Import (CSV)…',
+    mi_title: 'NetBox-Modul-Import',
+    mi_btn_close: 'Schließen',
+    mi_step_profile: 'Profil & Datei',
+    mi_step_preview: 'Vorschau',
+    mi_step_export: 'Export',
+    mi_step_interfaces: 'Interface-IDs',
+    mi_profile: 'Import-Profil',
+    mi_default_badge: 'Standard',
+    mi_btn_edit: 'Bearbeiten',
+    mi_btn_new: 'Neu',
+    mi_btn_duplicate: 'Duplizieren',
+    mi_btn_delete: 'Löschen',
+    mi_btn_import_profile: 'JSON importieren',
+    mi_btn_export_profile: 'JSON exportieren',
+    mi_new_profile_name: 'Neues Profil',
+    mi_cannot_delete_default: 'Das Standardprofil kann nicht gelöscht werden. Dupliziere es, um eine eigene Variante anzulegen.',
+    mi_confirm_delete_profile: 'Profil „{name}" löschen?',
+    mi_profile_import_invalid: 'Ungültige Profildatei.',
+    mi_profile_invalid: 'Das gewählte Profil enthält Fehler. Bitte zuerst im Editor beheben:',
+    mi_choose_file: 'CSV-Datei wählen',
+    mi_file_info: '{name}: {rows} Zeilen, {cols} Spalten',
+    mi_file_ignored: '{count} Spalte(n) „#NAME?" ignoriert',
+    mi_analyse: 'Analysieren',
+    mi_no_file: 'Bitte zuerst eine CSV-Datei wählen.',
+    mi_ed_tab_general: 'Allgemein',
+    mi_ed_tab_rules: 'Mapping-Regeln',
+    mi_ed_tab_splits: 'Port-Aufteilung',
+    mi_ed_tab_blocks: 'Blöcke',
+    mi_ed_tab_columns: 'Spalten',
+    mi_ed_name: 'Profilname',
+    mi_ed_device_type: 'NetBox-Gerätetyp',
+    mi_ed_slots: 'Modul-Bays',
+    mi_ed_strategy: 'Standard-Aufteilung',
+    mi_strategy_largest_first: 'Größte Module zuerst',
+    mi_strategy_smallest_first: 'Kleinste Module zuerst',
+    mi_strategy_fewest_modules: 'Möglichst wenige Module',
+    mi_ed_bay_pattern: 'Modul-Bay-Name ({n} = Bay-Nummer)',
+    mi_ed_iface_template: 'Interface-Namensvorlage',
+    mi_ed_iface_hint: 'Die Vorlage beschreibt die Namen, die NetBox aus dem Modultyp erzeugt ({module} = Bay-Position, {n} = Portnummer). Damit werden die umzubenennenden Interfaces gefunden.',
+    mi_ed_priority: 'Priorität',
+    mi_ed_conditions: 'Bedingungen (alle müssen zutreffen)',
+    mi_ed_module_type: 'NetBox-Modultyp',
+    mi_ed_min_bay: 'Min. Bay',
+    mi_ed_max_bay: 'Max. Bay',
+    mi_ed_add_rule: 'Regel hinzufügen',
+    mi_ed_add_condition: 'Bedingung',
+    mi_ed_remove: 'Entfernen',
+    mi_ed_no_modtypes: 'Noch keine Modultypen geladen. Lade sie unter Einstellungen → NetBox hoch oder per API, um Vorschläge zu erhalten; Freitext funktioniert ebenfalls.',
+    mi_ed_splits_hint: 'Explizite Aufteilung einer Gesamt-Portzahl auf Module. Ohne passenden Eintrag gilt die Standard-Aufteilung.',
+    mi_ed_add_split: 'Port-Aufteilung hinzufügen',
+    mi_ed_category: 'Kategorie',
+    mi_ed_color: 'Farbe',
+    mi_ed_total: 'Ports gesamt',
+    mi_ed_sequence: 'Modultypen in Reihenfolge (kommagetrennt)',
+    mi_ed_count_col: 'Anzahl-Spalte (belegte Blöcke)',
+    mi_ed_row_col: 'Spalte für Zeilennamen (optional)',
+    mi_ed_prefix: 'Block-Präfix-Muster',
+    mi_ed_block_seq: 'Block-Folge',
+    mi_ed_block_seq_hint: 'Kommagetrennt oder als Bereich: A-K, 1-12, A, B, Nord. Es werden die ersten N Einträge genutzt, N = Wert der Anzahl-Spalte.',
+    mi_ed_add_block: 'Block-Mapping hinzufügen',
+    mi_ed_add_column: 'Spalte hinzufügen',
+    mi_ed_pattern_hint: 'Spaltenüberschrift relativ zum Block-Präfix. Platzhalter: {prefix}, {block}, {n} (Portnummer). Felder: sockets_white / sockets_orange = Steckdosen-Anzahl, lan_port_name = eine Spalte je LAN-Port.',
+    mi_ed_save: 'Profil speichern',
+    mi_ed_cancel: 'Editor schließen',
+    mi_ed_saved: 'Profil gespeichert.',
+    mi_pv_summary: '{devices} Geräte · {bays} Module · {errors} Fehler · {warnings} Warnungen',
+    mi_pv_errors_only: 'Nur Fehler',
+    mi_pv_back: 'Zurück zu den Regeln',
+    mi_pv_continue: 'Weiter',
+    mi_pv_file_errors: 'Probleme mit Datei oder Profil',
+    mi_pv_row: 'Zeile {row}',
+    mi_pv_bay: 'Bay {bay}',
+    mi_pv_none: 'Keine Geräte gefunden. Prüfe Block-Mapping und Anzahl-Spalte.',
+    mi_pv_no_errors: 'Keine Geräte mit Fehlern.',
+    mi_ex_summary: '{devices} Geräte, {rows} Modulzeilen bereit zum Export.',
+    mi_ex_hint: 'Importiere module-import.csv in NetBox (Dcim → Modules → Import). Danach weiter zur Umbenennung der LAN-Interfaces.',
+    mi_ex_download_csv: 'module-import.csv herunterladen',
+    mi_ex_download_zip: 'Als ZIP herunterladen',
+    mi_ex_back: 'Zurück',
+    mi_ex_next: 'Weiter: Interface-IDs',
+    mi_if_intro: 'Nachdem NetBox die Module angelegt hat, brauchen die LAN-Interfaces ihre echten Portnamen. Hole die Interface-IDs aus NetBox:',
+    mi_if_no_lan: 'Kein Gerät hat LAN-Module, es gibt nichts umzubenennen.',
+    mi_if_api_btn: 'Per NetBox-API abrufen',
+    mi_if_file_btn: 'Interface-Export hochladen (CSV)',
+    mi_if_api_hint: 'Die API-Variante nutzt URL und Token aus Einstellungen → NetBox und braucht erlaubtes CORS. Der Datei-Upload funktioniert immer: Exportiere die Interfaces (mit ID-Spalte) aus NetBox.',
+    mi_if_result: '{matched} Umbenennungen · {unchanged} bereits korrekt · {unmatched} nicht gefunden',
+    mi_if_unmatched_title: 'In NetBox nicht gefunden (Gerät · erwarteter Name):',
+    mi_if_missing_cols: 'Fehlende Spalten in der Datei: {cols}',
+    mi_if_download: 'interface-rename.csv herunterladen',
+    mi_if_zip: 'Beide als ZIP herunterladen',
+    mi_err_no_rule: 'Keine Regel passt zu {category} ({size} Ports {color}).',
+    mi_err_bay_out_of_range: 'Regel passt, aber der Bay-Bereich liegt außerhalb des Geräts ({category}, {size} Ports).',
+    mi_err_no_free_bay: 'Keine freie Bay im erlaubten Bereich ({category}, {size} Ports {color}).',
+    mi_err_split_unresolvable: '{total} {category}-Ports lassen sich nicht auf die verfügbaren Module aufteilen.',
+    mi_err_block_count_invalid: 'Ungültige Blockanzahl „{value}" (max. {max}).',
+    mi_err_column_missing: 'Spalte nicht gefunden: „{column}".',
+    mi_err_column_value_invalid: 'Ungültiger Wert „{value}" in „{column}".',
+    mi_err_device_no_modules: 'Für dieses Gerät sind keine Module nötig.',
+    mi_val_name_required: 'Profilname ist erforderlich.',
+    mi_val_slot_count_invalid: 'Modul-Bays müssen eine ganze Zahl von 1 bis 99 sein.',
+    mi_val_strategy_invalid: 'Unbekannte Aufteilungsstrategie.',
+    mi_val_rule_module_required: 'Regel {rule}: Modultyp fehlt.',
+    mi_val_rule_module_unknown: 'Regel {rule}: „{name}" ist nicht in den geladenen Modultypen.',
+    mi_val_rule_bay_range: 'Regel {rule}: ungültiger Bay-Bereich.',
+    mi_val_rule_bay_beyond_slots: 'Regel {rule}: Max. Bay ist größer als die Anzahl der Bays.',
+    mi_val_rule_condition_invalid: 'Regel {rule}: ungültige Bedingung.',
+    mi_val_rule_priority_duplicate: 'Regel {rule}: Priorität {priority} wird mehrfach verwendet.',
+    mi_val_split_category_invalid: 'Port-Aufteilung {split}: ungültige Kategorie.',
+    mi_val_split_total_invalid: 'Port-Aufteilung {split}: ungültige Gesamtzahl.',
+    mi_val_split_sequence_empty: 'Port-Aufteilung {split}: keine Modultypen.',
+    mi_val_split_size_unknown: 'Port-Aufteilung {split}: Portzahl eines Modultyps unbekannt (braucht eine Regel mit „port_count eq N").',
+    mi_val_split_sum_mismatch: 'Port-Aufteilung {split}: Module ergeben nicht die Gesamtzahl.',
+    mi_val_block_count_column_required: 'Block {block}: Anzahl-Spalte fehlt.',
+    mi_val_block_prefix_required: 'Block {block}: Präfix-Muster fehlt.',
+    mi_val_block_sequence_empty: 'Block {block}: Block-Folge ist leer.',
+    mi_val_block_sequence_duplicate: 'Block {block}: Block-Folge enthält Duplikate.',
+    mi_val_column_field_invalid: 'Spalten-Mapping: unbekanntes Feld.',
+    mi_val_column_pattern_required: 'Spalten-Mapping „{field}": Muster fehlt.',
+    mi_val_no_blocks: 'Kein Block-Mapping definiert, es werden keine Geräte gefunden.',
+    mi_val_no_columns: 'Kein Spalten-Mapping definiert.',
   },
 };
 
@@ -4107,6 +4687,7 @@ function init() {
   initStorageIndicator();
   initBulkPositionHighlight();
   initNetboxAutocomplete();
+  initModuleImport();
   initAccordionAnimations();
   initDeviceSearch();
   initResponsiveSidebars();
@@ -4671,6 +5252,7 @@ function updateStats(state) {
 
 const STORAGE_KEY_TYPES         = 'rackbuilder_netbox_device_types';
 const STORAGE_KEY_ROLES         = 'rackbuilder_netbox_roles';
+const STORAGE_KEY_MODULE_TYPES  = 'rackbuilder_netbox_module_types';
 const STORAGE_KEY_MANUFACTURERS = 'rackbuilder_netbox_manufacturers';
 const STORAGE_KEY_API_URL       = 'rackbuilder_netbox_api_url';
 const STORAGE_KEY_API_TOKEN     = 'rackbuilder_netbox_api_token';
@@ -4757,19 +5339,13 @@ function parseNetboxJSON(text) {
 }
 
 function parseNetboxCSV(text) {
-  const lines = text.trim().split(/\r?\n/);
-  if (lines.length < 2) return null;
-  const sep = lines[0].includes('\t') ? '\t' : lines[0].includes(';') ? ';' : ',';
-  const headers = lines[0].split(sep).map(h => h.trim().replace(/^["']|["']$/g, '').toLowerCase());
-  const items = [];
-  for (let i = 1; i < lines.length; i++) {
-    const vals = lines[i].split(sep).map(v => v.trim().replace(/^["']|["']$/g, ''));
-    if (vals.length < headers.length) continue;
+  const { rows } = parseCsvTable(text);
+  if (rows.length === 0) return null;
+  return rows.map(r => {
     const obj = {};
-    headers.forEach((h, idx) => { obj[h] = vals[idx]; });
-    items.push(obj);
-  }
-  return items.length > 0 ? items : null;
+    for (const [k, v] of Object.entries(r)) obj[k.toLowerCase()] = v;
+    return obj;
+  });
 }
 
 function parseNetboxYAML(text) {
@@ -5023,6 +5599,7 @@ function updateNetboxUploadStatus() {
     { entries: loadNetboxEntries(STORAGE_KEY_TYPES),         statusIds: ['netbox-types-status', 'netbox-api-types-status'], clearId: 'netbox-clear-types-btn' },
     { entries: loadNetboxEntries(STORAGE_KEY_ROLES),         statusIds: ['netbox-roles-status', 'netbox-api-roles-status'], clearId: 'netbox-clear-roles-btn' },
     { entries: loadNetboxEntries(STORAGE_KEY_MANUFACTURERS), statusIds: ['netbox-mfr-status',   'netbox-api-mfr-status'],   clearId: 'netbox-clear-mfr-btn' },
+    { entries: loadNetboxEntries(STORAGE_KEY_MODULE_TYPES),  statusIds: ['netbox-modtypes-status', 'netbox-api-modtypes-status'], clearId: 'netbox-clear-modtypes-btn' },
   ];
   for (const { entries, statusIds, clearId } of data) {
     const text = entries.length > 0 ? t('netbox_loaded', { count: entries.length }) : t('netbox_not_loaded');
@@ -5033,9 +5610,19 @@ function updateNetboxUploadStatus() {
   }
 }
 
-async function apiFetchPages(baseUrl, token, endpoint) {
+function getModuleTypes() { return loadNetboxEntries(STORAGE_KEY_MODULE_TYPES); }
+function getDeviceTypes() { return loadNetboxEntries(STORAGE_KEY_TYPES); }
+
+async function getApiCredentials() {
+  const baseUrl = (localStorage.getItem(STORAGE_KEY_API_URL) || '').trim();
+  const fieldToken = document.getElementById('netbox-api-token-input')?.value.trim() || '';
+  const token = fieldToken || await loadApiToken();
+  return { baseUrl, token };
+}
+
+async function apiFetchPages(baseUrl, token, endpoint, query = '') {
   const results = [];
-  let url = `${baseUrl.replace(/\/+$/, '')}/api/${endpoint}/?limit=200&format=json`;
+  let url = `${baseUrl.replace(/\/+$/, '')}/api/${endpoint}/?limit=200&format=json${query ? '&' + query : ''}`;
   while (url) {
     const res = await fetch(url, { headers: { 'Authorization': `Token ${token}`, 'Accept': 'application/json' } });
     if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
@@ -5059,7 +5646,7 @@ async function apiFetchAndStore(endpoint, storageKey, inputId, btnId) {
     const entries = extractNameSlug(items);
     if (!entries || entries.length === 0) { alert(t('netbox_api_empty')); return false; }
     saveNetboxEntries(storageKey, entries);
-    attachAutocomplete(inputId, entries);
+    if (inputId) attachAutocomplete(inputId, entries);
     updateNetboxUploadStatus();
     return true;
   } catch (err) {
@@ -5082,7 +5669,7 @@ function initNetboxAutocomplete() {
     btn.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', () => {
       handleNetboxUpload(fileInput, storageKey, (entries) => {
-        attachAutocomplete(inputId, entries);
+        if (inputId) attachAutocomplete(inputId, entries);
         updateNetboxUploadStatus();
       });
     });
@@ -5092,7 +5679,7 @@ function initNetboxAutocomplete() {
     if (!btn) return;
     btn.addEventListener('click', () => {
       localStorage.removeItem(storageKey);
-      attachAutocomplete(inputId, []);
+      if (inputId) attachAutocomplete(inputId, []);
       updateNetboxUploadStatus();
     });
   };
@@ -5101,9 +5688,12 @@ function initNetboxAutocomplete() {
   wireUpload('netbox-upload-roles-btn', 'netbox-roles-file', STORAGE_KEY_ROLES, 'dev-role');
   wireUpload('netbox-upload-mfr-btn', 'netbox-mfr-file', STORAGE_KEY_MANUFACTURERS, 'dev-manufacturer');
 
+  wireUpload('netbox-upload-modtypes-btn', 'netbox-modtypes-file', STORAGE_KEY_MODULE_TYPES, null);
+
   wireClear('netbox-clear-types-btn', STORAGE_KEY_TYPES, 'dev-type');
   wireClear('netbox-clear-roles-btn', STORAGE_KEY_ROLES, 'dev-role');
   wireClear('netbox-clear-mfr-btn', STORAGE_KEY_MANUFACTURERS, 'dev-manufacturer');
+  wireClear('netbox-clear-modtypes-btn', STORAGE_KEY_MODULE_TYPES, null);
 
   // Populate on load
   attachAutocomplete('dev-type', loadNetboxEntries(STORAGE_KEY_TYPES));
@@ -5166,16 +5756,1435 @@ function initNetboxAutocomplete() {
     apiFetchAndStore('dcim/device-roles',  STORAGE_KEY_ROLES,         'dev-role',        'netbox-api-fetch-roles-btn'));
   document.getElementById('netbox-api-fetch-mfr-btn')?.addEventListener('click',   () =>
     apiFetchAndStore('dcim/manufacturers', STORAGE_KEY_MANUFACTURERS, 'dev-manufacturer', 'netbox-api-fetch-mfr-btn'));
+  document.getElementById('netbox-api-fetch-modtypes-btn')?.addEventListener('click', () =>
+    apiFetchAndStore('dcim/module-types', STORAGE_KEY_MODULE_TYPES, null, 'netbox-api-fetch-modtypes-btn'));
   document.getElementById('netbox-api-fetch-all-btn')?.addEventListener('click', async () => {
     const btn = document.getElementById('netbox-api-fetch-all-btn');
     if (btn) { btn.disabled = true; btn.textContent = t('netbox_api_fetching'); }
     await apiFetchAndStore('dcim/device-types',  STORAGE_KEY_TYPES,         'dev-type',        'netbox-api-fetch-types-btn');
     await apiFetchAndStore('dcim/device-roles',  STORAGE_KEY_ROLES,         'dev-role',        'netbox-api-fetch-roles-btn');
     await apiFetchAndStore('dcim/manufacturers', STORAGE_KEY_MANUFACTURERS, 'dev-manufacturer', 'netbox-api-fetch-mfr-btn');
+    await apiFetchAndStore('dcim/module-types', STORAGE_KEY_MODULE_TYPES, null, 'netbox-api-fetch-modtypes-btn');
     if (btn) { btn.disabled = false; btn.textContent = t('netbox_api_fetch_all'); }
   });
 
   setNetboxMode(localStorage.getItem(STORAGE_KEY_MODE) || 'upload', false);
+}
+
+// ─── NetBox module import (csv, zip, profiles, engine, wizard) ───────────────
+
+// ── csv.js ──
+// Minimal RFC 4180 CSV reader/writer (no dependencies, no DOM).
+
+/**
+ * Guess the delimiter from the first non-empty line (outside quotes).
+ * @param {string} text
+ * @returns {string}
+ */
+function detectCsvDelimiter(text) {
+  const firstLine = text.split(/\r?\n/).find(l => l.trim() !== '') || '';
+  let inQuotes = false;
+  const counts = { ',': 0, ';': 0, '\t': 0 };
+  for (const ch of firstLine) {
+    if (ch === '"') inQuotes = !inQuotes;
+    else if (!inQuotes && ch in counts) counts[ch]++;
+  }
+  let best = ',';
+  for (const d of [';', '\t']) {
+    if (counts[d] > counts[best]) best = d;
+  }
+  return best;
+}
+
+/**
+ * Parse CSV text into rows of cells. Handles quoted fields, escaped quotes (""),
+ * embedded newlines, CRLF/LF, a leading BOM and a missing trailing newline.
+ * Blank lines are skipped.
+ * @param {string} text
+ * @param {string} [delimiter] auto-detected when omitted
+ * @returns {string[][]}
+ */
+function parseCsvRows(text, delimiter) {
+  if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);
+  const delim = delimiter || detectCsvDelimiter(text);
+  const rows = [];
+  let row = [];
+  let cell = '';
+  let inQuotes = false;
+  let wasQuoted = false;
+
+  const endCell = () => { row.push(cell); cell = ''; wasQuoted = false; };
+  const endRow = () => {
+    endCell();
+    // skip rows that are entirely empty (blank lines)
+    if (!(row.length === 1 && row[0] === '' )) rows.push(row);
+    row = [];
+  };
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') { cell += '"'; i++; }
+        else inQuotes = false;
+      } else {
+        cell += ch;
+      }
+    } else if (ch === '"' && cell === '' && !wasQuoted) {
+      inQuotes = true;
+      wasQuoted = true;
+    } else if (ch === delim) {
+      endCell();
+    } else if (ch === '\n') {
+      endRow();
+    } else if (ch === '\r') {
+      if (text[i + 1] === '\n') i++;
+      endRow();
+    } else {
+      cell += ch;
+    }
+  }
+  if (cell !== '' || row.length > 0 || wasQuoted) endRow();
+  return rows;
+}
+
+/**
+ * Parse CSV text into { headers, rows } where each row is an object keyed by header.
+ * Headers are trimmed; duplicate headers get a numeric suffix ("name", "name#2").
+ * Rows shorter than the header are padded with empty strings.
+ * @param {string} text
+ * @param {string} [delimiter]
+ * @returns {{headers: string[], rows: Object<string,string>[], delimiter: string}}
+ */
+function parseCsvTable(text, delimiter) {
+  const delim = delimiter || detectCsvDelimiter(text.charCodeAt(0) === 0xFEFF ? text.slice(1) : text);
+  const raw = parseCsvRows(text, delim);
+  if (raw.length === 0) return { headers: [], rows: [], delimiter: delim };
+  const seen = {};
+  const headers = raw[0].map(h => {
+    const base = h.trim();
+    seen[base] = (seen[base] || 0) + 1;
+    return seen[base] === 1 ? base : `${base}#${seen[base]}`;
+  });
+  const rows = raw.slice(1).map(cells => {
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h] = (cells[idx] ?? '').trim(); });
+    return obj;
+  });
+  return { headers, rows, delimiter: delim };
+}
+
+/**
+ * Serialise rows to CSV (LF line endings, values quoted only when needed).
+ * @param {Array<Object>} rows
+ * @param {string[]} headers column order
+ * @returns {string}
+ */
+function writeCsv(rows, headers) {
+  const esc = v => {
+    const s = String(v ?? '');
+    return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  return [headers.join(','), ...rows.map(r => headers.map(h => esc(r[h])).join(','))].join('\n') + '\n';
+}
+
+// ── zip.js ──
+// Minimal store-only (uncompressed) ZIP writer. No dependencies, no DOM.
+
+let CRC_TABLE = null;
+
+function crcTable() {
+  if (CRC_TABLE) return CRC_TABLE;
+  CRC_TABLE = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    CRC_TABLE[n] = c >>> 0;
+  }
+  return CRC_TABLE;
+}
+
+/**
+ * CRC-32 (IEEE) of a byte array.
+ * @param {Uint8Array} bytes
+ * @returns {number} unsigned 32-bit
+ */
+function crc32(bytes) {
+  const table = crcTable();
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) c = table[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+function dosDateTime(d) {
+  const time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  const date = ((Math.max(d.getFullYear(), 1980) - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  return { time, date };
+}
+
+/**
+ * Build a ZIP archive (method 0 = stored).
+ * @param {Array<{name: string, data: string|Uint8Array}>} files
+ * @param {Date} [now]
+ * @returns {Uint8Array}
+ */
+function createZip(files, now = new Date()) {
+  const enc = new TextEncoder();
+  const { time, date } = dosDateTime(now);
+  const chunks = [];
+  const central = [];
+  let offset = 0;
+
+  const u16 = n => new Uint8Array([n & 0xFF, (n >>> 8) & 0xFF]);
+  const u32 = n => new Uint8Array([n & 0xFF, (n >>> 8) & 0xFF, (n >>> 16) & 0xFF, (n >>> 24) & 0xFF]);
+  const push = (arr, ...parts) => parts.forEach(p => arr.push(p));
+  const len = parts => parts.reduce((s, p) => s + p.length, 0);
+
+  for (const f of files) {
+    const nameBytes = enc.encode(f.name);
+    const data = typeof f.data === 'string' ? enc.encode(f.data) : f.data;
+    const crc = crc32(data);
+    const flags = 0x0800; // UTF-8 file names
+
+    const local = [
+      u32(0x04034B50), u16(20), u16(flags), u16(0), u16(time), u16(date),
+      u32(crc), u32(data.length), u32(data.length), u16(nameBytes.length), u16(0),
+      nameBytes,
+    ];
+    push(chunks, ...local, data);
+
+    const cd = [
+      u32(0x02014B50), u16(20), u16(20), u16(flags), u16(0), u16(time), u16(date),
+      u32(crc), u32(data.length), u32(data.length), u16(nameBytes.length),
+      u16(0), u16(0), u16(0), u16(0), u32(0), u32(offset),
+      nameBytes,
+    ];
+    central.push(cd);
+
+    offset += len(local) + data.length;
+  }
+
+  const centralSize = central.reduce((s, cd) => s + len(cd), 0);
+  const centralChunks = central.flat();
+  const eocd = [
+    u32(0x06054B50), u16(0), u16(0), u16(files.length), u16(files.length),
+    u32(centralSize), u32(offset), u16(0),
+  ];
+
+  const total = offset + centralSize + len(eocd);
+  const out = new Uint8Array(total);
+  let pos = 0;
+  for (const part of [...chunks, ...centralChunks, ...eocd]) {
+    out.set(part, pos);
+    pos += part.length;
+  }
+  return out;
+}
+
+// ── import-profiles.js ──
+// Import profiles for the NetBox module import (stored separately from the undo state).
+// Pure data logic: only the load/save helpers touch localStorage (injectable for tests).
+
+
+const PROFILES_KEY = 'rackbuilder_import_profiles';
+
+const SPLIT_STRATEGIES = ['largest_first', 'smallest_first', 'fewest_modules'];
+const CONDITION_OPS = ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'in', 'empty', 'notempty'];
+const INTERNAL_FIELDS = ['sockets_white', 'sockets_orange', 'lan_port_name'];
+/** Fields a MappingRule condition can test (derived by the engine). */
+const CONDITION_FIELDS = ['category', 'port_count', 'socket_color', 'block', 'row'];
+
+
+// ─── Factories ───────────────────────────────────────────────────────────────
+
+function createEmptyProfile(name = 'New profile') {
+  return {
+    id: generateId(),
+    name,
+    netbox_device_type_id: '',
+    default_split_strategy: 'largest_first',
+    is_default: false,
+    slot_count: 12,
+    bay_name_pattern: '{n}',
+    interface_name_template: 'Gi{module}/0/{n}',
+    created_at: new Date().toISOString(),
+    rules: [],
+    splitRules: [],
+    blocks: [],
+    columns: [],
+  };
+}
+
+function makeSeedRule(priority, category, color, ports, moduleType, minBay, maxBay) {
+  const conditions = [{ field: 'category', op: 'eq', value: category }];
+  if (color) conditions.push({ field: 'socket_color', op: 'eq', value: color });
+  conditions.push({ field: 'port_count', op: 'eq', value: ports });
+  return { id: generateId(), priority, conditions, netbox_module_type_id: moduleType, min_bay: minBay, max_bay: maxBay };
+}
+
+/** The bundled starting point (is_default). Names follow the spec's module type proposal. */
+function createSeedProfile() {
+  const p = createEmptyProfile('NetBox Standard (12-Bay)');
+  p.id = 'default-12bay';
+  p.is_default = true;
+  p.blocks = [{
+    id: generateId(),
+    count_column: 'Anzahl Bodentanks',
+    prefix_pattern: 'Bodentank {block}',
+    block_sequence: 'ABCDEFGHIJK'.split(''),
+    row_name_column: 'Raum',
+  }];
+  p.columns = [
+    { id: generateId(), internal_field: 'sockets_white', column_suffix_pattern: '{prefix} Steckdosen weiß' },
+    { id: generateId(), internal_field: 'sockets_orange', column_suffix_pattern: '{prefix} Steckdosen orange' },
+    { id: generateId(), internal_field: 'lan_port_name', column_suffix_pattern: '{prefix} Buchse {n}' },
+  ];
+  p.rules = [
+    makeSeedRule(10, 'LAN', null, 3, 'LAN-Modul 3-Port', 1, 12),
+    makeSeedRule(20, 'LAN', null, 2, 'LAN-Modul 2-Port', 1, 12),
+    makeSeedRule(30, 'Strom', 'white', 3, 'Steckdosenmodul 3-fach Weiß', 6, 12),
+    makeSeedRule(40, 'Strom', 'white', 2, 'Steckdosenmodul 2-fach Weiß', 6, 12),
+    makeSeedRule(50, 'Strom', 'orange', 3, 'Steckdosenmodul 3-fach Orange', 6, 12),
+    makeSeedRule(60, 'Strom', 'orange', 2, 'Steckdosenmodul 2-fach Orange', 6, 12),
+  ];
+  return p;
+}
+
+// ─── Helpers shared with the engine ──────────────────────────────────────────
+
+/**
+ * Port count of a module type, derived from the profile's rules ("port_count eq N").
+ * @returns {number|null}
+ */
+function moduleSizeFor(profile, moduleName) {
+  for (const r of profile.rules || []) {
+    if (r.netbox_module_type_id !== moduleName) continue;
+    const c = (r.conditions || []).find(c => c.field === 'port_count' && c.op === 'eq');
+    if (c && Number.isFinite(Number(c.value))) return Number(c.value);
+  }
+  return null;
+}
+
+/** Fill `{prefix}`, `{block}`, `{n}` placeholders. */
+function fillPattern(pattern, vars) {
+  return String(pattern ?? '').replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+}
+
+/**
+ * Expand a block sequence typed by the user: "A-K", "1-12", "A, C, Nord" or a mix.
+ * Ranges must be ascending single letters of the same case or integers (max 500 entries).
+ * @param {string} text
+ * @returns {string[]}
+ */
+function expandSequence(text) {
+  const out = [];
+  for (const raw of String(text ?? '').split(',')) {
+    const tok = raw.trim();
+    if (!tok) continue;
+    let m = tok.match(/^([A-Za-z])\s*-\s*([A-Za-z])$/);
+    if (m && (m[1] === m[1].toUpperCase()) === (m[2] === m[2].toUpperCase()) && m[1] <= m[2]) {
+      for (let c = m[1].charCodeAt(0); c <= m[2].charCodeAt(0); c++) out.push(String.fromCharCode(c));
+      continue;
+    }
+    m = tok.match(/^(\d+)\s*-\s*(\d+)$/);
+    if (m && Number(m[1]) <= Number(m[2]) && Number(m[2]) - Number(m[1]) < 500) {
+      for (let n = Number(m[1]); n <= Number(m[2]); n++) out.push(String(n));
+      continue;
+    }
+    out.push(tok);
+  }
+  return out;
+}
+
+// ─── Validation ──────────────────────────────────────────────────────────────
+
+/**
+ * @param {object} profile
+ * @param {string[]} [knownModuleTypes] names from the uploaded NetBox module types (optional)
+ * @returns {{errors: Array<{code:string, params?:object}>, warnings: Array<{code:string, params?:object}>}}
+ */
+function validateProfile(profile, knownModuleTypes = []) {
+  const errors = [];
+  const warnings = [];
+  const err = (code, params) => errors.push({ code, params });
+  const warn = (code, params) => warnings.push({ code, params });
+
+  if (!profile.name || !String(profile.name).trim()) err('name_required');
+  const slots = Number(profile.slot_count);
+  if (!Number.isInteger(slots) || slots < 1 || slots > 99) err('slot_count_invalid');
+  if (!SPLIT_STRATEGIES.includes(profile.default_split_strategy)) err('strategy_invalid');
+
+  const known = new Set(knownModuleTypes);
+  const prios = new Set();
+  (profile.rules || []).forEach((r, i) => {
+    const idx = i + 1;
+    if (!r.netbox_module_type_id) err('rule_module_required', { rule: idx });
+    else if (known.size && !known.has(r.netbox_module_type_id)) warn('rule_module_unknown', { rule: idx, name: r.netbox_module_type_id });
+    const min = Number(r.min_bay), max = Number(r.max_bay);
+    if (!Number.isInteger(min) || !Number.isInteger(max) || min < 1 || max < min) err('rule_bay_range', { rule: idx });
+    else if (max > slots) warn('rule_bay_beyond_slots', { rule: idx });
+    for (const c of r.conditions || []) {
+      if (!CONDITION_OPS.includes(c.op) || !c.field) err('rule_condition_invalid', { rule: idx });
+      else if (c.op === 'in' && !Array.isArray(c.value)) err('rule_condition_invalid', { rule: idx });
+    }
+    if (prios.has(r.priority)) warn('rule_priority_duplicate', { rule: idx, priority: r.priority });
+    prios.add(r.priority);
+  });
+
+  (profile.splitRules || []).forEach((s, i) => {
+    const idx = i + 1;
+    if (!['LAN', 'Strom'].includes(s.category)) err('split_category_invalid', { split: idx });
+    const seq = s.module_type_sequence || [];
+    if (!Number.isInteger(Number(s.total_count)) || Number(s.total_count) < 1) err('split_total_invalid', { split: idx });
+    if (seq.length === 0) { err('split_sequence_empty', { split: idx }); return; }
+    const sizes = seq.map(n => moduleSizeFor(profile, n));
+    if (sizes.some(x => x === null)) err('split_size_unknown', { split: idx });
+    else if (sizes.reduce((a, b) => a + b, 0) !== Number(s.total_count)) err('split_sum_mismatch', { split: idx });
+  });
+
+  (profile.blocks || []).forEach((b, i) => {
+    const idx = i + 1;
+    if (!b.count_column) err('block_count_column_required', { block: idx });
+    if (!b.prefix_pattern) err('block_prefix_required', { block: idx });
+    const seq = b.block_sequence || [];
+    if (seq.length === 0) err('block_sequence_empty', { block: idx });
+    else if (new Set(seq).size !== seq.length) err('block_sequence_duplicate', { block: idx });
+  });
+
+  const fields = new Set();
+  for (const c of profile.columns || []) {
+    if (!INTERNAL_FIELDS.includes(c.internal_field)) err('column_field_invalid');
+    if (!c.column_suffix_pattern) err('column_pattern_required', { field: c.internal_field });
+    fields.add(c.internal_field);
+  }
+  if ((profile.blocks || []).length === 0) warn('no_blocks');
+  if (!fields.has('lan_port_name') && !fields.has('sockets_white') && !fields.has('sockets_orange')) warn('no_columns');
+
+  return { errors, warnings };
+}
+
+// ─── Persistence ─────────────────────────────────────────────────────────────
+
+/** Load profiles; seeds the default profile when nothing is stored. */
+function loadProfiles(storage = globalThis.localStorage) {
+  let profiles = [];
+  try {
+    const raw = storage?.getItem(PROFILES_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed.profiles)) profiles = parsed.profiles;
+    }
+  } catch { /* corrupted → reseed */ }
+  if (profiles.length === 0) {
+    profiles = [createSeedProfile()];
+    saveProfiles(profiles, storage);
+  }
+  return profiles;
+}
+
+function saveProfiles(profiles, storage = globalThis.localStorage) {
+  try {
+    storage?.setItem(PROFILES_KEY, JSON.stringify({ version: 1, profiles }));
+  } catch (e) {
+    console.warn('Failed to save import profiles:', e);
+  }
+}
+
+function duplicateProfile(profile) {
+  const copy = JSON.parse(JSON.stringify(profile));
+  copy.id = generateId();
+  copy.name = `${profile.name} (copy)`;
+  copy.is_default = false;
+  copy.created_at = new Date().toISOString();
+  for (const list of [copy.rules, copy.splitRules, copy.blocks, copy.columns]) {
+    (list || []).forEach(x => { x.id = generateId(); });
+  }
+  return copy;
+}
+
+function exportProfileJson(profile) {
+  return JSON.stringify({ _format: 'rackbuilder-import-profile', version: 1, profile }, null, 2);
+}
+
+/** @returns {object|null} a fresh profile (new ids, never is_default) or null when invalid */
+function importProfileJson(text) {
+  try {
+    const data = JSON.parse(text);
+    if (data?._format !== 'rackbuilder-import-profile' || !data.profile) return null;
+    const p = { ...createEmptyProfile(data.profile.name || 'Imported'), ...data.profile };
+    p.id = generateId();
+    p.is_default = false;
+    for (const list of [p.rules, p.splitRules, p.blocks, p.columns]) {
+      (list || []).forEach(x => { x.id = generateId(); });
+    }
+    return p;
+  } catch { return null; }
+}
+
+// ── import-engine.js ──
+// NetBox module import engine: CSV table + profile → devices with module-bay assignments.
+// Pure logic (no DOM, no storage) so it can be tested in Node.
+
+
+const MODULE_IMPORT_HEADERS = ['device', 'module_bay', 'module_type', 'status'];
+const INTERFACE_RENAME_HEADERS = ['id', 'name'];
+
+const miNorm = s => String(s ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+const MAX_LAN_PORTS = 99;
+
+// ─── Table cleaning & value parsing ──────────────────────────────────────────
+
+/**
+ * Drop `#NAME?` columns (spreadsheet formula errors) from a parsed CSV table.
+ * @param {{headers: string[], rows: Object[]}} table
+ */
+function cleanTable(table) {
+  const dropped = table.headers.filter(h => h.trim().startsWith('#NAME?'));
+  const headers = table.headers.filter(h => !dropped.includes(h));
+  const rows = table.rows.map(r => {
+    const o = {};
+    for (const h of headers) o[h] = r[h] ?? '';
+    return o;
+  });
+  return { headers, rows, dropped };
+}
+
+/**
+ * Parse a numeric cell. Empty, "x" and "-" count as empty (null).
+ * @returns {{value: number|null, invalid: boolean}}
+ */
+function parseNumeric(raw) {
+  const s = String(raw ?? '').trim();
+  if (s === '' || /^x$/i.test(s) || s === '-') return { value: null, invalid: false };
+  const n = Number(s.replace(',', '.'));
+  return Number.isFinite(n) ? { value: n, invalid: false } : { value: null, invalid: true };
+}
+
+// ─── Rule conditions ─────────────────────────────────────────────────────────
+
+function conditionMatches(c, ctx) {
+  const actual = ctx[c.field];
+  const isEmpty = actual === undefined || actual === null || String(actual).trim() === '';
+  switch (c.op) {
+    case 'empty': return isEmpty;
+    case 'notempty': return !isEmpty;
+    case 'eq': return miNorm(actual) === miNorm(c.value);
+    case 'neq': return miNorm(actual) !== miNorm(c.value);
+    case 'in': return Array.isArray(c.value) && c.value.some(v => miNorm(v) === miNorm(actual));
+    case 'gt': return Number(actual) > Number(c.value);
+    case 'gte': return Number(actual) >= Number(c.value);
+    case 'lt': return Number(actual) < Number(c.value);
+    case 'lte': return Number(actual) <= Number(c.value);
+    default: return false;
+  }
+}
+
+const rulesInOrder = profile =>
+  (profile.rules || [])
+    .map((r, i) => ({ r, i }))
+    .sort((a, b) => (Number(a.r.priority) - Number(b.r.priority)) || (a.i - b.i))
+    .map(x => x.r);
+
+// ─── Splitting a port count across modules ───────────────────────────────────
+
+/** Module sizes usable for a category (and colour), derived from "port_count eq N" conditions. */
+function availableSizes(profile, category, color) {
+  const sizes = new Set();
+  for (const r of profile.rules || []) {
+    const conds = r.conditions || [];
+    const cat = conds.find(c => c.field === 'category' && c.op === 'eq');
+    if (cat && miNorm(cat.value) !== miNorm(category)) continue;
+    const col = conds.find(c => c.field === 'socket_color' && c.op === 'eq');
+    if (col && color && miNorm(col.value) !== miNorm(color)) continue;
+    const pc = conds.find(c => c.field === 'port_count' && c.op === 'eq');
+    if (pc && Number(pc.value) > 0) sizes.add(Number(pc.value));
+  }
+  return [...sizes];
+}
+
+/**
+ * Find a sequence of module sizes summing exactly to `total`, preferring the order
+ * given by `strategy`. Returns null when impossible (never pads or guesses).
+ */
+function composeSizes(total, sizes, strategy) {
+  const usable = sizes.filter(s => s > 0 && s <= total);
+  if (usable.length === 0) return null;
+
+  if (strategy === 'fewest_modules') {
+    const best = new Array(total + 1).fill(Infinity);
+    best[0] = 0;
+    for (let n = 1; n <= total; n++) {
+      for (const s of usable) if (s <= n && best[n - s] + 1 < best[n]) best[n] = best[n - s] + 1;
+    }
+    if (!Number.isFinite(best[total])) return null;
+    const desc = [...usable].sort((a, b) => b - a);
+    const out = [];
+    let rem = total;
+    while (rem > 0) {
+      const s = desc.find(x => x <= rem && best[rem - x] === best[rem] - 1);
+      out.push(s);
+      rem -= s;
+    }
+    return out;
+  }
+
+  const order = [...usable].sort((a, b) => (strategy === 'smallest_first' ? a - b : b - a));
+  const dfs = rem => {
+    if (rem === 0) return [];
+    for (const s of order) {
+      if (s > rem) continue;
+      const rest = dfs(rem - s);
+      if (rest) return [s, ...rest];
+    }
+    return null;
+  };
+  return dfs(total);
+}
+
+// ─── Analysis ────────────────────────────────────────────────────────────────
+
+/**
+ * @typedef {{rowIndex:number, device:string|null, bay:number|null, code:string, params?:object}} ImportIssue
+ * @typedef {{bay:number, moduleType:string, category:string, color:string, size:number, ports:string[]|null}} BayAssignment
+ * @typedef {{name:string, rowIndex:number, block:string, bays:(BayAssignment|null)[], issues:ImportIssue[]}} ImportDevice
+ */
+
+/**
+ * @param {{headers:string[], rows:Object[]}} table already cleaned (see cleanTable)
+ * @param {object} profile
+ * @returns {{devices: ImportDevice[], errors: ImportIssue[], warnings: ImportIssue[],
+ *            summary: {rows:number, devices:number, baysUsed:number, errors:number, warnings:number}}}
+ */
+function analyzeCsv(table, profile) {
+  const errors = [];
+  const warnings = [];
+  const devices = [];
+  const slots = Number(profile.slot_count) || 12;
+  const headerMap = new Map(table.headers.map(h => [miNorm(h), h]));
+  const findHeader = name => headerMap.get(miNorm(name));
+  const fileLevelReported = new Set();
+
+  const reportFile = (code, params) => {
+    const key = code + JSON.stringify(params);
+    if (fileLevelReported.has(key)) return;
+    fileLevelReported.add(key);
+    errors.push({ rowIndex: 0, device: null, bay: null, code, params });
+  };
+
+  const colPattern = field => (profile.columns || []).find(c => c.internal_field === field)?.column_suffix_pattern;
+  const orderedRules = rulesInOrder(profile);
+
+  for (const block of profile.blocks || []) {
+    const countHeader = findHeader(block.count_column);
+    if (!countHeader) { reportFile('column_missing', { column: block.count_column }); continue; }
+    const seq = block.block_sequence || [];
+
+    table.rows.forEach((row, rIdx) => {
+      const rowIndex = rIdx + 1;
+      const count = parseNumeric(row[countHeader]);
+      if (count.invalid || (count.value !== null && (!Number.isInteger(count.value) || count.value < 0))) {
+        errors.push({ rowIndex, device: null, bay: null, code: 'block_count_invalid', params: { value: row[countHeader], max: seq.length } });
+        return;
+      }
+      const n = count.value ?? 0;
+      if (n > seq.length) {
+        errors.push({ rowIndex, device: null, bay: null, code: 'block_count_invalid', params: { value: n, max: seq.length } });
+        return;
+      }
+      const rowName = block.row_name_column ? (row[findHeader(block.row_name_column)] || '').trim() : '';
+
+      for (const blockId of seq.slice(0, n)) {
+        const prefix = fillPattern(block.prefix_pattern, { block: blockId });
+        const name = [rowName, prefix].filter(Boolean).join(' ');
+        const device = { name, rowIndex, block: blockId, bays: new Array(slots).fill(null), issues: [] };
+        const fail = (code, params, bay = null) => {
+          const issue = { rowIndex, device: name, bay, code, params };
+          errors.push(issue);
+          device.issues.push(issue);
+        };
+
+        // ── read the block's columns ──
+        const readCount = field => {
+          const pattern = colPattern(field);
+          if (!pattern) return 0;
+          const header = findHeader(fillPattern(pattern, { prefix, block: blockId }));
+          if (!header) { reportFile('column_missing', { column: fillPattern(pattern, { prefix, block: blockId }) }); return 0; }
+          const v = parseNumeric(row[header]);
+          if (v.invalid) { fail('column_value_invalid', { column: header, value: row[header] }); return 0; }
+          return v.value ?? 0;
+        };
+        const white = readCount('sockets_white');
+        const orange = readCount('sockets_orange');
+
+        const lanNames = [];
+        const lanPattern = colPattern('lan_port_name');
+        if (lanPattern) {
+          let foundAny = false;
+          for (let i = 1; i <= MAX_LAN_PORTS; i++) {
+            const header = findHeader(fillPattern(lanPattern, { prefix, block: blockId, n: i }));
+            if (!header) break;
+            foundAny = true;
+            const v = (row[header] || '').trim();
+            if (v !== '') lanNames.push(v);
+          }
+          if (!foundAny) reportFile('column_missing', { column: fillPattern(lanPattern, { prefix, block: blockId, n: 1 }) });
+        }
+
+        // ── demands → chunks → bays ──
+        const demands = [
+          { category: 'LAN', color: '', total: lanNames.length, names: lanNames },
+          { category: 'Strom', color: 'white', total: white, names: null },
+          { category: 'Strom', color: 'orange', total: orange, names: null },
+        ];
+        const occupied = new Set();
+
+        for (const d of demands) {
+          if (!d.total || d.total <= 0) continue;
+          if (!Number.isInteger(d.total)) { fail('column_value_invalid', { column: d.category, value: d.total }); continue; }
+
+          const chunks = splitDemand(profile, d, fail);
+          if (!chunks) continue;
+          let offset = 0;
+          for (const ch of chunks) {
+            const ports = d.names ? d.names.slice(offset, offset + ch.size) : null;
+            offset += ch.size;
+            const ctx = { category: d.category, port_count: ch.size, socket_color: d.color, block: blockId, row: rowName };
+            const candidates = orderedRules.filter(r =>
+              (!ch.forcedModule || r.netbox_module_type_id === ch.forcedModule) &&
+              (r.conditions || []).every(c => conditionMatches(c, ctx)));
+            if (candidates.length === 0) { fail('no_rule', { category: d.category, size: ch.size, color: d.color }); continue; }
+
+            let placed = false;
+            for (const r of candidates) {
+              const lo = Math.max(1, Number(r.min_bay));
+              const hi = Math.min(slots, Number(r.max_bay));
+              for (let bay = lo; bay <= hi; bay++) {
+                if (occupied.has(bay)) continue;
+                occupied.add(bay);
+                device.bays[bay - 1] = {
+                  bay, moduleType: r.netbox_module_type_id, category: d.category,
+                  color: d.color, size: ch.size, ports,
+                };
+                placed = true;
+                break;
+              }
+              if (placed) break;
+            }
+            if (!placed) {
+              const allOutside = candidates.every(r => Number(r.min_bay) > slots);
+              fail(allOutside ? 'bay_out_of_range' : 'no_free_bay',
+                { category: d.category, size: ch.size, color: d.color });
+            }
+          }
+        }
+
+        if (!device.bays.some(Boolean) && device.issues.length === 0) {
+          warnings.push({ rowIndex, device: name, bay: null, code: 'device_no_modules' });
+        }
+        devices.push(device);
+      }
+    });
+  }
+
+  return {
+    devices, errors, warnings,
+    summary: {
+      rows: table.rows.length,
+      devices: devices.length,
+      baysUsed: devices.reduce((s, d) => s + d.bays.filter(Boolean).length, 0),
+      errors: errors.length,
+      warnings: warnings.length,
+    },
+  };
+}
+
+/** Turn a demand into module chunks [{size, forcedModule?}] or null (after reporting via fail). */
+function splitDemand(profile, demand, fail) {
+  const { category, color, total } = demand;
+
+  const split = (profile.splitRules || []).find(s =>
+    s.category === category && Number(s.total_count) === total && (!s.color || miNorm(s.color) === miNorm(color)));
+  if (split) {
+    const chunks = (split.module_type_sequence || []).map(name => ({ size: moduleSizeFor(profile, name), forcedModule: name }));
+    if (chunks.length === 0 || chunks.some(c => c.size === null) ||
+        chunks.reduce((s, c) => s + c.size, 0) !== total) {
+      fail('split_unresolvable', { category, total });
+      return null;
+    }
+    return chunks;
+  }
+
+  const sizes = availableSizes(profile, category, color);
+  if (sizes.length === 0) { fail('no_rule', { category, size: total, color }); return null; }
+  const composed = composeSizes(total, sizes, profile.default_split_strategy || 'largest_first');
+  if (!composed) { fail('split_unresolvable', { category, total }); return null; }
+  return composed.map(size => ({ size }));
+}
+
+// ─── Output builders ─────────────────────────────────────────────────────────
+
+/** Rows for `module-import.csv`: one row per bay that receives a module. */
+function buildModuleImportRows(devices, profile) {
+  const rows = [];
+  for (const d of devices) {
+    for (const b of d.bays) {
+      if (!b) continue;
+      rows.push({
+        device: d.name,
+        module_bay: fillPattern(profile.bay_name_pattern || '{n}', { n: b.bay }),
+        module_type: b.moduleType,
+        status: 'active',
+      });
+    }
+  }
+  return rows;
+}
+
+/**
+ * Interfaces NetBox will create for LAN modules, with the target name from the source file.
+ * @returns {Array<{device:string, bay:number, expected:string, newName:string}>}
+ */
+function expectedInterfaces(devices, profile) {
+  const out = [];
+  for (const d of devices) {
+    for (const b of d.bays) {
+      if (!b || b.category !== 'LAN' || !b.ports) continue;
+      b.ports.forEach((portName, i) => {
+        out.push({
+          device: d.name,
+          bay: b.bay,
+          expected: fillPattern(profile.interface_name_template || 'Gi{module}/0/{n}', { module: b.bay, n: i + 1 }),
+          newName: portName,
+        });
+      });
+    }
+  }
+  return out;
+}
+
+/**
+ * Read an interface list exported from NetBox (needs id, device, name columns).
+ * @returns {{interfaces: Array<{id:string, device:string, name:string}>, missing: string[]}}
+ */
+function readInterfaceTable(table) {
+  const find = key => table.headers.find(h => miNorm(h) === key);
+  const idH = find('id'), devH = find('device'), nameH = find('name');
+  const missing = [['id', idH], ['device', devH], ['name', nameH]].filter(([, h]) => !h).map(([k]) => k);
+  if (missing.length) return { interfaces: [], missing };
+  return {
+    interfaces: table.rows
+      .filter(r => (r[idH] || '').trim() !== '')
+      .map(r => ({ id: r[idH].trim(), device: (r[devH] || '').trim(), name: (r[nameH] || '').trim() })),
+    missing: [],
+  };
+}
+
+/**
+ * Match expected interfaces to NetBox interfaces (device + name) and build the rename rows.
+ * @returns {{rows: Array<{id:string,name:string}>, unmatched: object[], unchanged: number}}
+ */
+function buildInterfaceRename(devices, profile, interfaces) {
+  const byKey = new Map();
+  for (const i of interfaces) {
+    const key = `${i.device}\u0000${i.name}`;
+    if (!byKey.has(key)) byKey.set(key, i);
+  }
+  const rows = [];
+  const unmatched = [];
+  let unchanged = 0;
+  for (const e of expectedInterfaces(devices, profile)) {
+    const hit = byKey.get(`${e.device}\u0000${e.expected}`);
+    if (!hit) { unmatched.push(e); continue; }
+    if (hit.name === e.newName) { unchanged++; continue; }
+    rows.push({ id: hit.id, name: e.newName });
+  }
+  return { rows, unmatched, unchanged };
+}
+
+// ── module-import.js ──
+// NetBox module import wizard: profile + CSV → preview (12-bay slot view) → export → interface IDs.
+
+
+const S = {
+  profiles: [],
+  activeId: null,
+  draft: null,
+  editorTab: 'general',
+  table: null,
+  fileName: '',
+  ignoredCols: 0,
+  analysis: null,
+  rename: null,
+};
+
+const $ = id => document.getElementById(id);
+const esc = v => String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const clone = o => JSON.parse(JSON.stringify(o));
+const activeProfile = () => S.profiles.find(p => p.id === S.activeId) || S.profiles[0];
+const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'profile';
+
+function moduleColor(name) {
+  let h = 0;
+  for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return `hsl(${h % 360} 55% 38%)`;
+}
+
+function issueText(issue) {
+  const parts = [];
+  if (issue.rowIndex) parts.push(t('mi_pv_row', { row: issue.rowIndex }));
+  if (issue.bay) parts.push(t('mi_pv_bay', { bay: issue.bay }));
+  const msg = t('mi_err_' + issue.code, issue.params || {});
+  return (parts.length ? parts.join(' · ') + ': ' : '') + msg;
+}
+
+function validationText(item) {
+  return t('mi_val_' + item.code, item.params || {});
+}
+
+// ─── Steps ───────────────────────────────────────────────────────────────────
+
+function showStep(n) {
+  document.querySelectorAll('#module-import-dialog .mi-step').forEach(el =>
+    el.classList.toggle('active', Number(el.dataset.step) === n));
+  document.querySelectorAll('#mi-steps li').forEach(el => {
+    const s = Number(el.dataset.step);
+    el.classList.toggle('active', s === n);
+    el.classList.toggle('done', s < n);
+  });
+  $('module-import-dialog').scrollTop = 0;
+}
+
+// ─── Step 1: profile & file ──────────────────────────────────────────────────
+
+function renderProfileSelect() {
+  const sel = $('mi-profile');
+  sel.innerHTML = S.profiles.map(p =>
+    `<option value="${esc(p.id)}"${p.id === S.activeId ? ' selected' : ''}>${esc(p.name)}${p.is_default ? ' · ' + esc(t('mi_default_badge')) : ''}</option>`
+  ).join('');
+}
+
+function setActive(id) {
+  S.activeId = id;
+  renderProfileSelect();
+}
+
+function persistProfiles() {
+  saveProfiles(S.profiles);
+}
+
+function openEditor() {
+  S.draft = clone(activeProfile());
+  S.editorTab = 'general';
+  $('mi-editor').hidden = false;
+  $('mi-editor-msg').innerHTML = '';
+  renderEditor();
+}
+
+function closeEditor() {
+  S.draft = null;
+  $('mi-editor').hidden = true;
+}
+
+async function readTextFile(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = () => reject(r.error);
+    r.readAsText(file);
+  });
+}
+
+async function onCsvChosen(file) {
+  if (!file) return;
+  const text = await readTextFile(file);
+  const parsed = parseCsvTable(text);
+  const cleaned = cleanTable(parsed);
+  S.table = cleaned;
+  S.fileName = file.name;
+  S.ignoredCols = cleaned.dropped.length;
+  let info = t('mi_file_info', { name: file.name, rows: cleaned.rows.length, cols: cleaned.headers.length });
+  if (S.ignoredCols) info += ' · ' + t('mi_file_ignored', { count: S.ignoredCols });
+  $('mi-file-info').textContent = info;
+  $('mi-analyse-btn').disabled = false;
+  if (S.draft) renderEditor(); // refresh header suggestions
+}
+
+function runAnalysis() {
+  if (!S.table) { alert(t('mi_no_file')); return; }
+  const profile = activeProfile();
+  const { errors } = validateProfile(profile, getModuleTypes().map(m => m.name));
+  if (errors.length) {
+    alert(t('mi_profile_invalid') + '\n\n' + errors.map(validationText).join('\n'));
+    return;
+  }
+  S.analysis = analyzeCsv(S.table, profile);
+  S.rename = null;
+  $('mi-pv-errors-only').checked = false;
+  renderPreview();
+  showStep(2);
+}
+
+// ─── Profile editor ──────────────────────────────────────────────────────────
+
+const EDITOR_TABS = ['general', 'rules', 'splits', 'blocks', 'columns'];
+
+function dataLists() {
+  const mods = getModuleTypes();
+  const types = getDeviceTypes();
+  const headers = S.table?.headers || [];
+  return `
+    <datalist id="mi-dl-modtypes">${mods.map(m => `<option value="${esc(m.name)}">`).join('')}</datalist>
+    <datalist id="mi-dl-devtypes">${types.map(m => `<option value="${esc(m.name)}">`).join('')}</datalist>
+    <datalist id="mi-dl-headers">${headers.map(h => `<option value="${esc(h)}">`).join('')}</datalist>`;
+}
+
+function selectHtml(options, value, attrs, labelFn = o => o) {
+  return `<select ${attrs}>${options.map(o =>
+    `<option value="${esc(o)}"${String(o) === String(value) ? ' selected' : ''}>${esc(labelFn(o))}</option>`).join('')}</select>`;
+}
+
+function renderGeneral(d) {
+  return `
+    <div class="form-group"><label>${esc(t('mi_ed_name'))}</label>
+      <input type="text" data-k="name" value="${esc(d.name)}"></div>
+    <div class="form-row">
+      <div class="form-group"><label>${esc(t('mi_ed_device_type'))}</label>
+        <input type="text" data-k="netbox_device_type_id" list="mi-dl-devtypes" value="${esc(d.netbox_device_type_id)}" autocomplete="off"></div>
+      <div class="form-group"><label>${esc(t('mi_ed_slots'))}</label>
+        <input type="number" min="1" max="99" data-k="slot_count" value="${esc(d.slot_count)}"></div>
+    </div>
+    <div class="form-group"><label>${esc(t('mi_ed_strategy'))}</label>
+      ${selectHtml(SPLIT_STRATEGIES, d.default_split_strategy, 'data-k="default_split_strategy"', s => t('mi_strategy_' + s))}</div>
+    <div class="form-row">
+      <div class="form-group"><label>${esc(t('mi_ed_bay_pattern'))}</label>
+        <input type="text" data-k="bay_name_pattern" value="${esc(d.bay_name_pattern)}"></div>
+      <div class="form-group"><label>${esc(t('mi_ed_iface_template'))}</label>
+        <input type="text" data-k="interface_name_template" value="${esc(d.interface_name_template)}"></div>
+    </div>
+    <p class="settings-section-desc">${esc(t('mi_ed_iface_hint'))}</p>`;
+}
+
+function conditionRow(c, ri, ci) {
+  const valueText = Array.isArray(c.value) ? c.value.join(', ') : c.value ?? '';
+  const needsValue = c.op !== 'empty' && c.op !== 'notempty';
+  return `<div class="mi-cond">
+    ${selectHtml(CONDITION_FIELDS, c.field, `data-list="rules" data-i="${ri}" data-ci="${ci}" data-k="field"`)}
+    ${selectHtml(CONDITION_OPS, c.op, `data-list="rules" data-i="${ri}" data-ci="${ci}" data-k="op" data-rerender="1"`)}
+    ${needsValue ? `<input type="text" data-list="rules" data-i="${ri}" data-ci="${ci}" data-k="value" value="${esc(valueText)}">` : ''}
+    <button type="button" class="mi-x" data-act="del-cond" data-i="${ri}" data-ci="${ci}" title="${esc(t('mi_ed_remove'))}">×</button>
+  </div>`;
+}
+
+function renderRules(d) {
+  const known = getModuleTypes().length > 0;
+  return `
+    ${known ? '' : `<p class="settings-section-desc">${esc(t('mi_ed_no_modtypes'))}</p>`}
+    ${d.rules.map((r, i) => `
+      <div class="mi-item">
+        <div class="mi-item-head">
+          <label>${esc(t('mi_ed_priority'))}</label>
+          <input type="number" class="mi-num" data-list="rules" data-i="${i}" data-k="priority" value="${esc(r.priority)}">
+          <button type="button" class="mi-x" data-act="del-rule" data-i="${i}" title="${esc(t('mi_ed_remove'))}">×</button>
+        </div>
+        <div class="mi-conds">
+          <label>${esc(t('mi_ed_conditions'))}</label>
+          ${(r.conditions || []).map((c, ci) => conditionRow(c, i, ci)).join('')}
+          <button type="button" class="btn btn-secondary btn-sm" data-act="add-cond" data-i="${i}">+ ${esc(t('mi_ed_add_condition'))}</button>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>${esc(t('mi_ed_module_type'))}</label>
+            <input type="text" list="mi-dl-modtypes" autocomplete="off" data-list="rules" data-i="${i}" data-k="netbox_module_type_id" value="${esc(r.netbox_module_type_id)}"></div>
+          <div class="form-group mi-narrow"><label>${esc(t('mi_ed_min_bay'))}</label>
+            <input type="number" min="1" data-list="rules" data-i="${i}" data-k="min_bay" value="${esc(r.min_bay)}"></div>
+          <div class="form-group mi-narrow"><label>${esc(t('mi_ed_max_bay'))}</label>
+            <input type="number" min="1" data-list="rules" data-i="${i}" data-k="max_bay" value="${esc(r.max_bay)}"></div>
+        </div>
+      </div>`).join('')}
+    <button type="button" class="btn btn-secondary btn-sm" data-act="add-rule">+ ${esc(t('mi_ed_add_rule'))}</button>`;
+}
+
+function renderSplits(d) {
+  return `
+    <p class="settings-section-desc">${esc(t('mi_ed_splits_hint'))}</p>
+    ${d.splitRules.map((s, i) => `
+      <div class="mi-item">
+        <div class="mi-item-head">
+          <span></span>
+          <button type="button" class="mi-x" data-act="del-split" data-i="${i}" title="${esc(t('mi_ed_remove'))}">×</button>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>${esc(t('mi_ed_category'))}</label>
+            ${selectHtml(['LAN', 'Strom'], s.category, `data-list="splitRules" data-i="${i}" data-k="category"`)}</div>
+          <div class="form-group"><label>${esc(t('mi_ed_color'))}</label>
+            ${selectHtml(['', 'white', 'orange'], s.color || '', `data-list="splitRules" data-i="${i}" data-k="color"`, o => o || '—')}</div>
+          <div class="form-group mi-narrow"><label>${esc(t('mi_ed_total'))}</label>
+            <input type="number" min="1" data-list="splitRules" data-i="${i}" data-k="total_count" value="${esc(s.total_count)}"></div>
+        </div>
+        <div class="form-group"><label>${esc(t('mi_ed_sequence'))}</label>
+          <input type="text" data-list="splitRules" data-i="${i}" data-k="module_type_sequence" value="${esc((s.module_type_sequence || []).join(', '))}">
+        </div>
+      </div>`).join('')}
+    <button type="button" class="btn btn-secondary btn-sm" data-act="add-split">+ ${esc(t('mi_ed_add_split'))}</button>`;
+}
+
+function renderBlocks(d) {
+  return `
+    ${d.blocks.map((b, i) => `
+      <div class="mi-item">
+        <div class="mi-item-head"><span></span>
+          <button type="button" class="mi-x" data-act="del-block" data-i="${i}" title="${esc(t('mi_ed_remove'))}">×</button></div>
+        <div class="form-row">
+          <div class="form-group"><label>${esc(t('mi_ed_count_col'))}</label>
+            <input type="text" list="mi-dl-headers" autocomplete="off" data-list="blocks" data-i="${i}" data-k="count_column" value="${esc(b.count_column)}"></div>
+          <div class="form-group"><label>${esc(t('mi_ed_row_col'))}</label>
+            <input type="text" list="mi-dl-headers" autocomplete="off" data-list="blocks" data-i="${i}" data-k="row_name_column" value="${esc(b.row_name_column || '')}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>${esc(t('mi_ed_prefix'))}</label>
+            <input type="text" data-list="blocks" data-i="${i}" data-k="prefix_pattern" value="${esc(b.prefix_pattern)}"></div>
+          <div class="form-group"><label>${esc(t('mi_ed_block_seq'))}</label>
+            <input type="text" data-list="blocks" data-i="${i}" data-k="block_sequence" value="${esc((b.block_sequence || []).join(', '))}"></div>
+        </div>
+        <p class="settings-section-desc">${esc(t('mi_ed_block_seq_hint'))}</p>
+      </div>`).join('')}
+    <button type="button" class="btn btn-secondary btn-sm" data-act="add-block">+ ${esc(t('mi_ed_add_block'))}</button>`;
+}
+
+function renderColumns(d) {
+  return `
+    <p class="settings-section-desc">${esc(t('mi_ed_pattern_hint'))}</p>
+    ${d.columns.map((c, i) => `
+      <div class="mi-item mi-item--row">
+        ${selectHtml(INTERNAL_FIELDS, c.internal_field, `data-list="columns" data-i="${i}" data-k="internal_field"`)}
+        <input type="text" list="mi-dl-headers" autocomplete="off" data-list="columns" data-i="${i}" data-k="column_suffix_pattern" value="${esc(c.column_suffix_pattern)}">
+        <button type="button" class="mi-x" data-act="del-col" data-i="${i}" title="${esc(t('mi_ed_remove'))}">×</button>
+      </div>`).join('')}
+    <button type="button" class="btn btn-secondary btn-sm" data-act="add-col">+ ${esc(t('mi_ed_add_column'))}</button>`;
+}
+
+function renderEditor() {
+  const d = S.draft;
+  if (!d) return;
+  document.querySelectorAll('#mi-editor [data-mi-tab]').forEach(b =>
+    b.classList.toggle('active', b.dataset.miTab === S.editorTab));
+  const body = {
+    general: renderGeneral, rules: renderRules, splits: renderSplits, blocks: renderBlocks, columns: renderColumns,
+  }[S.editorTab](d);
+  $('mi-editor-body').innerHTML = dataLists() + body;
+}
+
+function onEditorInput(e) {
+  const el = e.target;
+  const k = el.dataset.k;
+  if (!k || !S.draft) return;
+  let val = el.value;
+  if (el.type === 'number') val = val === '' ? '' : Number(val);
+
+  if (!el.dataset.list) { S.draft[k] = val; return; }
+  const item = S.draft[el.dataset.list][Number(el.dataset.i)];
+  if (!item) return;
+  if (el.dataset.ci !== undefined) {
+    const c = item.conditions[Number(el.dataset.ci)];
+    if (k === 'value') c.value = c.op === 'in' ? String(val).split(',').map(s => s.trim()).filter(Boolean) : val;
+    else {
+      c[k] = val;
+      if (k === 'op') {
+        if (val === 'in' && !Array.isArray(c.value)) c.value = String(c.value ?? '').split(',').map(s => s.trim()).filter(Boolean);
+        if (val !== 'in' && Array.isArray(c.value)) c.value = c.value.join(', ');
+      }
+    }
+    if (el.dataset.rerender) renderEditor();
+  } else if (k === 'module_type_sequence') {
+    item[k] = String(val).split(',').map(s => s.trim()).filter(Boolean);
+  } else if (k === 'block_sequence') {
+    item[k] = expandSequence(val);
+  } else {
+    item[k] = val;
+  }
+}
+
+function onEditorClick(e) {
+  const btn = e.target.closest('[data-act]');
+  if (!btn || !S.draft) return;
+  const d = S.draft;
+  const i = Number(btn.dataset.i);
+  switch (btn.dataset.act) {
+    case 'add-rule': {
+      const maxPrio = d.rules.reduce((m, r) => Math.max(m, Number(r.priority) || 0), 0);
+      d.rules.push({ id: generateId(), priority: maxPrio + 10, conditions: [], netbox_module_type_id: '', min_bay: 1, max_bay: Number(d.slot_count) || 12 });
+      break;
+    }
+    case 'del-rule': d.rules.splice(i, 1); break;
+    case 'add-cond': d.rules[i].conditions.push({ field: 'category', op: 'eq', value: '' }); break;
+    case 'del-cond': d.rules[i].conditions.splice(Number(btn.dataset.ci), 1); break;
+    case 'add-split': d.splitRules.push({ id: generateId(), category: 'LAN', color: '', total_count: 2, module_type_sequence: [] }); break;
+    case 'del-split': d.splitRules.splice(i, 1); break;
+    case 'add-block': d.blocks.push({ id: generateId(), count_column: '', prefix_pattern: 'Block {block}', block_sequence: ['A', 'B', 'C'], row_name_column: '' }); break;
+    case 'del-block': d.blocks.splice(i, 1); break;
+    case 'add-col': d.columns.push({ id: generateId(), internal_field: 'lan_port_name', column_suffix_pattern: '{prefix} ' }); break;
+    case 'del-col': d.columns.splice(i, 1); break;
+    default: return;
+  }
+  renderEditor();
+}
+
+function saveDraft() {
+  const d = S.draft;
+  if (!d) return;
+  const { errors, warnings } = validateProfile(d, getModuleTypes().map(m => m.name));
+  const msg = $('mi-editor-msg');
+  if (errors.length) {
+    msg.innerHTML = `<div class="message message-error">${errors.map(x => esc(validationText(x))).join('<br>')}</div>`;
+    return;
+  }
+  d.slot_count = Number(d.slot_count);
+  d.rules.sort((a, b) => Number(a.priority) - Number(b.priority));
+  const idx = S.profiles.findIndex(p => p.id === d.id);
+  if (idx >= 0) S.profiles[idx] = clone(d);
+  persistProfiles();
+  renderProfileSelect();
+  msg.innerHTML = warnings.length
+    ? `<div class="message message-info">${esc(t('mi_ed_saved'))}<br>${warnings.map(x => esc(validationText(x))).join('<br>')}</div>`
+    : `<div class="message message-success">${esc(t('mi_ed_saved'))}</div>`;
+  S.draft = clone(S.profiles[idx]);
+  renderEditor();
+}
+
+// ─── Step 2: preview ─────────────────────────────────────────────────────────
+
+function renderPreview() {
+  const a = S.analysis;
+  const profile = activeProfile();
+  const slots = Number(profile.slot_count) || 12;
+  const s = a.summary;
+  $('mi-pv-summary').textContent = t('mi_pv_summary', {
+    devices: s.devices, bays: s.baysUsed, errors: s.errors, warnings: s.warnings,
+  });
+  $('mi-pv-summary').classList.toggle('mi-has-errors', s.errors > 0);
+
+  const fileLevel = a.errors.filter(e => e.rowIndex === 0);
+  const fl = $('mi-pv-file-issues');
+  fl.innerHTML = fileLevel.length
+    ? `<div class="message message-error"><strong>${esc(t('mi_pv_file_errors'))}</strong><br>${fileLevel.map(i => esc(issueText(i))).join('<br>')}</div>`
+    : '';
+
+  const rowErrors = a.errors.filter(e => e.rowIndex && !e.device);
+  const rl = $('mi-pv-row-issues');
+  rl.innerHTML = rowErrors.length
+    ? `<div class="message message-error">${rowErrors.map(i => esc(issueText(i))).join('<br>')}</div>`
+    : '';
+
+  const types = new Set();
+  a.devices.forEach(d => d.bays.forEach(b => b && types.add(b.moduleType)));
+  $('mi-pv-legend').innerHTML = [...types].map(n =>
+    `<span class="mi-chip"><i style="background:${moduleColor(n)}"></i>${esc(n)}</span>`).join('');
+
+  const onlyErrors = $('mi-pv-errors-only').checked;
+  const list = a.devices.filter(d => !onlyErrors || d.issues.length);
+  $('mi-pv-cards').innerHTML = list.length ? list.map(d => {
+    const cells = [];
+    for (let n = 1; n <= slots; n++) {
+      const b = d.bays[n - 1];
+      const hasErr = d.issues.some(i => i.bay === n);
+      const title = b ? `${b.moduleType}${b.ports ? '\n' + b.ports.join(', ') : ''}` : '';
+      cells.push(`<div class="slot-cell${hasErr ? ' slot-cell--error' : ''}" title="${esc(title)}">
+        <span class="slot-no">${n}</span>
+        ${b ? `<span class="slot-module" style="background:${moduleColor(b.moduleType)}">${esc(b.moduleType)}${b.ports ? ` <small>(${esc(b.ports.join(', '))})</small>` : ''}</span>`
+            : '<span class="slot-module slot-empty"></span>'}
+      </div>`);
+    }
+    return `<div class="mi-card${d.issues.length ? ' mi-card--error' : ''}">
+      <div class="mi-card-head"><strong>${esc(d.name)}</strong><small>${esc(t('mi_pv_row', { row: d.rowIndex }))}</small></div>
+      ${d.issues.length ? `<ul class="mi-card-issues">${d.issues.map(i => `<li>${esc(issueText({ ...i, rowIndex: 0 }))}</li>`).join('')}</ul>` : ''}
+      <div class="slot-preview">${cells.join('')}</div>
+    </div>`;
+  }).join('') : `<p class="settings-section-desc">${esc(t(a.devices.length ? 'mi_pv_no_errors' : 'mi_pv_none'))}</p>`;
+
+  $('mi-pv-continue').disabled = s.errors > 0 || s.devices === 0;
+}
+
+// ─── Step 3: export ──────────────────────────────────────────────────────────
+
+function moduleCsv() {
+  return writeCsv(buildModuleImportRows(S.analysis.devices, activeProfile()), MODULE_IMPORT_HEADERS);
+}
+
+function renderExport() {
+  const rows = buildModuleImportRows(S.analysis.devices, activeProfile()).length;
+  $('mi-ex-summary').textContent = t('mi_ex_summary', { rows, devices: S.analysis.devices.length });
+}
+
+// ─── Step 4: interface IDs ───────────────────────────────────────────────────
+
+function renderRenameResult() {
+  const r = S.rename;
+  const box = $('mi-if-result');
+  if (!r) { box.innerHTML = ''; $('mi-if-download').disabled = true; $('mi-if-zip').disabled = true; return; }
+  const unmatched = r.unmatched.slice(0, 15).map(u => `${esc(u.device)} · ${esc(u.expected)}`).join('<br>');
+  box.innerHTML = `
+    <div class="message ${r.unmatched.length ? 'message-info' : 'message-success'}">
+      ${esc(t('mi_if_result', { matched: r.rows.length, unchanged: r.unchanged, unmatched: r.unmatched.length }))}
+      ${r.unmatched.length ? `<br><small>${esc(t('mi_if_unmatched_title'))}</small><br><small>${unmatched}${r.unmatched.length > 15 ? '<br>…' : ''}</small>` : ''}
+    </div>`;
+  $('mi-if-download').disabled = r.rows.length === 0;
+  $('mi-if-zip').disabled = false;
+}
+
+function applyInterfaces(interfaces) {
+  S.rename = buildInterfaceRename(S.analysis.devices, activeProfile(), interfaces);
+  renderRenameResult();
+}
+
+function renderInterfaceStep() {
+  const expected = expectedInterfaces(S.analysis.devices, activeProfile());
+  const none = expected.length === 0;
+  $('mi-if-none').hidden = !none;
+  $('mi-if-actions').hidden = none;
+  renderRenameResult();
+}
+
+async function fetchInterfacesFromApi() {
+  const { baseUrl, token } = await getApiCredentials();
+  if (!baseUrl || !token) { alert(t('netbox_api_missing_creds')); return; }
+  const names = [...new Set(expectedInterfaces(S.analysis.devices, activeProfile()).map(e => e.device))];
+  const btn = $('mi-if-api-btn');
+  const orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = t('netbox_api_fetching');
+  try {
+    const all = [];
+    for (let i = 0; i < names.length; i += 20) {
+      const query = names.slice(i, i + 20).map(n => `device=${encodeURIComponent(n)}`).join('&');
+      const items = await apiFetchPages(baseUrl, token, 'dcim/interfaces', query);
+      for (const it of items) all.push({ id: String(it.id), device: it.device?.name || '', name: it.name });
+    }
+    applyInterfaces(all);
+  } catch (err) {
+    alert(err instanceof TypeError ? t('netbox_api_cors_error') : `${t('netbox_api_error')}: ${err.message}`);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = orig;
+  }
+}
+
+async function onInterfaceFile(file) {
+  if (!file) return;
+  const table = parseCsvTable(await readTextFile(file));
+  const { interfaces, missing } = readInterfaceTable(table);
+  if (missing.length) { alert(t('mi_if_missing_cols', { cols: missing.join(', ') })); return; }
+  applyInterfaces(interfaces);
+}
+
+function renameCsv() {
+  return writeCsv(S.rename.rows, INTERFACE_RENAME_HEADERS);
+}
+
+// ─── Init ────────────────────────────────────────────────────────────────────
+
+function initModuleImport() {
+  const dialog = $('module-import-dialog');
+  if (!dialog) return;
+
+  $('module-import-btn')?.addEventListener('click', () => {
+    S.profiles = loadProfiles();
+    if (!S.profiles.some(p => p.id === S.activeId)) S.activeId = S.profiles[0].id;
+    renderProfileSelect();
+    closeEditor();
+    showStep(1);
+    dialog.showModal();
+  });
+  $('mi-close-btn').addEventListener('click', () => closeDialogAnimated(dialog));
+
+  // Profile toolbar
+  $('mi-profile').addEventListener('change', e => { S.activeId = e.target.value; if (S.draft) openEditor(); });
+  $('mi-profile-new').addEventListener('click', () => {
+    const p = createEmptyProfile(t('mi_new_profile_name'));
+    const seed = createSeedProfile();
+    p.blocks = seed.blocks; p.columns = seed.columns;
+    S.profiles.push(p);
+    persistProfiles();
+    setActive(p.id);
+    openEditor();
+  });
+  $('mi-profile-dup').addEventListener('click', () => {
+    const copy = duplicateProfile(activeProfile());
+    S.profiles.push(copy);
+    persistProfiles();
+    setActive(copy.id);
+  });
+  $('mi-profile-del').addEventListener('click', () => {
+    const p = activeProfile();
+    if (p.is_default) { alert(t('mi_cannot_delete_default')); return; }
+    if (!confirm(t('mi_confirm_delete_profile', { name: p.name }))) return;
+    S.profiles = S.profiles.filter(x => x.id !== p.id);
+    persistProfiles();
+    closeEditor();
+    setActive(S.profiles[0].id);
+  });
+  $('mi-profile-edit').addEventListener('click', openEditor);
+  $('mi-profile-export').addEventListener('click', () => {
+    const p = activeProfile();
+    triggerDownload(exportProfileJson(p), `${slug(p.name)}.profile.json`, 'application/json');
+  });
+  $('mi-profile-import').addEventListener('click', () => $('mi-profile-file').click());
+  $('mi-profile-file').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    const p = importProfileJson(await readTextFile(file));
+    if (!p) { alert(t('mi_profile_import_invalid')); return; }
+    S.profiles.push(p);
+    persistProfiles();
+    setActive(p.id);
+  });
+
+  // Editor
+  document.querySelectorAll('#mi-editor [data-mi-tab]').forEach(b =>
+    b.addEventListener('click', () => { S.editorTab = b.dataset.miTab; renderEditor(); }));
+  $('mi-editor-body').addEventListener('input', onEditorInput);
+  $('mi-editor-body').addEventListener('change', onEditorInput);
+  $('mi-editor-body').addEventListener('click', onEditorClick);
+  $('mi-editor-save').addEventListener('click', saveDraft);
+  $('mi-editor-cancel').addEventListener('click', closeEditor);
+
+  // File + analyse
+  $('mi-csv-btn').addEventListener('click', () => $('mi-csv-file').click());
+  $('mi-csv-file').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    await onCsvChosen(file);
+  });
+  $('mi-analyse-btn').addEventListener('click', runAnalysis);
+
+  // Preview
+  $('mi-pv-errors-only').addEventListener('change', renderPreview);
+  $('mi-pv-back').addEventListener('click', () => showStep(1));
+  $('mi-pv-continue').addEventListener('click', () => { renderExport(); showStep(3); });
+
+  // Export
+  $('mi-ex-csv').addEventListener('click', () =>
+    triggerDownload(moduleCsv(), 'module-import.csv', 'text/csv'));
+  $('mi-ex-zip').addEventListener('click', () =>
+    triggerDownload(createZip([{ name: 'module-import.csv', data: moduleCsv() }]), 'module-import.zip', 'application/zip'));
+  $('mi-ex-back').addEventListener('click', () => showStep(2));
+  $('mi-ex-next').addEventListener('click', () => { renderInterfaceStep(); showStep(4); });
+
+  // Interfaces
+  $('mi-if-api-btn').addEventListener('click', fetchInterfacesFromApi);
+  $('mi-if-file-btn').addEventListener('click', () => $('mi-if-file').click());
+  $('mi-if-file').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    await onInterfaceFile(file);
+  });
+  $('mi-if-download').addEventListener('click', () =>
+    triggerDownload(renameCsv(), 'interface-rename.csv', 'text/csv'));
+  $('mi-if-zip').addEventListener('click', () => {
+    const files = [{ name: 'module-import.csv', data: moduleCsv() }];
+    if (S.rename && S.rename.rows.length) files.push({ name: 'interface-rename.csv', data: renameCsv() });
+    triggerDownload(createZip(files), 'module-import-bundle.zip', 'application/zip');
+  });
+  $('mi-if-back').addEventListener('click', () => showStep(3));
 }
 
 // ─── Accordion animations ────────────────────────────────────────────────────
@@ -5298,6 +7307,8 @@ function initStorageIndicator() {
       // Keep theme and language preferences
       const theme = localStorage.getItem('rackbuilder_theme');
       const lang = localStorage.getItem('rackbuilder_lang');
+      const profiles = localStorage.getItem('rackbuilder_import_profiles');
+      const keepProfiles = profiles && !confirm(t('confirm_clear_profiles'));
 
       // Remove all rackbuilder keys
       const keysToRemove = [];
@@ -5312,6 +7323,7 @@ function initStorageIndicator() {
       // Restore preferences
       if (theme) localStorage.setItem('rackbuilder_theme', theme);
       if (lang) localStorage.setItem('rackbuilder_lang', lang);
+      if (keepProfiles) localStorage.setItem('rackbuilder_import_profiles', profiles);
 
       dispatch('CLEAR_STATE');
     }
