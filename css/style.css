@@ -2010,6 +2010,12 @@ dialog.dialog-wide {
 [data-theme="light"] .slot-cell { border-bottom-color: #d1d5db; }
 [data-theme="light"] .slot-preview { border-color: #94a3b8; }
 
+/* Light theme: the shared message colours are tuned for dark backgrounds */
+[data-theme="light"] #module-import-dialog .message-error,
+[data-theme="light"] .mi-card-issues { color: #b91c1c; }
+[data-theme="light"] #module-import-dialog .message-info { color: #1d4ed8; }
+[data-theme="light"] #module-import-dialog .message-success { color: #15803d; }
+
 @media (max-width: 700px) {
   .mi-steps li em { display: none; }
   .mi-narrow { flex-basis: 70px; }
