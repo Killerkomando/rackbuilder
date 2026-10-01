@@ -29,6 +29,30 @@ export function initDeviceForm() {
     });
   });
 
+  // Auto-fill form from device type template metadata
+  document.getElementById('dev-type').addEventListener('ac:select', (e) => {
+    if (editingDeviceId) return; // Don't override while editing
+    const entry = e.detail;
+    const parts = [];
+    if (entry.uHeight) { document.getElementById('dev-height').value = entry.uHeight; parts.push(entry.uHeight + 'U'); }
+    if (entry.fullDepth !== undefined) { document.getElementById('dev-full-depth').checked = entry.fullDepth; if (entry.fullDepth) parts.push('Full'); }
+    if (entry.manufacturer) { document.getElementById('dev-manufacturer').value = entry.manufacturer; parts.push(entry.manufacturer); }
+    if (parts.length > 0) showAutofillToast(parts.join(' · '));
+  });
+
+  function showAutofillToast(text) {
+    let toast = document.getElementById('autofill-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'autofill-toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = '⚡ Auto-filled: ' + text;
+    toast.className = 'autofill-toast autofill-toast--show';
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => { toast.className = 'autofill-toast'; }, 2500);
+  }
+
   // Bulk toggle via checkbox
   bulkCheckbox.addEventListener('change', () => {
     const isOpen = bulkCheckbox.checked;
