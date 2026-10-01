@@ -6,7 +6,7 @@ import { moduleSizeFor, fillPattern } from './import-profiles.js';
 export const MODULE_IMPORT_HEADERS = ['device', 'module_bay', 'module_type', 'status'];
 export const INTERFACE_RENAME_HEADERS = ['id', 'name'];
 
-const norm = s => String(s ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
+const miNorm = s => String(s ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
 const MAX_LAN_PORTS = 99;
 
 // ─── Table cleaning & value parsing ──────────────────────────────────────────
@@ -45,9 +45,9 @@ function conditionMatches(c, ctx) {
   switch (c.op) {
     case 'empty': return isEmpty;
     case 'notempty': return !isEmpty;
-    case 'eq': return norm(actual) === norm(c.value);
-    case 'neq': return norm(actual) !== norm(c.value);
-    case 'in': return Array.isArray(c.value) && c.value.some(v => norm(v) === norm(actual));
+    case 'eq': return miNorm(actual) === miNorm(c.value);
+    case 'neq': return miNorm(actual) !== miNorm(c.value);
+    case 'in': return Array.isArray(c.value) && c.value.some(v => miNorm(v) === miNorm(actual));
     case 'gt': return Number(actual) > Number(c.value);
     case 'gte': return Number(actual) >= Number(c.value);
     case 'lt': return Number(actual) < Number(c.value);
@@ -70,9 +70,9 @@ function availableSizes(profile, category, color) {
   for (const r of profile.rules || []) {
     const conds = r.conditions || [];
     const cat = conds.find(c => c.field === 'category' && c.op === 'eq');
-    if (cat && norm(cat.value) !== norm(category)) continue;
+    if (cat && miNorm(cat.value) !== miNorm(category)) continue;
     const col = conds.find(c => c.field === 'socket_color' && c.op === 'eq');
-    if (col && color && norm(col.value) !== norm(color)) continue;
+    if (col && color && miNorm(col.value) !== miNorm(color)) continue;
     const pc = conds.find(c => c.field === 'port_count' && c.op === 'eq');
     if (pc && Number(pc.value) > 0) sizes.add(Number(pc.value));
   }
@@ -137,8 +137,8 @@ export function analyzeCsv(table, profile) {
   const warnings = [];
   const devices = [];
   const slots = Number(profile.slot_count) || 12;
-  const headerMap = new Map(table.headers.map(h => [norm(h), h]));
-  const findHeader = name => headerMap.get(norm(name));
+  const headerMap = new Map(table.headers.map(h => [miNorm(h), h]));
+  const findHeader = name => headerMap.get(miNorm(name));
   const fileLevelReported = new Set();
 
   const reportFile = (code, params) => {
@@ -160,7 +160,7 @@ export function analyzeCsv(table, profile) {
       const rowIndex = rIdx + 1;
       const count = parseNumeric(row[countHeader]);
       if (count.invalid || (count.value !== null && (!Number.isInteger(count.value) || count.value < 0))) {
-        errors.push({ rowIndex, device: null, bay: null, code: 'block_count_invalid', params: { value: row[countHeader] } });
+        errors.push({ rowIndex, device: null, bay: null, code: 'block_count_invalid', params: { value: row[countHeader], max: seq.length } });
         return;
       }
       const n = count.value ?? 0;
@@ -280,7 +280,7 @@ function splitDemand(profile, demand, fail) {
   const { category, color, total } = demand;
 
   const split = (profile.splitRules || []).find(s =>
-    s.category === category && Number(s.total_count) === total && (!s.color || norm(s.color) === norm(color)));
+    s.category === category && Number(s.total_count) === total && (!s.color || miNorm(s.color) === miNorm(color)));
   if (split) {
     const chunks = (split.module_type_sequence || []).map(name => ({ size: moduleSizeFor(profile, name), forcedModule: name }));
     if (chunks.length === 0 || chunks.some(c => c.size === null) ||
@@ -344,7 +344,7 @@ export function expectedInterfaces(devices, profile) {
  * @returns {{interfaces: Array<{id:string, device:string, name:string}>, missing: string[]}}
  */
 export function readInterfaceTable(table) {
-  const find = key => table.headers.find(h => norm(h) === key);
+  const find = key => table.headers.find(h => miNorm(h) === key);
   const idH = find('id'), devH = find('device'), nameH = find('name');
   const missing = [['id', idH], ['device', devH], ['name', nameH]].filter(([, h]) => !h).map(([k]) => k);
   if (missing.length) return { interfaces: [], missing };

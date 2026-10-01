@@ -9,6 +9,7 @@ import { initDragDrop } from './drag-drop.js';
 import { initExport } from './export.js';
 import { t, getCurrentLang, setLang, applyTranslations } from './i18n.js';
 import { initNetboxAutocomplete } from './netbox-autocomplete.js';
+import { initModuleImport } from './module-import.js';
 
 // Initialize the application
 function init() {
@@ -45,6 +46,7 @@ function init() {
   initStorageIndicator();
   initBulkPositionHighlight();
   initNetboxAutocomplete();
+  initModuleImport();
   initAccordionAnimations();
   initDeviceSearch();
   initResponsiveSidebars();
@@ -714,6 +716,10 @@ function initStorageIndicator() {
       const theme = localStorage.getItem('rackbuilder_theme');
       const lang = localStorage.getItem('rackbuilder_lang');
 
+      // Import profiles are configuration: keep them unless the user explicitly agrees to delete them
+      const profiles = localStorage.getItem('rackbuilder_import_profiles');
+      const keepProfiles = profiles && !confirm(t('confirm_clear_profiles'));
+
       // Remove all rackbuilder keys
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
@@ -727,6 +733,7 @@ function initStorageIndicator() {
       // Restore preferences
       if (theme) localStorage.setItem('rackbuilder_theme', theme);
       if (lang) localStorage.setItem('rackbuilder_lang', lang);
+      if (keepProfiles) localStorage.setItem('rackbuilder_import_profiles', profiles);
 
       dispatch('CLEAR_STATE');
     }

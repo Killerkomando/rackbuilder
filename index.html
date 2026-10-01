@@ -214,6 +214,7 @@
       <div class="sidebar-accordion-body">
         <button class="btn btn-secondary btn-block" id="import-btn" data-i18n="btn_import">Import JSON</button>
         <input type="file" id="import-file" accept=".json" style="display:none">
+        <button class="btn btn-secondary btn-block" id="module-import-btn" data-i18n="mi_open_btn">Module import (CSV)…</button>
         <button class="btn btn-secondary btn-block" id="import-csv-btn" data-i18n="btn_import_csv" style="margin-top:6px">Import CSV</button>
         <input type="file" id="import-csv-file" accept=".csv" style="display:none">
         <p class="form-hint" data-i18n="import_csv_hint" style="margin-top:6px"></p>
@@ -273,6 +274,114 @@
     <button class="btn btn-secondary" id="import-preview-cancel" data-i18n="btn_dialog_cancel">Cancel</button>
     <button class="btn btn-primary" id="import-preview-confirm" data-i18n="import_preview_ok">Import</button>
   </div>
+</dialog>
+
+<!-- Module Import Dialog (NetBox module types per bay from CSV) -->
+<dialog id="module-import-dialog" class="dialog-wide">
+  <div class="mi-header">
+    <h2 data-i18n="mi_title">NetBox Module Import</h2>
+    <button type="button" class="btn btn-secondary btn-sm" id="mi-close-btn" data-i18n="mi_btn_close">Close</button>
+  </div>
+  <ol class="mi-steps" id="mi-steps">
+    <li data-step="1" class="active"><span>1</span><em data-i18n="mi_step_profile">Profile &amp; file</em></li>
+    <li data-step="2"><span>2</span><em data-i18n="mi_step_preview">Preview</em></li>
+    <li data-step="3"><span>3</span><em data-i18n="mi_step_export">Export</em></li>
+    <li data-step="4"><span>4</span><em data-i18n="mi_step_interfaces">Interface IDs</em></li>
+  </ol>
+
+  <!-- Step 1: profile + file -->
+  <section class="mi-step active" data-step="1">
+    <div class="form-group">
+      <label for="mi-profile" data-i18n="mi_profile">Import profile</label>
+      <select id="mi-profile"></select>
+    </div>
+    <div class="mi-toolbar">
+      <button type="button" class="btn btn-secondary btn-sm" id="mi-profile-edit" data-i18n="mi_btn_edit">Edit</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="mi-profile-new" data-i18n="mi_btn_new">New</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="mi-profile-dup" data-i18n="mi_btn_duplicate">Duplicate</button>
+      <button type="button" class="btn btn-danger btn-sm" id="mi-profile-del" data-i18n="mi_btn_delete">Delete</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="mi-profile-import" data-i18n="mi_btn_import_profile">Import JSON</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="mi-profile-export" data-i18n="mi_btn_export_profile">Export JSON</button>
+      <input type="file" id="mi-profile-file" accept=".json" style="display:none">
+    </div>
+
+    <div class="mi-editor" id="mi-editor" hidden>
+      <div class="mi-tabs">
+        <button type="button" data-mi-tab="general" data-i18n="mi_ed_tab_general">General</button>
+        <button type="button" data-mi-tab="rules" data-i18n="mi_ed_tab_rules">Mapping rules</button>
+        <button type="button" data-mi-tab="splits" data-i18n="mi_ed_tab_splits">Port splits</button>
+        <button type="button" data-mi-tab="blocks" data-i18n="mi_ed_tab_blocks">Blocks</button>
+        <button type="button" data-mi-tab="columns" data-i18n="mi_ed_tab_columns">Columns</button>
+      </div>
+      <div id="mi-editor-body" class="mi-editor-body"></div>
+      <div id="mi-editor-msg"></div>
+      <div class="mi-actions">
+        <button type="button" class="btn btn-secondary btn-sm" id="mi-editor-cancel" data-i18n="mi_ed_cancel">Close editor</button>
+        <button type="button" class="btn btn-primary btn-sm" id="mi-editor-save" data-i18n="mi_ed_save">Save profile</button>
+      </div>
+    </div>
+
+    <div class="mi-file-row">
+      <button type="button" class="btn btn-secondary" id="mi-csv-btn" data-i18n="mi_choose_file">Choose CSV file</button>
+      <input type="file" id="mi-csv-file" accept=".csv,.tsv,.txt" style="display:none">
+      <span id="mi-file-info" class="mi-file-info"></span>
+    </div>
+    <div class="mi-actions">
+      <button type="button" class="btn btn-primary" id="mi-analyse-btn" disabled data-i18n="mi_analyse">Analyse</button>
+    </div>
+  </section>
+
+  <!-- Step 2: preview -->
+  <section class="mi-step" data-step="2">
+    <p id="mi-pv-summary" class="mi-summary"></p>
+    <div id="mi-pv-file-issues"></div>
+    <div id="mi-pv-row-issues"></div>
+    <div class="mi-pv-controls">
+      <label class="form-checkbox-label"><input type="checkbox" id="mi-pv-errors-only"><span data-i18n="mi_pv_errors_only">Errors only</span></label>
+      <div id="mi-pv-legend" class="mi-legend"></div>
+    </div>
+    <div id="mi-pv-cards" class="mi-cards"></div>
+    <div class="mi-actions">
+      <button type="button" class="btn btn-secondary" id="mi-pv-back" data-i18n="mi_pv_back">Back to rules</button>
+      <button type="button" class="btn btn-primary" id="mi-pv-continue" data-i18n="mi_pv_continue">Continue</button>
+    </div>
+  </section>
+
+  <!-- Step 3: export -->
+  <section class="mi-step" data-step="3">
+    <p id="mi-ex-summary" class="mi-summary"></p>
+    <p class="settings-section-desc" data-i18n="mi_ex_hint">Import module-import.csv in NetBox (Dcim → Modules → Import). Then continue to rename the LAN interfaces.</p>
+    <div class="mi-toolbar">
+      <button type="button" class="btn btn-success" id="mi-ex-csv" data-i18n="mi_ex_download_csv">Download module-import.csv</button>
+      <button type="button" class="btn btn-secondary" id="mi-ex-zip" data-i18n="mi_ex_download_zip">Download as ZIP</button>
+    </div>
+    <div class="mi-actions">
+      <button type="button" class="btn btn-secondary" id="mi-ex-back" data-i18n="mi_ex_back">Back</button>
+      <button type="button" class="btn btn-primary" id="mi-ex-next" data-i18n="mi_ex_next">Next: interface IDs</button>
+    </div>
+  </section>
+
+  <!-- Step 4: interface IDs -->
+  <section class="mi-step" data-step="4">
+    <p class="settings-section-desc" data-i18n="mi_if_intro">After NetBox created the modules, the LAN interfaces need their real port names. Get the interface IDs from NetBox:</p>
+    <p id="mi-if-none" class="message message-info" hidden data-i18n="mi_if_no_lan">None of the devices has LAN modules, so there is nothing to rename.</p>
+    <div id="mi-if-actions">
+      <div class="mi-toolbar">
+        <button type="button" class="btn btn-secondary" id="mi-if-api-btn" data-i18n="mi_if_api_btn">Fetch from NetBox API</button>
+        <button type="button" class="btn btn-secondary" id="mi-if-file-btn" data-i18n="mi_if_file_btn">Upload interface export (CSV)</button>
+        <input type="file" id="mi-if-file" accept=".csv,.tsv,.txt" style="display:none">
+      </div>
+      <p class="settings-section-desc" data-i18n="mi_if_api_hint">The API option uses the URL and token from Settings → NetBox and needs CORS to be allowed. The file upload always works: export the interfaces (with the ID column) from NetBox.</p>
+    </div>
+    <div id="mi-if-result"></div>
+    <div class="mi-toolbar">
+      <button type="button" class="btn btn-success" id="mi-if-download" disabled data-i18n="mi_if_download">Download interface-rename.csv</button>
+      <button type="button" class="btn btn-secondary" id="mi-if-zip" disabled data-i18n="mi_if_zip">Download both as ZIP</button>
+    </div>
+    <div class="mi-actions">
+      <button type="button" class="btn btn-secondary" id="mi-if-back" data-i18n="mi_ex_back">Back</button>
+    </div>
+  </section>
 </dialog>
 
 <!-- Settings Modal -->

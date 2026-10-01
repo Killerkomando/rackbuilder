@@ -1,6 +1,8 @@
 // Import profiles for the NetBox module import (stored separately from the undo state).
 // Pure data logic: only the load/save helpers touch localStorage (injectable for tests).
 
+import { generateId } from './utils.js';
+
 export const PROFILES_KEY = 'rackbuilder_import_profiles';
 
 export const SPLIT_STRATEGIES = ['largest_first', 'smallest_first', 'fewest_modules'];
@@ -9,14 +11,12 @@ export const INTERNAL_FIELDS = ['sockets_white', 'sockets_orange', 'lan_port_nam
 /** Fields a MappingRule condition can test (derived by the engine). */
 export const CONDITION_FIELDS = ['category', 'port_count', 'socket_color', 'block', 'row'];
 
-const uid = () => (globalThis.crypto?.randomUUID?.() ||
-  'id-' + Math.random().toString(36).slice(2) + Date.now().toString(36));
 
 // ─── Factories ───────────────────────────────────────────────────────────────
 
 export function createEmptyProfile(name = 'New profile') {
   return {
-    id: uid(),
+    id: generateId(),
     name,
     netbox_device_type_id: '',
     default_split_strategy: 'largest_first',
@@ -32,11 +32,11 @@ export function createEmptyProfile(name = 'New profile') {
   };
 }
 
-function rule(priority, category, color, ports, moduleType, minBay, maxBay) {
+function makeSeedRule(priority, category, color, ports, moduleType, minBay, maxBay) {
   const conditions = [{ field: 'category', op: 'eq', value: category }];
   if (color) conditions.push({ field: 'socket_color', op: 'eq', value: color });
   conditions.push({ field: 'port_count', op: 'eq', value: ports });
-  return { id: uid(), priority, conditions, netbox_module_type_id: moduleType, min_bay: minBay, max_bay: maxBay };
+  return { id: generateId(), priority, conditions, netbox_module_type_id: moduleType, min_bay: minBay, max_bay: maxBay };
 }
 
 /** The bundled starting point (is_default). Names follow the spec's module type proposal. */
@@ -45,24 +45,24 @@ export function createSeedProfile() {
   p.id = 'default-12bay';
   p.is_default = true;
   p.blocks = [{
-    id: uid(),
+    id: generateId(),
     count_column: 'Anzahl Bodentanks',
     prefix_pattern: 'Bodentank {block}',
     block_sequence: 'ABCDEFGHIJK'.split(''),
     row_name_column: 'Raum',
   }];
   p.columns = [
-    { id: uid(), internal_field: 'sockets_white', column_suffix_pattern: '{prefix} Steckdosen weiß' },
-    { id: uid(), internal_field: 'sockets_orange', column_suffix_pattern: '{prefix} Steckdosen orange' },
-    { id: uid(), internal_field: 'lan_port_name', column_suffix_pattern: '{prefix} Buchse {n}' },
+    { id: generateId(), internal_field: 'sockets_white', column_suffix_pattern: '{prefix} Steckdosen weiß' },
+    { id: generateId(), internal_field: 'sockets_orange', column_suffix_pattern: '{prefix} Steckdosen orange' },
+    { id: generateId(), internal_field: 'lan_port_name', column_suffix_pattern: '{prefix} Buchse {n}' },
   ];
   p.rules = [
-    rule(10, 'LAN', null, 3, 'LAN-Modul 3-Port', 1, 12),
-    rule(20, 'LAN', null, 2, 'LAN-Modul 2-Port', 1, 12),
-    rule(30, 'Strom', 'white', 3, 'Steckdosenmodul 3-fach Weiß', 6, 12),
-    rule(40, 'Strom', 'white', 2, 'Steckdosenmodul 2-fach Weiß', 6, 12),
-    rule(50, 'Strom', 'orange', 3, 'Steckdosenmodul 3-fach Orange', 6, 12),
-    rule(60, 'Strom', 'orange', 2, 'Steckdosenmodul 2-fach Orange', 6, 12),
+    makeSeedRule(10, 'LAN', null, 3, 'LAN-Modul 3-Port', 1, 12),
+    makeSeedRule(20, 'LAN', null, 2, 'LAN-Modul 2-Port', 1, 12),
+    makeSeedRule(30, 'Strom', 'white', 3, 'Steckdosenmodul 3-fach Weiß', 6, 12),
+    makeSeedRule(40, 'Strom', 'white', 2, 'Steckdosenmodul 2-fach Weiß', 6, 12),
+    makeSeedRule(50, 'Strom', 'orange', 3, 'Steckdosenmodul 3-fach Orange', 6, 12),
+    makeSeedRule(60, 'Strom', 'orange', 2, 'Steckdosenmodul 2-fach Orange', 6, 12),
   ];
   return p;
 }
@@ -85,6 +85,32 @@ export function moduleSizeFor(profile, moduleName) {
 /** Fill `{prefix}`, `{block}`, `{n}` placeholders. */
 export function fillPattern(pattern, vars) {
   return String(pattern ?? '').replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+}
+
+/**
+ * Expand a block sequence typed by the user: "A-K", "1-12", "A, C, Nord" or a mix.
+ * Ranges must be ascending single letters of the same case or integers (max 500 entries).
+ * @param {string} text
+ * @returns {string[]}
+ */
+export function expandSequence(text) {
+  const out = [];
+  for (const raw of String(text ?? '').split(',')) {
+    const tok = raw.trim();
+    if (!tok) continue;
+    let m = tok.match(/^([A-Za-z])\s*-\s*([A-Za-z])$/);
+    if (m && (m[1] === m[1].toUpperCase()) === (m[2] === m[2].toUpperCase()) && m[1] <= m[2]) {
+      for (let c = m[1].charCodeAt(0); c <= m[2].charCodeAt(0); c++) out.push(String.fromCharCode(c));
+      continue;
+    }
+    m = tok.match(/^(\d+)\s*-\s*(\d+)$/);
+    if (m && Number(m[1]) <= Number(m[2]) && Number(m[2]) - Number(m[1]) < 500) {
+      for (let n = Number(m[1]); n <= Number(m[2]); n++) out.push(String(n));
+      continue;
+    }
+    out.push(tok);
+  }
+  return out;
 }
 
 // ─── Validation ──────────────────────────────────────────────────────────────
@@ -183,12 +209,12 @@ export function saveProfiles(profiles, storage = globalThis.localStorage) {
 
 export function duplicateProfile(profile) {
   const copy = JSON.parse(JSON.stringify(profile));
-  copy.id = uid();
+  copy.id = generateId();
   copy.name = `${profile.name} (copy)`;
   copy.is_default = false;
   copy.created_at = new Date().toISOString();
   for (const list of [copy.rules, copy.splitRules, copy.blocks, copy.columns]) {
-    (list || []).forEach(x => { x.id = uid(); });
+    (list || []).forEach(x => { x.id = generateId(); });
   }
   return copy;
 }
@@ -203,10 +229,10 @@ export function importProfileJson(text) {
     const data = JSON.parse(text);
     if (data?._format !== 'rackbuilder-import-profile' || !data.profile) return null;
     const p = { ...createEmptyProfile(data.profile.name || 'Imported'), ...data.profile };
-    p.id = uid();
+    p.id = generateId();
     p.is_default = false;
     for (const list of [p.rules, p.splitRules, p.blocks, p.columns]) {
-      (list || []).forEach(x => { x.id = uid(); });
+      (list || []).forEach(x => { x.id = generateId(); });
     }
     return p;
   } catch { return null; }

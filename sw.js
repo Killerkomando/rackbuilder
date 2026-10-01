@@ -1,6 +1,6 @@
 // Service Worker for offline capability
 
-const CACHE_NAME = 'rackbuilder-v5';
+const CACHE_NAME = 'rackbuilder-v6';
 const ASSETS = [
   './',
   './index.html',
@@ -15,6 +15,11 @@ const ASSETS = [
   './js/utils.js',
   './js/i18n.js',
   './js/netbox-autocomplete.js',
+  './js/csv.js',
+  './js/zip.js',
+  './js/import-profiles.js',
+  './js/import-engine.js',
+  './js/module-import.js',
   './manifest.json',
 ];
 
@@ -37,6 +42,8 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Never cache cross-origin requests (e.g. the NetBox API)
+  if (new URL(event.request.url).origin !== self.location.origin) return;
   event.respondWith(
     caches.match(event.request).then(cached => cached || fetch(event.request))
   );

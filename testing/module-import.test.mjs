@@ -11,7 +11,7 @@ import {
 } from '../js/import-engine.js';
 import {
   createSeedProfile, validateProfile, duplicateProfile, exportProfileJson, importProfileJson,
-  loadProfiles, saveProfiles, PROFILES_KEY,
+  loadProfiles, saveProfiles, PROFILES_KEY, expandSequence,
 } from '../js/import-profiles.js';
 
 const dir = dirname(fileURLToPath(import.meta.url));
@@ -34,6 +34,14 @@ test('composeSizes strategies', () => {
   assert.deepEqual(composeSizes(6, [2, 3], 'fewest_modules'), [3, 3]);
   assert.equal(composeSizes(1, [2, 3], 'largest_first'), null);
   assert.equal(composeSizes(3, [], 'largest_first'), null);
+});
+
+test('expandSequence handles letter/number ranges and plain lists', () => {
+  assert.deepEqual(expandSequence('A-D'), ['A', 'B', 'C', 'D']);
+  assert.deepEqual(expandSequence('1-3, X'), ['1', '2', '3', 'X']);
+  assert.deepEqual(expandSequence('a-c'), ['a', 'b', 'c']);
+  assert.deepEqual(expandSequence('D-A'), ['D-A']); // descending is not a range
+  assert.deepEqual(expandSequence(' Nord , Süd '), ['Nord', 'Süd']);
 });
 
 // ── profile ──
