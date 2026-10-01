@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cable Manager</title>
+  <style>
+    /* --- CSS Variables (based on minimalist/index.html, extended for Cable Manager) --- */
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --color-text: #e2e8f0;
+      --color-text-muted: #94a3b8;
+      --color-border: #334155;
+      --color-success: #22c55e;
+      --color-warning: #facc15;
+      --color-error: #ef4444;
+      --color-accent: #6366f1;
+      --radius: 6px;
+      /* Cable Manager specific */
+      --port-connected: #22c55e;
+      --port-planned: #facc15;
+      --port-free: #334155;
+    }
+    [data-theme="light"] {
+      --bg-primary: #f1f5f9;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #e2e8f0;
+      --color-text: #1e293b;
+      --color-text-muted: #64748b;
+      --color-border: #cbd5e1;
+      --port-connected: #16a34a;
+      --port-planned: #ca8a04;
+      --port-free: #cbd5e1;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: var(--bg-primary); color: var(--color-text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* --- Toolbar --- */
+    #toolbar { display: flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--bg-secondary); border-bottom: 1px solid var(--color-border); flex-shrink: 0; flex-wrap: wrap; }
+    .toolbar-title { font-weight: 700; font-size: 15px; margin-right: 6px; white-space: nowrap; }
+    .toolbar-sep { width: 1px; height: 20px; background: var(--color-border); }
+    .breadcrumb { display: flex; align-items: center; gap: 4px; }
+    .breadcrumb-arrow { color: var(--color-text-muted); font-size: 12px; }
+    .nav-select { background: var(--bg-tertiary); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 4px 10px; font-size: 11px; color: var(--color-text); cursor: pointer; }
+    .nav-select.active { border-color: var(--color-accent); color: var(--color-accent); }
+    .quick-tabs { display: flex; gap: 2px; background: var(--bg-primary); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 2px; }
+    .quick-tab { padding: 3px 10px; border-radius: 4px; font-size: 10px; cursor: pointer; color: var(--color-text-muted); background: transparent; border: none; }
+    .quick-tab.active { background: var(--color-accent); color: white; font-weight: 600; }
+    .filter-group { display: flex; gap: 2px; background: var(--bg-primary); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 2px; }
+    .filter-btn { padding: 3px 9px; border-radius: 4px; font-size: 10px; cursor: pointer; color: var(--color-text-muted); background: transparent; border: none; }
+    .filter-btn.active { background: var(--color-accent); color: white; }
+    .toolbar-spacer { flex: 1; }
+    .btn-sm { padding: 4px 10px; border-radius: var(--radius); font-size: 10px; cursor: pointer; border: 1px solid var(--color-border); background: var(--bg-tertiary); color: var(--color-text); }
+    .netbox-badge { padding: 4px 10px; border-radius: var(--radius); font-size: 10px; cursor: pointer; font-weight: 600; border: none; }
+    .netbox-badge.ok  { background: #15803d22; border: 1px solid var(--color-success); color: var(--color-success); }
+    .netbox-badge.warn { background: #a1620722; border: 1px solid var(--color-warning); color: var(--color-warning); }
+    .netbox-badge.err  { background: #7f1d1d22; border: 1px solid var(--color-error); color: var(--color-error); }
+
+    /* --- Main Layout --- */
+    #main { display: flex; flex: 1; overflow: hidden; }
+    #rack-panel { width: 52%; border-right: 1px solid var(--color-border); display: flex; flex-direction: column; overflow: hidden; }
+    #port-panel { width: 48%; display: flex; flex-direction: column; overflow: hidden; }
+
+    /* --- Rack Panel --- */
+    #rack-header { padding: 8px 12px; font-size: 11px; color: var(--color-text-muted); border-bottom: 1px solid var(--color-border); background: var(--bg-secondary); flex-shrink: 0; }
+    #rack-list { flex: 1; overflow-y: auto; padding: 10px; background: var(--bg-primary); }
+    .rack-row { display: flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: var(--radius); cursor: pointer; border: 1px solid transparent; margin-bottom: 2px; font-size: 11px; }
+    .rack-row:hover { background: var(--bg-tertiary); }
+    .rack-row.selected { border-color: var(--color-warning); background: var(--bg-secondary); }
+    .rack-row.local-only { border-style: dashed; border-color: var(--color-text-muted); }
+    .rack-unit { min-width: 28px; color: var(--color-text-muted); font-size: 10px; }
+    .rack-device { flex: 1; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; color: white; }
+    .cable-badge { font-size: 10px; white-space: nowrap; color: var(--color-text-muted); }
+
+    /* --- Port Panel --- */
+    #port-header { padding: 8px 12px; font-size: 11px; border-bottom: 1px solid var(--color-border); background: var(--bg-secondary); flex-shrink: 0; display: flex; align-items: center; gap: 8px; }
+    #port-body { flex: 1; display: flex; overflow: hidden; }
+    .port-col { flex: 1; padding: 8px; overflow-y: auto; background: var(--bg-primary); }
+    .port-col-front { border-right: 1px solid var(--color-border); }
+    .port-col-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+    .port-col-label.front { color: var(--color-accent); }
+    .port-col-label.rear  { color: #f97316; }
+    .port-passthrough { width: 24px; display: flex; flex-direction: column; align-items: center; padding-top: 32px; gap: 14px; background: var(--bg-secondary); border-right: 1px solid var(--color-border); flex-shrink: 0; }
+    .pt-arrow { color: var(--color-text-muted); font-size: 11px; }
+    .port-card { border: 1px solid var(--port-free); border-radius: var(--radius); padding: 5px 7px; font-size: 9px; margin-bottom: 4px; background: var(--bg-secondary); }
+    .port-card.connected { border-color: var(--port-connected); }
+    .port-card.planned   { border-color: var(--port-planned); }
+    .port-name { font-weight: 600; margin-bottom: 2px; }
+    .port-target { color: var(--color-text-muted); font-size: 8px; line-height: 1.4; cursor: pointer; }
+    .port-target:hover { color: var(--color-text); text-decoration: underline; }
+    .port-type-badge { display: inline-block; padding: 1px 5px; border-radius: 3px; font-size: 8px; margin-top: 3px; background: #1e3a5f; color: #93c5fd; }
+    .port-type-badge.power   { background: #3a2d1e; color: #fdba74; }
+    .port-type-badge.console { background: #2d1e3a; color: #c4b5fd; }
+    .port-free-btn { border: 1px dashed var(--color-border); border-radius: var(--radius); padding: 5px 7px; font-size: 9px; margin-bottom: 4px; color: var(--color-text-muted); cursor: pointer; text-align: center; background: transparent; width: 100%; }
+    .port-free-btn:hover { border-color: var(--color-accent); color: var(--color-accent); }
+    .no-rear-msg { font-size: 9px; color: var(--color-text-muted); font-style: italic; padding: 8px; text-align: center; }
+
+    /* --- Cable Plan Search --- */
+    .cable-plan-form { border: 1px solid var(--color-warning); border-radius: var(--radius); padding: 7px; font-size: 9px; margin-bottom: 4px; background: var(--bg-secondary); }
+    .cable-plan-form input, .cable-plan-form select { width: 100%; background: var(--bg-primary); border: 1px solid var(--color-border); border-radius: 4px; padding: 4px 6px; color: var(--color-text); font-size: 9px; margin-bottom: 4px; }
+    .cable-plan-results { max-height: 100px; overflow-y: auto; border: 1px solid var(--color-border); border-radius: 4px; margin-bottom: 4px; }
+    .cable-plan-result { padding: 4px 6px; font-size: 9px; cursor: pointer; }
+    .cable-plan-result:hover, .cable-plan-result.selected-result { background: var(--bg-tertiary); }
+    .cable-plan-result.selected-result { background: var(--color-accent); color: white; }
+    .cable-plan-actions { display: flex; gap: 4px; justify-content: flex-end; }
+    .btn-confirm  { padding: 3px 10px; border-radius: 4px; font-size: 9px; background: var(--color-warning); color: #000; border: none; cursor: pointer; font-weight: 600; }
+    .btn-cancel   { padding: 3px 8px; border-radius: 4px; font-size: 9px; background: var(--bg-tertiary); color: var(--color-text-muted); border: 1px solid var(--color-border); cursor: pointer; }
+
+    /* --- Status Bar --- */
+    #statusbar { padding: 4px 14px; background: var(--bg-secondary); border-top: 1px solid var(--color-border); font-size: 10px; color: var(--color-text-muted); display: flex; gap: 12px; flex-shrink: 0; }
+    .status-nb      { color: var(--color-success); }
+    .status-planned { color: var(--color-warning); }
+
+    /* --- Loading Overlay --- */
+    #loading { display: none; position: fixed; inset: 0; background: #0008; z-index: 100; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
+    #loading.active { display: flex; }
+    .spinner { width: 32px; height: 32px; border: 3px solid var(--color-border); border-top-color: var(--color-accent); border-radius: 50%; animation: spin .7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loading-msg { font-size: 12px; color: var(--color-text-muted); }
+
+    /* --- NetBox Connect Dialog --- */
+    #connect-dialog { display: none; position: fixed; inset: 0; background: #0008; z-index: 200; align-items: center; justify-content: center; }
+    #connect-dialog.active { display: flex; }
+    .dialog-box { background: var(--bg-secondary); border: 1px solid var(--color-border); border-radius: 10px; padding: 24px; width: 380px; max-width: 90vw; }
+    .dialog-box h3 { margin-bottom: 12px; font-size: 14px; }
+    .dialog-box label { font-size: 11px; color: var(--color-text-muted); display: block; margin-bottom: 4px; }
+    .dialog-box input { width: 100%; background: var(--bg-primary); border: 1px solid var(--color-border); border-radius: var(--radius); padding: 7px 10px; color: var(--color-text); font-size: 12px; margin-bottom: 12px; }
+    .dialog-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .btn-primary   { padding: 7px 16px; border-radius: var(--radius); background: var(--color-accent); color: white; border: none; cursor: pointer; font-size: 12px; font-weight: 600; }
+    .btn-secondary { padding: 7px 16px; border-radius: var(--radius); background: var(--bg-tertiary); color: var(--color-text); border: 1px solid var(--color-border); cursor: pointer; font-size: 12px; }
+    .dialog-error { font-size: 11px; color: var(--color-error); margin-bottom: 10px; display: none; }
+    .dialog-error.visible { display: block; }
+
+    /* --- Responsive --- */
+    @media (max-width: 700px) {
+      #main { flex-direction: column; }
+      #rack-panel, #port-panel { width: 100%; }
+      #rack-panel { height: 45%; border-right: none; border-bottom: 1px solid var(--color-border); }
+      #port-panel { height: 55%; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Toolbar -->
+  <div id="toolbar">
+    <span class="toolbar-title">🔌 Cable Manager</span>
+    <div class="toolbar-sep"></div>
+    <div class="breadcrumb">
+      <select id="sel-site" class="nav-select"><option value="">Standort…</option></select>
+      <span class="breadcrumb-arrow">›</span>
+      <select id="sel-location" class="nav-select"><option value="">Raum…</option></select>
+      <span class="breadcrumb-arrow">›</span>
+      <select id="sel-rack" class="nav-select active"><option value="">Rack…</option></select>
+    </div>
+    <div id="quick-tabs" class="quick-tabs"></div>
+    <div class="filter-group">
+      <button class="filter-btn active" data-filter="all">Alle</button>
+      <button class="filter-btn" data-filter="network">🔵 Netz</button>
+      <button class="filter-btn" data-filter="power">⚡ Power</button>
+      <button class="filter-btn" data-filter="console">🖥 Console</button>
+    </div>
+    <div class="toolbar-spacer"></div>
+    <button class="btn-sm" id="btn-load-project">📥 Projekt laden</button>
+    <button class="btn-sm" id="btn-export-json">⬇ JSON</button>
+    <button class="btn-sm" id="btn-export-yaml">⬇ YAML</button>
+    <button class="netbox-badge err" id="netbox-badge">NetBox ✕</button>
+    <button class="btn-sm" id="btn-theme">🌙</button>
+  </div>
+
+  <!-- Main -->
+  <div id="main">
+    <div id="rack-panel">
+      <div id="rack-header">Kein Rack ausgewählt</div>
+      <div id="rack-list"><p style="padding:16px;font-size:11px;color:var(--color-text-muted)">Verbinde NetBox und wähle ein Rack.</p></div>
+    </div>
+    <div id="port-panel">
+      <div id="port-header"><span id="port-device-name" style="font-size:11px;font-weight:600;">Kein Gerät ausgewählt</span></div>
+      <div id="port-body">
+        <div class="port-col port-col-front"><div class="port-col-label front">◀ Front</div></div>
+        <div class="port-passthrough"></div>
+        <div class="port-col"><div class="port-col-label rear">Rear ▶</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Status Bar -->
+  <div id="statusbar">
+    <span id="status-rack">–</span>
+    <span class="status-nb" id="status-nb">● 0 NetBox</span>
+    <span class="status-planned" id="status-planned">● 0 geplant</span>
+    <span style="margin-left:auto;" id="status-loaded">–</span>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loading"><div class="spinner"></div><div id="loading-msg">Lade Daten…</div></div>
+
+  <!-- Connect Dialog -->
+  <div id="connect-dialog">
+    <div class="dialog-box">
+      <h3>NetBox verbinden</h3>
+      <label>NetBox URL</label>
+      <input type="url" id="input-url" placeholder="https://netbox.example.com">
+      <label>API Token</label>
+      <input type="password" id="input-token" placeholder="Token eingeben">
+      <div class="dialog-error" id="dialog-error"></div>
+      <div class="dialog-actions">
+        <button class="btn-secondary" id="btn-dialog-cancel">Abbrechen</button>
+        <button class="btn-primary" id="btn-dialog-connect">Verbinden</button>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="file-input" accept=".json" style="display:none">
+
+  <script>
+    // ─── Constants ────────────────────────────────────────────────────────────────
+    const SESSION_CRYPTO_KEY  = 'rackbuilder_ck';
+    const LS_TOKEN_KEY        = 'rackbuilder_netbox_api_token'; // shared with Rack Builder (same origin)
+    const LS_TOKEN_ENC_FLAG   = 'rackbuilder_netbox_api_token_enc';
+    const LS_URL_KEY          = 'rackbuilder_netbox_api_url';   // shared with Rack Builder — known trade-off: connecting to a different URL here overwrites Rack Builder's URL too
+    const SS_CACHE_KEY        = 'cablemanager_cache';
+
+    // ─── Crypto ───────────────────────────────────────────────────────────────────
+    async function getCryptoKey() {
+      const stored = sessionStorage.getItem(SESSION_CRYPTO_KEY);
+      if (stored) {
+        try {
+          const raw = Uint8Array.from(atob(stored), c => c.charCodeAt(0));
+          return await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt', 'decrypt']);
+        } catch { /* fall through */ }
+      }
+      const key = await crypto.subtle.generateKey({ name: 'AES-GCM', length: 256 }, true, ['encrypt', 'decrypt']);
+      const raw = await crypto.subtle.exportKey('raw', key);
+      sessionStorage.setItem(SESSION_CRYPTO_KEY, btoa(String.fromCharCode(...new Uint8Array(raw))));
+      return key;
+    }
+
+    async function encryptToken(plaintext) {
+      const key = await getCryptoKey();
+      const iv  = crypto.getRandomValues(new Uint8Array(12));
+      const enc = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(plaintext));
+      const buf = new Uint8Array(12 + enc.byteLength);
+      buf.set(iv); buf.set(new Uint8Array(enc), 12);
+      return btoa(String.fromCharCode(...buf));
+    }
+
+    async function decryptToken(b64) {
+      try {
+        const key = await getCryptoKey();
+        const buf = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+        const dec = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: buf.slice(0, 12) }, key, buf.slice(12));
+        return new TextDecoder().decode(dec);
+      } catch { return null; }
+    }
+
+    async function loadToken() {
+      const raw = localStorage.getItem(LS_TOKEN_KEY);
+      if (!raw) return '';
+      if (localStorage.getItem(LS_TOKEN_ENC_FLAG) !== '1') { await saveToken(raw); return raw; }
+      const dec = await decryptToken(raw);
+      if (dec === null) { localStorage.removeItem(LS_TOKEN_KEY); localStorage.removeItem(LS_TOKEN_ENC_FLAG); return ''; }
+      return dec;
+    }
+
+    async function saveToken(token) {
+      if (!token) { localStorage.removeItem(LS_TOKEN_KEY); localStorage.removeItem(LS_TOKEN_ENC_FLAG); return; }
+      localStorage.setItem(LS_TOKEN_KEY, await encryptToken(token));
+      localStorage.setItem(LS_TOKEN_ENC_FLAG, '1');
+    }
+
+    // ─── App State ────────────────────────────────────────────────────────────────
+    const state = {
+      token: '',
+      baseUrl: '',
+      connected: false,
+      // NetBox data
+      sites: [],
+      locations: [],
+      racks: [],
+      devices: [],
+      ports: {},          // { deviceId: { interfaces:[], frontPorts:[], rearPorts:[], powerPorts:[], consolePorts:[], consoleServerPorts:[] } }
+      cables: [],
+      // UI state
+      selectedSiteId: null,
+      selectedLocationId: null,
+      selectedRackId: null,
+      selectedDeviceId: null,
+      cableFilter: 'all',
+      // Planned cables (local)
+      plannedCables: [],
+      // Rack Builder import
+      importedDevices: [],
+      // Cable planning state (set by Task 6 inline search; null = no planning in progress)
+      _planningPortId: null,
+      _planningObjectType: null,
+    };
+
+    // ─── Paginated API Client ─────────────────────────────────────────────────────
+    async function nbFetchAll(path, params = {}) {
+      const results = [];
+      let offset = 0;
+      const limit = 100;
+      const maxPages = 50;
+      let page = 0;
+      while (page < maxPages) {
+        const qs = new URLSearchParams({ ...params, limit, offset }).toString();
+        const url = `${state.baseUrl}${path}?${qs}`;
+        const res = await fetch(url, {
+          headers: { Authorization: `Token ${state.token}`, Accept: 'application/json' }
+        });
+        if (!res.ok) throw Object.assign(new Error(res.statusText), { status: res.status });
+        const data = await res.json();
+        results.push(...(data.results ?? []));
+        if (!data.next) break;
+        offset += limit;
+        page++;
+      }
+      return results;
+    }
+
+    // ─── Badge helpers ────────────────────────────────────────────────────────────
+    function setBadge(status, text, tooltip = '') {
+      const b = document.getElementById('netbox-badge');
+      b.className = `netbox-badge ${status}`;
+      b.textContent = text;
+      b.title = tooltip;
+    }
+
+    // ─── Connect Dialog ───────────────────────────────────────────────────────────
+    // Badge-Listener: wenn verbunden → Reload-Confirm, sonst → Connect-Dialog
+    const _oldBadge = document.getElementById('netbox-badge');
+    const _newBadge = _oldBadge.cloneNode(true);
+    _oldBadge.parentNode.replaceChild(_newBadge, _oldBadge);
+    _newBadge.addEventListener('click', () => {
+      if (state.connected) {
+        if (confirm('NetBox-Daten neu laden?')) { sessionStorage.removeItem(SS_CACHE_KEY); loadSitesAndLocations(); }
+      } else { openConnectDialog(); }
+    });
+
+    document.getElementById('btn-dialog-cancel').addEventListener('click', () => {
+      document.getElementById('connect-dialog').classList.remove('active');
+    });
+    document.getElementById('btn-dialog-connect').addEventListener('click', connectNetBox);
+
+    function openConnectDialog() {
+      document.getElementById('input-url').value = state.baseUrl || localStorage.getItem(LS_URL_KEY) || '';
+      document.getElementById('input-token').value = '';
+      document.getElementById('dialog-error').classList.remove('visible');
+      document.getElementById('connect-dialog').classList.add('active');
+    }
+
+    async function connectNetBox() {
+      const btn   = document.getElementById('btn-dialog-connect');
+      const url   = document.getElementById('input-url').value.trim().replace(/\/$/, '');
+      const token = document.getElementById('input-token').value.trim();
+      const errEl = document.getElementById('dialog-error');
+      errEl.classList.remove('visible');
+      btn.disabled = true;
+      if (!url || !token) {
+        errEl.textContent = 'URL und Token erforderlich.';
+        errEl.classList.add('visible');
+        btn.disabled = false;
+        return;
+      }
+      try {
+        const res = await fetch(`${url}/api/dcim/sites/?limit=1`, {
+          headers: { Authorization: `Token ${token}`, Accept: 'application/json' }
+        });
+        if (res.status === 401) throw new Error('Token ungültig (401 Unauthorized)');
+        if (res.status === 403) throw new Error('Fehlende Berechtigungen (403 Forbidden)');
+        if (!res.ok) throw new Error(`Fehler: ${res.status} ${res.statusText}`);
+        state.token = token;
+        state.baseUrl = url;
+        state.connected = true;
+        localStorage.setItem(LS_URL_KEY, url);
+        await saveToken(token);
+        document.getElementById('connect-dialog').classList.remove('active');
+        setBadge('ok', 'NetBox ✓');
+        await loadSitesAndLocations();
+      } catch(e) {
+        errEl.textContent = e.message;
+        errEl.classList.add('visible');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // ─── Loading helpers ──────────────────────────────────────────────────────────
+    function showLoading(msg = 'Lade Daten…') {
+      document.getElementById('loading-msg').textContent = msg;
+      document.getElementById('loading').classList.add('active');
+    }
+    function hideLoading() {
+      document.getElementById('loading').classList.remove('active');
+    }
+
+    async function loadSitesAndLocations() {
+      // Check sessionStorage cache first
+      const cached = sessionStorage.getItem(SS_CACHE_KEY);
+      if (cached) {
+        try {
+          const { sites, locations, racks, ts } = JSON.parse(cached);
+          state.sites = sites;
+          state.locations = locations;
+          state.racks = racks;
+          renderSiteSelect();
+          document.getElementById('status-loaded').textContent = `Cache: ${new Date(ts).toLocaleTimeString()}`;
+          return;
+        } catch { /* corrupt cache, reload */ }
+      }
+      showLoading('Lade Standorte…');
+      try {
+        [state.sites, state.locations, state.racks] = await Promise.all([
+          nbFetchAll('/api/dcim/sites/'),
+          nbFetchAll('/api/dcim/locations/'),
+          nbFetchAll('/api/dcim/racks/'),
+        ]);
+        sessionStorage.setItem(SS_CACHE_KEY, JSON.stringify({
+          sites: state.sites, locations: state.locations, racks: state.racks, ts: Date.now()
+        }));
+        renderSiteSelect();
+      } catch(e) {
+        setBadge('err', 'NetBox ✕', e.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function renderSiteSelect() {
+      const sel = document.getElementById('sel-site');
+      sel.innerHTML = '<option value="">Standort…</option>';
+      state.sites.forEach(s => {
+        const o = document.createElement('option');
+        o.value = s.id;
+        o.textContent = s.name;
+        sel.appendChild(o);
+      });
+      if (state.selectedSiteId) sel.value = state.selectedSiteId;
+    }
+
+    function renderLocationSelect(siteId) {
+      const locs = siteId
+        ? state.locations.filter(l => l.site?.id == siteId)
+        : state.locations;
+      const sel = document.getElementById('sel-location');
+      sel.innerHTML = '<option value="">Raum…</option>';
+      locs.forEach(l => {
+        const o = document.createElement('option');
+        o.value = l.id;
+        o.textContent = l.name;
+        sel.appendChild(o);
+      });
+      if (state.selectedLocationId) sel.value = state.selectedLocationId;
+    }
+
+    function renderRackSelect(locationId) {
+      const racks = locationId
+        ? state.racks.filter(r => r.location?.id == locationId)
+        : state.racks;
+      const sel = document.getElementById('sel-rack');
+      sel.innerHTML = '<option value="">Rack…</option>';
+      racks.forEach(r => {
+        const o = document.createElement('option');
+        o.value = r.id;
+        o.textContent = r.name;
+        sel.appendChild(o);
+      });
+      renderQuickTabs(racks);
+    }
+
+    function renderQuickTabs(racks) {
+      const ct = document.getElementById('quick-tabs');
+      ct.innerHTML = '';
+      racks.slice(0, 8).forEach(r => {
+        const b = document.createElement('button');
+        b.className = 'quick-tab' + (r.id == state.selectedRackId ? ' active' : '');
+        b.textContent = r.name;
+        b.addEventListener('click', () => selectRack(r.id));
+        ct.appendChild(b);
+      });
+    }
+
+    document.getElementById('sel-site').addEventListener('change', e => {
+      state.selectedSiteId = e.target.value ? parseInt(e.target.value) : null;
+      state.selectedLocationId = null;
+      state.selectedRackId = null;
+      renderLocationSelect(state.selectedSiteId);
+      renderRackSelect(null);
+    });
+
+    document.getElementById('sel-location').addEventListener('change', e => {
+      state.selectedLocationId = e.target.value ? parseInt(e.target.value) : null;
+      state.selectedRackId = null;
+      renderRackSelect(state.selectedLocationId);
+    });
+
+    document.getElementById('sel-rack').addEventListener('change', e => {
+      if (e.target.value) selectRack(parseInt(e.target.value));
+    });
+
+    // Cable type filter
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.cableFilter = btn.dataset.filter;
+        if (state.selectedRackId) renderRack();
+        if (state.selectedDeviceId) renderPortPanel(state.selectedDeviceId);
+      });
+    });
+
+    async function selectRack(rackId) {
+      state.selectedRackId = rackId;
+      state.selectedDeviceId = null;
+      document.getElementById('sel-rack').value = rackId;
+      // Quick-Tabs aktualisieren
+      const racks = state.selectedLocationId
+        ? state.racks.filter(r => r.location?.id == state.selectedLocationId)
+        : state.racks;
+      renderQuickTabs(racks);
+      // Rack-Daten laden
+      showLoading('Lade Geräte und Kabel…');
+      try {
+        const [devices, cables] = await Promise.all([
+          nbFetchAll('/api/dcim/devices/', { rack_id: rackId }),
+          nbFetchAll('/api/dcim/cables/', { rack_id: rackId }),
+        ]);
+        state.devices  = devices;
+        state.cables   = cables;
+        state.ports    = {};
+        document.getElementById('status-loaded').textContent = `Geladen: ${new Date().toLocaleTimeString()}`;
+        renderRack();
+      } catch(e) {
+        setBadge('err', 'NetBox ✕', e.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    // Zähle Kabel pro Gerät (nach Filter)
+    function cableCountForDevice(deviceId) {
+      return state.cables.filter(c => {
+        const matchesSide = side => c[`${side}_terminations`]?.some(t => t.object?.device?.id === deviceId || t.object?.id === deviceId);
+        const connected = matchesSide('a') || matchesSide('b');
+        if (!connected) return false;
+        if (state.cableFilter === 'all') return true;
+        const networkTypes = ['cat3','cat5','cat5e','cat6','cat6a','cat7','cat7a','cat8','dac-active','dac-passive','mrj21-trunk','coaxial','mmf','mmf-om1','mmf-om2','mmf-om3','mmf-om4','mmf-om5','smf','smf-os1','smf-os2','aoc'];
+        const t = c.type?.value || '';
+        if (state.cableFilter === 'network') return networkTypes.includes(t) || t.startsWith('mmf') || t.startsWith('smf') || t === 'aoc';
+        if (state.cableFilter === 'power') return t === 'power';
+        if (state.cableFilter === 'console') return !networkTypes.includes(t) && t !== 'power';
+        return true;
+      }).length + state.plannedCables.filter(pc => {
+        const sides = [pc.a_terminations[0], pc.b_terminations[0]];
+        return sides.some(s => s?.device_id === deviceId || s?.object_id === deviceId);
+      }).length;
+    }
+
+    function renderRack() {
+      const rack = state.racks.find(r => r.id === state.selectedRackId);
+      if (!rack) return;
+      document.getElementById('rack-header').textContent = `${rack.name} · ${rack.u_height}U · ${state.devices.length} Geräte`;
+      const listEl = document.getElementById('rack-list');
+      listEl.innerHTML = '';
+      // Geräte nach U-Position sortieren
+      const sorted = [...state.devices].sort((a, b) => (a.position || 0) - (b.position || 0));
+      // Importierte lokale Geräte (die nicht in NetBox sind) anhängen
+      const localOnly = state.importedDevices.filter(ld => !state.devices.some(d => d.name === ld.name));
+      sorted.push(...localOnly.map(ld => ({ ...ld, _localOnly: true })));
+
+      sorted.forEach(device => {
+        const count = cableCountForDevice(device.id);
+        const row = document.createElement('div');
+        row.className = 'rack-row' + (device.id === state.selectedDeviceId ? ' selected' : '') + (device._localOnly ? ' local-only' : '');
+        row.dataset.deviceId = device.id;
+        const colors = { active: '#3b82f6', planned: '#22c55e', staged: '#a855f7', decommissioning: '#f97316', offline: '#64748b', inventory: '#64748b' };
+        const color = colors[device.status?.value] || '#3b82f6';
+        row.innerHTML = `
+          <span class="rack-unit">U${device.position ?? '?'}</span>
+          <span class="rack-device" style="background:${color}">${device.name}</span>
+          ${count > 0 ? `<span class="cable-badge">🔌 ${count}</span>` : ''}
+        `;
+        row.addEventListener('click', () => {
+          document.querySelectorAll('.rack-row').forEach(r => r.classList.remove('selected'));
+          row.classList.add('selected');
+          state.selectedDeviceId = device.id;
+          loadAndRenderPortPanel(device);
+        });
+        listEl.appendChild(row);
+      });
+
+      // Statusleiste
+      const nbCount = state.cables.length;
+      const plannedCount = state.plannedCables.length;
+      document.getElementById('status-rack').textContent = `${rack.name} · ${rack.u_height}U · ${state.devices.length} Geräte · ${nbCount + plannedCount} Kabel`;
+      document.getElementById('status-nb').textContent = `● ${nbCount} NetBox`;
+      document.getElementById('status-planned').textContent = `● ${plannedCount} geplant`;
+    }
+
+    async function loadAndRenderPortPanel(device) {
+      if (device._localOnly) {
+        document.getElementById('port-device-name').textContent = `${device.name} (lokal geplant — keine Port-Daten)`;
+        renderPortPanelEmpty();
+        return;
+      }
+      document.getElementById('port-device-name').textContent = `${device.name} · U${device.position ?? '?'}`;
+      if (state.ports[device.id]) { renderPortPanel(device.id); return; } // Cache-Hit
+      showLoading(`Lade Ports für ${device.name}…`);
+      try {
+        const [ifaces, frontPorts, rearPorts, powerPorts, consolePorts, consoleServerPorts] = await Promise.all([
+          nbFetchAll('/api/dcim/interfaces/', { device_id: device.id }),
+          nbFetchAll('/api/dcim/front-ports/', { device_id: device.id }),
+          nbFetchAll('/api/dcim/rear-ports/', { device_id: device.id }),
+          nbFetchAll('/api/dcim/power-ports/', { device_id: device.id }),
+          nbFetchAll('/api/dcim/console-ports/', { device_id: device.id }),
+          nbFetchAll('/api/dcim/console-server-ports/', { device_id: device.id }),
+        ]);
+        state.ports[device.id] = { interfaces: ifaces, frontPorts, rearPorts, powerPorts, consolePorts, consoleServerPorts };
+        renderPortPanel(device.id);
+      } catch(e) {
+        setBadge('err', 'NetBox ✕', e.message);
+      } finally {
+        hideLoading();
+      }
+    }
+
+    function findCableForPort(objectType, objectId) {
+      const nb = state.cables.find(c => {
+        const check = side => c[`${side}_terminations`]?.some(t => t.object_type === objectType && t.object?.id === objectId);
+        return check('a') || check('b');
+      });
+      if (nb) return { ...nb, _source: 'netbox' };
+      const pl = state.plannedCables.find(c => {
+        const checkSide = s => s.object_type === objectType && s.object_id === objectId;
+        return checkSide(c.a_terminations[0]) || checkSide(c.b_terminations[0]);
+      });
+      if (pl) return { ...pl, _source: 'planned' };
+      return null;
+    }
+
+    function getOtherSide(cable, objectType, objectId) {
+      const isA = cable.a_terminations?.some(t => t.object_type === objectType && (t.object?.id === objectId || t.object_id === objectId));
+      const terms = isA ? cable.b_terminations : cable.a_terminations;
+      if (!terms?.length) return null;
+      const t = terms[0];
+      return { deviceName: t.object?.device?.name || t.device_name || '', portName: t.object?.name || t.port_name || '', deviceId: t.object?.device?.id };
+    }
+
+    function portTypeFilter(objectType) {
+      if (state.cableFilter === 'all') return true;
+      const networkTypes = ['dcim.interface', 'dcim.frontport', 'dcim.rearport'];
+      const powerTypes   = ['dcim.powerport'];
+      const consoleTypes = ['dcim.consoleport', 'dcim.consoleserverport'];
+      if (state.cableFilter === 'network') return networkTypes.includes(objectType);
+      if (state.cableFilter === 'power')   return powerTypes.includes(objectType);
+      if (state.cableFilter === 'console') return consoleTypes.includes(objectType);
+      return true;
+    }
+
+    function renderPortCard(port, objectType, isPlanningActive, planningPortId) {
+      const cable = findCableForPort(objectType, port.id);
+      const otherSide = cable ? getOtherSide(cable, objectType, port.id) : null;
+      const isPlanned = cable?._source === 'planned';
+      const card = document.createElement('div');
+      card.className = 'port-card' + (cable ? (isPlanned ? ' planned' : ' connected') : '');
+
+      if (isPlanningActive && planningPortId === port.id) {
+        card.appendChild(buildCablePlanForm(port, objectType));
+        return card;
+      }
+
+      const typeStr = port.type?.label || port.type?.value || '';
+      const badge = objectType === 'dcim.powerport' ? 'power' : objectType.includes('console') ? 'console' : '';
+      card.innerHTML = `
+        <div class="port-name">${port.name}</div>
+        ${otherSide ? `<div class="port-target"${otherSide.deviceId ? ` data-device-id="${otherSide.deviceId}"` : ''}>→ ${otherSide.deviceName} / ${otherSide.portName}</div>` : ''}
+        ${typeStr ? `<span class="port-type-badge ${badge}">${typeStr}</span>` : ''}
+      `;
+      if (!cable) {
+        const planBtn = document.createElement('div');
+        planBtn.className = 'port-free-btn';
+        planBtn.textContent = '+ Kabel planen';
+        planBtn.addEventListener('click', () => {
+          state._planningPortId = port.id;
+          state._planningObjectType = objectType;
+          renderPortPanel(state.selectedDeviceId);
+        });
+        card.innerHTML = `<div class="port-name">${port.name} <span style="color:var(--color-text-muted);font-size:8px;">${typeStr}</span></div>`;
+        card.appendChild(planBtn);
+      }
+      card.querySelectorAll('.port-target[data-device-id]').forEach(el => {
+        el.addEventListener('click', () => {
+          const devId = parseInt(el.dataset.deviceId);
+          const dev = state.devices.find(d => d.id === devId);
+          if (dev) {
+            state.selectedDeviceId = devId;
+            document.querySelectorAll('.rack-row').forEach(r => { r.classList.toggle('selected', parseInt(r.dataset.deviceId) === devId); });
+            loadAndRenderPortPanel(dev);
+          }
+        });
+      });
+      if (isPlanned && otherSide) {
+        const delBtn = document.createElement('button');
+        delBtn.style.cssText = 'margin-top:3px;padding:1px 6px;font-size:8px;background:var(--color-error);color:white;border:none;border-radius:3px;cursor:pointer;';
+        delBtn.textContent = '✕ löschen';
+        delBtn.addEventListener('click', () => {
+          state.plannedCables = state.plannedCables.filter(c => c.id !== cable.id);
+          renderRack();
+          renderPortPanel(state.selectedDeviceId);
+        });
+        card.appendChild(delBtn);
+      }
+      return card;
+    }
+
+    function renderPortPanel(deviceId) {
+      const ports = state.ports[deviceId];
+      if (!ports) return;
+      const hasFrontPorts = ports.frontPorts.length > 0;
+      const hasRearPorts  = ports.rearPorts.length > 0;
+      const isPatchPanel  = hasFrontPorts || hasRearPorts;
+
+      const frontPortGroups = [
+        ...ports.interfaces.map(p => ({ port: p, type: 'dcim.interface' })),
+        ...ports.frontPorts.map(p => ({ port: p, type: 'dcim.frontport' })),
+        ...ports.powerPorts.map(p => ({ port: p, type: 'dcim.powerport' })),
+        ...ports.consolePorts.map(p => ({ port: p, type: 'dcim.consoleport' })),
+        ...ports.consoleServerPorts.map(p => ({ port: p, type: 'dcim.consoleserverport' })),
+      ].filter(({ type }) => portTypeFilter(type));
+
+      const rearPortGroups = ports.rearPorts.map(p => ({ port: p, type: 'dcim.rearport' }))
+        .filter(({ type }) => portTypeFilter(type));
+
+      const frontCol = document.querySelector('#port-body .port-col-front');
+      const passCol  = document.querySelector('#port-body .port-passthrough');
+      const rearCol  = document.querySelector('#port-body .port-col:last-child');
+
+      frontCol.innerHTML = '<div class="port-col-label front">◀ Front</div>';
+      passCol.innerHTML  = '<div style="font-size:8px;color:var(--color-text-muted);writing-mode:vertical-rl;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Pass</div>';
+      rearCol.innerHTML  = '<div class="port-col-label rear">Rear ▶</div>';
+
+      frontPortGroups.forEach(({ port, type }) => {
+        frontCol.appendChild(renderPortCard(port, type, !!state._planningPortId && state._planningObjectType === type, state._planningPortId));
+      });
+
+      if (isPatchPanel) {
+        rearPortGroups.forEach(() => {
+          const arrow = document.createElement('div');
+          arrow.className = 'pt-arrow';
+          arrow.textContent = '↔';
+          passCol.appendChild(arrow);
+        });
+        rearPortGroups.forEach(({ port, type }) => {
+          rearCol.appendChild(renderPortCard(port, type, false, null));
+        });
+      } else {
+        rearCol.innerHTML += '<div class="no-rear-msg">Kein Rear-Port<br>nur bei Patch-Panels</div>';
+      }
+    }
+
+    function renderPortPanelEmpty() {
+      document.querySelector('#port-body .port-col-front').innerHTML = '<div class="port-col-label front">◀ Front</div>';
+      document.querySelector('#port-body .port-passthrough').innerHTML = '';
+      document.querySelector('#port-body .port-col:last-child').innerHTML = '<div class="port-col-label rear">Rear ▶</div>';
+    }
+
+    // UUID-Hilfsfunktion
+    function uuid() {
+      return crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => { const r = Math.random()*16|0; return (c==='x'?r:(r&0x3|0x8)).toString(16); });
+    }
+
+    function fuzzyMatch(str, query) {
+      str = str.toLowerCase(); query = query.toLowerCase();
+      let qi = 0;
+      for (let i = 0; i < str.length && qi < query.length; i++) { if (str[i] === query[qi]) qi++; }
+      return qi === query.length;
+    }
+
+    // BEKANNTE EINSCHRÄNKUNG: Durchsucht nur Ports von Geräten die der User
+    // bereits angeklickt hat (state.ports ist ein Lazy-Cache).
+    function allPortsFlat() {
+      const result = [];
+      Object.entries(state.ports).forEach(([deviceId, portGroups]) => {
+        const device = state.devices.find(d => d.id === parseInt(deviceId));
+        if (!device) return;
+        const add = (ports, type) => ports.forEach(p => {
+          result.push({ port: p, device, objectType: type, label: `${device.name} / ${p.name}`, sublabel: `${device.rack?.name || ''} U${device.position ?? '?'} · ${p.type?.label || ''}` });
+        });
+        add(portGroups.interfaces, 'dcim.interface');
+        add(portGroups.frontPorts, 'dcim.frontport');
+        add(portGroups.rearPorts, 'dcim.rearport');
+        add(portGroups.powerPorts, 'dcim.powerport');
+        add(portGroups.consolePorts, 'dcim.consoleport');
+        add(portGroups.consoleServerPorts, 'dcim.consoleserverport');
+      });
+      return result;
+    }
+
+    function buildCablePlanForm(sourcePort, sourceObjectType) {
+      const form = document.createElement('div');
+      form.className = 'cable-plan-form';
+      form.innerHTML = `
+        <div style="font-weight:600;margin-bottom:6px;font-size:10px;">Kabel planen: ${sourcePort.name}</div>
+        <input type="text" class="plan-search" placeholder="Gerät oder Port suchen…">
+        <div class="cable-plan-results"></div>
+        <select class="plan-type">
+          <option value="cat6">Ethernet (Cat6)</option>
+          <option value="mmf-om4">Fiber (MMF OM4)</option>
+          <option value="smf-os2">Fiber (SMF OS2)</option>
+          <option value="dac-passive">DAC (passiv)</option>
+          <option value="aoc">AOC</option>
+          <option value="power">Power</option>
+          <option value="usb-a">Console (USB)</option>
+          <option value="db-9">Console (DB-9)</option>
+        </select>
+        <div class="cable-plan-actions">
+          <button class="btn-cancel">Abbrechen</button>
+          <button class="btn-confirm">Verbinden</button>
+        </div>
+      `;
+
+      let selectedResult = null;
+      const searchInput = form.querySelector('.plan-search');
+      const resultsEl   = form.querySelector('.cable-plan-results');
+
+      searchInput.addEventListener('input', () => {
+        const q = searchInput.value.trim();
+        resultsEl.innerHTML = '';
+        selectedResult = null;
+        if (q.length < 2) return;
+        const matches = allPortsFlat().filter(r => fuzzyMatch(r.label, q) || fuzzyMatch(r.sublabel, q)).slice(0, 10);
+        matches.forEach(m => {
+          const div = document.createElement('div');
+          div.className = 'cable-plan-result';
+          div.innerHTML = `<strong>${m.device.name}</strong> / ${m.port.name} <span style="color:var(--color-text-muted);font-size:8px;"> · ${m.sublabel}</span>`;
+          div.addEventListener('click', () => {
+            resultsEl.querySelectorAll('.cable-plan-result').forEach(r => r.classList.remove('selected-result'));
+            div.classList.add('selected-result');
+            selectedResult = m;
+          });
+          resultsEl.appendChild(div);
+        });
+      });
+
+      form.querySelector('.btn-cancel').addEventListener('click', () => {
+        state._planningPortId = null;
+        state._planningObjectType = null;
+        renderPortPanel(state.selectedDeviceId);
+      });
+
+      form.querySelector('.btn-confirm').addEventListener('click', () => {
+        if (!selectedResult) { searchInput.style.borderColor = 'var(--color-error)'; return; }
+        const srcDevice = state.devices.find(d => d.id === state.selectedDeviceId);
+        const cable = {
+          id: uuid(),
+          status: 'planned',
+          type: form.querySelector('.plan-type').value,
+          label: '',
+          color: '',
+          a_terminations: [{ object_type: sourceObjectType, object_id: sourcePort.id, device_name: srcDevice?.name || '', port_name: sourcePort.name, device_id: srcDevice?.id }],
+          b_terminations: [{ object_type: selectedResult.objectType, object_id: selectedResult.port.id, device_name: selectedResult.device.name, port_name: selectedResult.port.name, device_id: selectedResult.device.id }],
+        };
+        state.plannedCables.push(cable);
+        state._planningPortId = null;
+        state._planningObjectType = null;
+        renderRack();
+        renderPortPanel(state.selectedDeviceId);
+      });
+
+      setTimeout(() => searchInput.focus(), 50);
+      return form;
+    }
+
+    // ─── Init ─────────────────────────────────────────────────────────────────────
+    async function init() {
+      const url = localStorage.getItem(LS_URL_KEY);
+      const token = await loadToken();
+      if (url && token) {
+        state.token = token;
+        state.baseUrl = url;
+        try {
+          const res = await fetch(`${url}/api/dcim/sites/?limit=1`, {
+            headers: { Authorization: `Token ${token}`, Accept: 'application/json' }
+          });
+          if (res.ok) {
+            state.connected = true;
+            setBadge('ok', 'NetBox ✓');
+            await loadSitesAndLocations();
+            return;
+          }
+          if (res.status === 401 || res.status === 403) {
+            setBadge('warn', 'NetBox ?', 'Token evtl. abgelaufen — bitte neu verbinden');
+          } else {
+            setBadge('warn', 'NetBox ?', `Verbindungsfehler: ${res.status} ${res.statusText}`);
+          }
+          openConnectDialog();
+          return;
+        } catch {
+          setBadge('err', 'NetBox ✕', 'NetBox nicht erreichbar: ' + url);
+          openConnectDialog();
+          return;
+        }
+      }
+      openConnectDialog();
+    }
+
+    // ─── Rack Builder Import ───────────────────────────────────────────────────────
+    document.getElementById('btn-load-project').addEventListener('click', () => {
+      document.getElementById('file-input').click();
+    });
+
+    document.getElementById('file-input').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = evt => {
+        try {
+          const data = JSON.parse(evt.target.result);
+          if (data._format !== 'rackbuilder-project') { alert('Keine gültige Rack Builder Projektdatei.'); return; }
+          let devices = data.devices || [];
+          if (data.racks && Array.isArray(data.racks)) {
+            data.racks.forEach(r => { if (r.devices) devices = devices.concat(r.devices); });
+          }
+          state.importedDevices = devices.map(d => ({
+            id: d.id || d.name,
+            name: d.name,
+            position: d.position || d.u || null,
+            color: d.color,
+            comments: d.comments || '',
+            _localOnly: true,
+          }));
+          state.importedDevices.forEach(ld => {
+            const nb = state.devices.find(d => d.name === ld.name);
+            if (nb) {
+              nb._importColor    = ld.color;
+              nb._importComments = ld.comments;
+            }
+          });
+          renderRack();
+          alert(`${devices.length} Geräte aus Projektdatei geladen.`);
+        } catch(e) { alert('Fehler beim Lesen der Datei: ' + e.message); }
+        e.target.value = '';
+      };
+      reader.readAsText(file);
+    });
+
+    // ─── Export ───────────────────────────────────────────────────────────────────
+    function exportJSON() {
+      if (!state.plannedCables.length) { alert('Keine geplanten Kabel vorhanden.'); return; }
+      const payload = state.plannedCables.map(c => ({
+        status:         c.status,
+        type:           c.type,
+        label:          c.label,
+        color:          c.color,
+        a_terminations: c.a_terminations.map(t => ({ object_type: t.object_type, object_id: t.object_id })).filter(t => t.object_id),
+        b_terminations: c.b_terminations.map(t => ({ object_type: t.object_type, object_id: t.object_id })).filter(t => t.object_id),
+      }));
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'planned-cables.json'; a.click();
+    }
+
+    document.getElementById('btn-export-json').addEventListener('click', exportJSON);
+
+    function toYamlValue(v) {
+      if (v === null || v === undefined) return 'null';
+      if (typeof v === 'boolean') return v ? 'true' : 'false';
+      if (typeof v === 'number') return String(v);
+      if (typeof v === 'string') {
+        if (!v || /[:#\[\]{}&*!,|>'"@`]/.test(v) || /^\s|\s$/.test(v)) return `"${v.replace(/"/g, '\\"')}"`;
+        return v;
+      }
+      return `"${String(v)}"`;
+    }
+
+    function cablesToYaml(cables) {
+      return cables.map(c => {
+        const a = c.a_terminations[0] || {};
+        const b = c.b_terminations[0] || {};
+        const fields = [
+          `- id: ${toYamlValue(c.id)}`,
+          `  type: ${toYamlValue(c.type)}`,
+          `  status: ${toYamlValue(c.status)}`,
+          `  a_device: ${toYamlValue(a.device_name || '')}`,
+          `  a_port: ${toYamlValue(a.port_name || '')}`,
+          `  a_port_type: ${toYamlValue(a.object_type || '')}`,
+          `  a_object_id: ${a.object_id ?? 'null'}`,
+          `  b_device: ${toYamlValue(b.device_name || '')}`,
+          `  b_port: ${toYamlValue(b.port_name || '')}`,
+          `  b_port_type: ${toYamlValue(b.object_type || '')}`,
+          `  b_object_id: ${b.object_id ?? 'null'}`,
+        ];
+        if (c.label) fields.push(`  label: ${toYamlValue(c.label)}`);
+        return fields.join('\n');
+      }).join('\n');
+    }
+
+    function exportYAML() {
+      if (!state.plannedCables.length) { alert('Keine geplanten Kabel vorhanden.'); return; }
+      const yaml = cablesToYaml(state.plannedCables);
+      const blob = new Blob([yaml], { type: 'text/yaml' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'planned-cables.yaml'; a.click();
+    }
+
+    document.getElementById('btn-export-yaml').addEventListener('click', exportYAML);
+
+    // ─── Theme ────────────────────────────────────────────────────────────────────
+    (function() {
+      const saved = localStorage.getItem('cm_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', saved);
+      document.getElementById('btn-theme').textContent = saved === 'dark' ? '🌙' : '☀️';
+    })();
+
+    document.getElementById('btn-theme').addEventListener('click', () => {
+      const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('cm_theme', next);
+      document.getElementById('btn-theme').textContent = next === 'dark' ? '🌙' : '☀️';
+    });
+
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</body>
+</html>
