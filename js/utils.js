@@ -66,3 +66,41 @@ export function parsePositionList(input) {
     .map(s => parseInt(s.trim(), 10))
     .filter(n => !isNaN(n) && n > 0);
 }
+
+/**
+ * Trigger a browser download for text or binary content.
+ * @param {string|Uint8Array|Blob} content
+ * @param {string} filename
+ * @param {string} mimeType
+ */
+export function triggerDownload(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Close a <dialog> with the closing animation (falls back after 300 ms).
+ * @param {HTMLDialogElement} dialog
+ */
+export function closeDialogAnimated(dialog) {
+  if (!dialog.open) return;
+  dialog.classList.add('dialog-closing');
+  const done = () => {
+    dialog.classList.remove('dialog-closing');
+    if (dialog.open) dialog.close();
+  };
+  dialog.addEventListener('animationend', function handler() {
+    dialog.removeEventListener('animationend', handler);
+    clearTimeout(fallback);
+    done();
+  });
+  // Fallback in case animationend never fires
+  const fallback = setTimeout(done, 300);
+}

@@ -2,13 +2,14 @@
 
 import { getState, subscribe, dispatch, undo, redo, canUndo, canRedo, getReservedUnits, setReservedUnits, clearReservedUnits, getActiveRackConfig, getActiveDevices } from './state.js';
 import { renderRack, setSearchFilter } from './rack-view.js';
-import { getLocalStorageUsage, parsePositionList, generateId } from './utils.js';
+import { getLocalStorageUsage, parsePositionList, generateId, closeDialogAnimated } from './utils.js';
 import { getRackUtilization, toNetBoxJSON } from './rack-model.js';
 import { initDeviceForm, populateFormForEdit } from './device-form.js';
 import { initDragDrop } from './drag-drop.js';
 import { initExport } from './export.js';
 import { t, getCurrentLang, setLang, applyTranslations } from './i18n.js';
 import { initNetboxAutocomplete } from './netbox-autocomplete.js';
+import { initModuleImport } from './module-import.js';
 
 // Initialize the application
 function init() {
@@ -45,6 +46,7 @@ function init() {
   initStorageIndicator();
   initBulkPositionHighlight();
   initNetboxAutocomplete();
+  initModuleImport();
   initAccordionAnimations();
   initDeviceSearch();
   initResponsiveSidebars();
@@ -480,24 +482,6 @@ function initSettings() {
   });
 }
 
-// ─── Dialog animation helper ─────────────────────────────────────────────────
-
-function closeDialogAnimated(dialog) {
-  if (!dialog.open) return;
-  dialog.classList.add('dialog-closing');
-  const done = () => {
-    dialog.classList.remove('dialog-closing');
-    if (dialog.open) dialog.close();
-  };
-  dialog.addEventListener('animationend', function handler() {
-    dialog.removeEventListener('animationend', handler);
-    clearTimeout(fallback);
-    done();
-  });
-  // Fallback in case animationend never fires
-  const fallback = setTimeout(done, 300);
-}
-
 // ─── Keyboard shortcuts ──────────────────────────────────────────────────────
 
 const DEFAULT_SHORTCUTS = {
@@ -732,6 +716,10 @@ function initStorageIndicator() {
       const theme = localStorage.getItem('rackbuilder_theme');
       const lang = localStorage.getItem('rackbuilder_lang');
 
+      // Import profiles are configuration: keep them unless the user explicitly agrees to delete them
+      const profiles = localStorage.getItem('rackbuilder_import_profiles');
+      const keepProfiles = profiles && !confirm(t('confirm_clear_profiles'));
+
       // Remove all rackbuilder keys
       const keysToRemove = [];
       for (let i = 0; i < localStorage.length; i++) {
@@ -745,6 +733,7 @@ function initStorageIndicator() {
       // Restore preferences
       if (theme) localStorage.setItem('rackbuilder_theme', theme);
       if (lang) localStorage.setItem('rackbuilder_lang', lang);
+      if (keepProfiles) localStorage.setItem('rackbuilder_import_profiles', profiles);
 
       dispatch('CLEAR_STATE');
     }
