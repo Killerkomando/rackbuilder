@@ -2020,3 +2020,22 @@ dialog.dialog-wide {
   .mi-steps li em { display: none; }
   .mi-narrow { flex-basis: 70px; }
 }
+
+/* Module import: warnings (amber) next to errors (red) */
+.message-warning { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.35); }
+.mi-summary.mi-has-warnings { color: #f59e0b; }
+.mi-card--warning { border-color: #f59e0b; box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.3); }
+.mi-card-warnings { margin: 0 0 8px; padding-left: 18px; font-size: 12px; color: #fcd34d; }
+.mi-pv-filter { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-text-muted); }
+.mi-pv-filter select {
+  padding: 6px 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  font-size: 13px;
+  font-family: inherit;
+}
+[data-theme="light"] #module-import-dialog .message-warning,
+[data-theme="light"] .mi-card-warnings { color: #b45309; }
+[data-theme="light"] .mi-summary.mi-has-warnings { color: #b45309; }

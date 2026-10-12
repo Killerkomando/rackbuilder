@@ -1571,6 +1571,25 @@ dialog.dialog-wide {
   .mi-narrow { flex-basis: 70px; }
 }
 
+
+/* Module import: warnings (amber) next to errors (red) */
+.message-warning { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.35); }
+.mi-summary.mi-has-warnings { color: #f59e0b; }
+.mi-card--warning { border-color: #f59e0b; box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.3); }
+.mi-card-warnings { margin: 0 0 8px; padding-left: 18px; font-size: 12px; color: #fcd34d; }
+.mi-pv-filter { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--color-text-muted); }
+.mi-pv-filter select {
+  padding: 6px 8px;
+  background: var(--bg-primary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  color: var(--color-text);
+  font-size: 13px;
+  font-family: inherit;
+}
+[data-theme="light"] #module-import-dialog .message-warning,
+[data-theme="light"] .mi-card-warnings { color: #b45309; }
+[data-theme="light"] .mi-summary.mi-has-warnings { color: #b45309; }
   </style>
 </head>
 <body>
@@ -1901,7 +1920,8 @@ dialog.dialog-wide {
     <div id="mi-pv-file-issues"></div>
     <div id="mi-pv-row-issues"></div>
     <div class="mi-pv-controls">
-      <label class="form-checkbox-label"><input type="checkbox" id="mi-pv-errors-only"><span data-i18n="mi_pv_errors_only">Errors only</span></label>
+      <label class="mi-pv-filter"><span data-i18n="mi_pv_filter_label">Show</span>
+        <select id="mi-pv-filter"><option value="all">All</option><option value="errors">Errors</option><option value="warnings">Warnings</option></select></label>
       <div id="mi-pv-legend" class="mi-legend"></div>
     </div>
     <div id="mi-pv-cards" class="mi-cards"></div>
@@ -2439,14 +2459,21 @@ const translations = {
     mi_ed_cancel: 'Close editor',
     mi_ed_saved: 'Profile saved.',
     mi_pv_summary: '{devices} devices · {bays} modules · {errors} errors · {warnings} warnings',
-    mi_pv_errors_only: 'Errors only',
     mi_pv_back: 'Back to rules',
     mi_pv_continue: 'Continue',
     mi_pv_file_errors: 'Problems with the file or profile',
     mi_pv_row: 'Row {row}',
     mi_pv_bay: 'Bay {bay}',
+    mi_pv_filter_label: 'Show',
+    mi_pv_filter_all: 'All devices ({count})',
+    mi_pv_filter_errors: 'With errors ({count})',
+    mi_pv_filter_warnings: 'With warnings ({count})',
+    mi_pv_filter_empty: 'No devices match this filter.',
+    mi_pv_file_warnings: 'Notes about the file',
+    mi_warn_device_no_modules: 'No modules needed for this device.',
+    mi_warn_columns_ignored: '{count} "#NAME?" column(s) ignored.',
+    mi_warn_lan_port_gap: 'A LAN port name is empty before port {port}; the following names move up one port.',
     mi_pv_none: 'No devices found. Check the block mapping and the count column.',
-    mi_pv_no_errors: 'No devices with errors.',
     mi_ex_summary: '{devices} devices, {rows} module rows ready for export.',
     mi_ex_hint: 'Import module-import.csv in NetBox (Dcim → Modules → Import). Then continue to rename the LAN interfaces.',
     mi_ex_download_csv: 'Download module-import.csv',
@@ -2470,7 +2497,6 @@ const translations = {
     mi_err_block_count_invalid: 'Invalid block count "{value}" (max {max}).',
     mi_err_column_missing: 'Column not found: "{column}".',
     mi_err_column_value_invalid: 'Invalid value "{value}" in "{column}".',
-    mi_err_device_no_modules: 'No modules needed for this device.',
     mi_val_name_required: 'Profile name is required.',
     mi_val_slot_count_invalid: 'Module bays must be a whole number from 1 to 99.',
     mi_val_strategy_invalid: 'Unknown split strategy.',
@@ -2717,14 +2743,21 @@ const translations = {
     mi_ed_cancel: 'Editor schließen',
     mi_ed_saved: 'Profil gespeichert.',
     mi_pv_summary: '{devices} Geräte · {bays} Module · {errors} Fehler · {warnings} Warnungen',
-    mi_pv_errors_only: 'Nur Fehler',
     mi_pv_back: 'Zurück zu den Regeln',
     mi_pv_continue: 'Weiter',
     mi_pv_file_errors: 'Probleme mit Datei oder Profil',
     mi_pv_row: 'Zeile {row}',
     mi_pv_bay: 'Bay {bay}',
+    mi_pv_filter_label: 'Anzeigen',
+    mi_pv_filter_all: 'Alle Geräte ({count})',
+    mi_pv_filter_errors: 'Mit Fehlern ({count})',
+    mi_pv_filter_warnings: 'Mit Warnungen ({count})',
+    mi_pv_filter_empty: 'Kein Gerät passt zu diesem Filter.',
+    mi_pv_file_warnings: 'Hinweise zur Datei',
+    mi_warn_device_no_modules: 'Für dieses Gerät sind keine Module nötig.',
+    mi_warn_columns_ignored: '{count} Spalte(n) „#NAME?" ignoriert.',
+    mi_warn_lan_port_gap: 'Ein LAN-Portname ist vor Port {port} leer; die folgenden Namen rutschen um einen Port nach oben.',
     mi_pv_none: 'Keine Geräte gefunden. Prüfe Block-Mapping und Anzahl-Spalte.',
-    mi_pv_no_errors: 'Keine Geräte mit Fehlern.',
     mi_ex_summary: '{devices} Geräte, {rows} Modulzeilen bereit zum Export.',
     mi_ex_hint: 'Importiere module-import.csv in NetBox (Dcim → Modules → Import). Danach weiter zur Umbenennung der LAN-Interfaces.',
     mi_ex_download_csv: 'module-import.csv herunterladen',
@@ -2748,7 +2781,6 @@ const translations = {
     mi_err_block_count_invalid: 'Ungültige Blockanzahl „{value}" (max. {max}).',
     mi_err_column_missing: 'Spalte nicht gefunden: „{column}".',
     mi_err_column_value_invalid: 'Ungültiger Wert „{value}" in „{column}".',
-    mi_err_device_no_modules: 'Für dieses Gerät sind keine Module nötig.',
     mi_val_name_required: 'Profilname ist erforderlich.',
     mi_val_slot_count_invalid: 'Modul-Bays müssen eine ganze Zahl von 1 bis 99 sein.',
     mi_val_strategy_invalid: 'Unbekannte Aufteilungsstrategie.',
@@ -6346,7 +6378,7 @@ function composeSizes(total, sizes, strategy) {
 /**
  * @typedef {{rowIndex:number, device:string|null, bay:number|null, code:string, params?:object}} ImportIssue
  * @typedef {{bay:number, moduleType:string, category:string, color:string, size:number, ports:string[]|null}} BayAssignment
- * @typedef {{name:string, rowIndex:number, block:string, bays:(BayAssignment|null)[], issues:ImportIssue[]}} ImportDevice
+ * @typedef {{name:string, rowIndex:number, block:string, bays:(BayAssignment|null)[], issues:ImportIssue[], warnings:ImportIssue[]}} ImportDevice
  */
 
 /**
@@ -6370,6 +6402,9 @@ function analyzeCsv(table, profile) {
     fileLevelReported.add(key);
     errors.push({ rowIndex: 0, device: null, bay: null, code, params });
   };
+
+  const warnFile = (code, params) => warnings.push({ rowIndex: 0, device: null, bay: null, code, params });
+  if (table.dropped?.length) warnFile('columns_ignored', { count: table.dropped.length });
 
   const colPattern = field => (profile.columns || []).find(c => c.internal_field === field)?.column_suffix_pattern;
   const orderedRules = rulesInOrder(profile);
@@ -6396,11 +6431,17 @@ function analyzeCsv(table, profile) {
       for (const blockId of seq.slice(0, n)) {
         const prefix = fillPattern(block.prefix_pattern, { block: blockId });
         const name = [rowName, prefix].filter(Boolean).join(' ');
-        const device = { name, rowIndex, block: blockId, bays: new Array(slots).fill(null), issues: [] };
+        const device = { name, rowIndex, block: blockId, bays: new Array(slots).fill(null), issues: [], warnings: [] };
         const fail = (code, params, bay = null) => {
           const issue = { rowIndex, device: name, bay, code, params };
           errors.push(issue);
           device.issues.push(issue);
+        };
+
+        const warn = (code, params, bay = null) => {
+          const issue = { rowIndex, device: name, bay, code, params };
+          warnings.push(issue);
+          device.warnings.push(issue);
         };
 
         // ── read the block's columns ──
@@ -6420,13 +6461,19 @@ function analyzeCsv(table, profile) {
         const lanPattern = colPattern('lan_port_name');
         if (lanPattern) {
           let foundAny = false;
+          let sawEmpty = false;
+          let gapAt = 0;
           for (let i = 1; i <= MAX_LAN_PORTS; i++) {
             const header = findHeader(fillPattern(lanPattern, { prefix, block: blockId, n: i }));
             if (!header) break;
             foundAny = true;
             const v = (row[header] || '').trim();
-            if (v !== '') lanNames.push(v);
+            if (v === '') { sawEmpty = true; continue; }
+            if (sawEmpty && !gapAt) gapAt = i;
+            lanNames.push(v);
           }
+          // An empty port name before a filled one shifts every later port name up by one.
+          if (gapAt) warn('lan_port_gap', { port: gapAt });
           if (!foundAny) reportFile('column_missing', { column: fillPattern(lanPattern, { prefix, block: blockId, n: 1 }) });
         }
 
@@ -6479,7 +6526,7 @@ function analyzeCsv(table, profile) {
         }
 
         if (!device.bays.some(Boolean) && device.issues.length === 0) {
-          warnings.push({ rowIndex, device: name, bay: null, code: 'device_no_modules' });
+          warn('device_no_modules');
         }
         devices.push(device);
       }
@@ -6629,11 +6676,11 @@ function moduleColor(name) {
   return `hsl(${h % 360} 55% 38%)`;
 }
 
-function issueText(issue) {
+function issueText(issue, kind = 'err') {
   const parts = [];
   if (issue.rowIndex) parts.push(t('mi_pv_row', { row: issue.rowIndex }));
   if (issue.bay) parts.push(t('mi_pv_bay', { bay: issue.bay }));
-  const msg = t('mi_err_' + issue.code, issue.params || {});
+  const msg = t((kind === 'warn' ? 'mi_warn_' : 'mi_err_') + issue.code, issue.params || {});
   return (parts.length ? parts.join(' · ') + ': ' : '') + msg;
 }
 
@@ -6719,7 +6766,7 @@ function runAnalysis() {
   }
   S.analysis = analyzeCsv(S.table, profile);
   S.rename = null;
-  $('mi-pv-errors-only').checked = false;
+  $('mi-pv-filter').value = 'all';
   renderPreview();
   showStep(2);
 }
@@ -6961,12 +7008,18 @@ function renderPreview() {
     devices: s.devices, bays: s.baysUsed, errors: s.errors, warnings: s.warnings,
   });
   $('mi-pv-summary').classList.toggle('mi-has-errors', s.errors > 0);
+  $('mi-pv-summary').classList.toggle('mi-has-warnings', s.errors === 0 && s.warnings > 0);
 
   const fileLevel = a.errors.filter(e => e.rowIndex === 0);
   const fl = $('mi-pv-file-issues');
-  fl.innerHTML = fileLevel.length
-    ? `<div class="message message-error"><strong>${esc(t('mi_pv_file_errors'))}</strong><br>${fileLevel.map(i => esc(issueText(i))).join('<br>')}</div>`
-    : '';
+  const fileWarn = a.warnings.filter(w => w.rowIndex === 0);
+  fl.innerHTML =
+    (fileLevel.length
+      ? `<div class="message message-error"><strong>${esc(t('mi_pv_file_errors'))}</strong><br>${fileLevel.map(i => esc(issueText(i))).join('<br>')}</div>`
+      : '') +
+    (fileWarn.length
+      ? `<div class="message message-warning"><strong>${esc(t('mi_pv_file_warnings'))}</strong><br>${fileWarn.map(i => esc(issueText(i, 'warn'))).join('<br>')}</div>`
+      : '');
 
   const rowErrors = a.errors.filter(e => e.rowIndex && !e.device);
   const rl = $('mi-pv-row-issues');
@@ -6979,8 +7032,15 @@ function renderPreview() {
   $('mi-pv-legend').innerHTML = [...types].map(n =>
     `<span class="mi-chip"><i style="background:${moduleColor(n)}"></i>${esc(n)}</span>`).join('');
 
-  const onlyErrors = $('mi-pv-errors-only').checked;
-  const list = a.devices.filter(d => !onlyErrors || d.issues.length);
+  const withErrors = a.devices.filter(d => d.issues.length).length;
+  const withWarnings = a.devices.filter(d => d.warnings.length).length;
+  const filterEl = $('mi-pv-filter');
+  const mode = filterEl.value;
+  filterEl.options[0].textContent = t('mi_pv_filter_all', { count: a.devices.length });
+  filterEl.options[1].textContent = t('mi_pv_filter_errors', { count: withErrors });
+  filterEl.options[2].textContent = t('mi_pv_filter_warnings', { count: withWarnings });
+  const list = a.devices.filter(d =>
+    mode === 'errors' ? d.issues.length > 0 : mode === 'warnings' ? d.warnings.length > 0 : true);
   $('mi-pv-cards').innerHTML = list.length ? list.map(d => {
     const cells = [];
     for (let n = 1; n <= slots; n++) {
@@ -6993,12 +7053,13 @@ function renderPreview() {
             : '<span class="slot-module slot-empty"></span>'}
       </div>`);
     }
-    return `<div class="mi-card${d.issues.length ? ' mi-card--error' : ''}">
+    return `<div class="mi-card${d.issues.length ? ' mi-card--error' : d.warnings.length ? ' mi-card--warning' : ''}">
       <div class="mi-card-head"><strong>${esc(d.name)}</strong><small>${esc(t('mi_pv_row', { row: d.rowIndex }))}</small></div>
       ${d.issues.length ? `<ul class="mi-card-issues">${d.issues.map(i => `<li>${esc(issueText({ ...i, rowIndex: 0 }))}</li>`).join('')}</ul>` : ''}
+      ${d.warnings.length ? `<ul class="mi-card-warnings">${d.warnings.map(i => `<li>${esc(issueText({ ...i, rowIndex: 0 }, 'warn'))}</li>`).join('')}</ul>` : ''}
       <div class="slot-preview">${cells.join('')}</div>
     </div>`;
-  }).join('') : `<p class="settings-section-desc">${esc(t(a.devices.length ? 'mi_pv_no_errors' : 'mi_pv_none'))}</p>`;
+  }).join('') : `<p class="settings-section-desc">${esc(t(a.devices.length ? 'mi_pv_filter_empty' : 'mi_pv_none'))}</p>`;
 
   $('mi-pv-continue').disabled = s.errors > 0 || s.devices === 0;
 }
@@ -7157,7 +7218,7 @@ function initModuleImport() {
   $('mi-analyse-btn').addEventListener('click', runAnalysis);
 
   // Preview
-  $('mi-pv-errors-only').addEventListener('change', renderPreview);
+  $('mi-pv-filter').addEventListener('change', renderPreview);
   $('mi-pv-back').addEventListener('click', () => showStep(1));
   $('mi-pv-continue').addEventListener('click', () => { renderExport(); showStep(3); });
 

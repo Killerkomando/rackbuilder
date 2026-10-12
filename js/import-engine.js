@@ -123,7 +123,7 @@ export function composeSizes(total, sizes, strategy) {
 /**
  * @typedef {{rowIndex:number, device:string|null, bay:number|null, code:string, params?:object}} ImportIssue
  * @typedef {{bay:number, moduleType:string, category:string, color:string, size:number, ports:string[]|null}} BayAssignment
- * @typedef {{name:string, rowIndex:number, block:string, bays:(BayAssignment|null)[], issues:ImportIssue[]}} ImportDevice
+ * @typedef {{name:string, rowIndex:number, block:string, bays:(BayAssignment|null)[], issues:ImportIssue[], warnings:ImportIssue[]}} ImportDevice
  */
 
 /**
@@ -147,6 +147,9 @@ export function analyzeCsv(table, profile) {
     fileLevelReported.add(key);
     errors.push({ rowIndex: 0, device: null, bay: null, code, params });
   };
+
+  const warnFile = (code, params) => warnings.push({ rowIndex: 0, device: null, bay: null, code, params });
+  if (table.dropped?.length) warnFile('columns_ignored', { count: table.dropped.length });
 
   const colPattern = field => (profile.columns || []).find(c => c.internal_field === field)?.column_suffix_pattern;
   const orderedRules = rulesInOrder(profile);
@@ -173,11 +176,17 @@ export function analyzeCsv(table, profile) {
       for (const blockId of seq.slice(0, n)) {
         const prefix = fillPattern(block.prefix_pattern, { block: blockId });
         const name = [rowName, prefix].filter(Boolean).join(' ');
-        const device = { name, rowIndex, block: blockId, bays: new Array(slots).fill(null), issues: [] };
+        const device = { name, rowIndex, block: blockId, bays: new Array(slots).fill(null), issues: [], warnings: [] };
         const fail = (code, params, bay = null) => {
           const issue = { rowIndex, device: name, bay, code, params };
           errors.push(issue);
           device.issues.push(issue);
+        };
+
+        const warn = (code, params, bay = null) => {
+          const issue = { rowIndex, device: name, bay, code, params };
+          warnings.push(issue);
+          device.warnings.push(issue);
         };
 
         // ── read the block's columns ──
@@ -197,13 +206,19 @@ export function analyzeCsv(table, profile) {
         const lanPattern = colPattern('lan_port_name');
         if (lanPattern) {
           let foundAny = false;
+          let sawEmpty = false;
+          let gapAt = 0;
           for (let i = 1; i <= MAX_LAN_PORTS; i++) {
             const header = findHeader(fillPattern(lanPattern, { prefix, block: blockId, n: i }));
             if (!header) break;
             foundAny = true;
             const v = (row[header] || '').trim();
-            if (v !== '') lanNames.push(v);
+            if (v === '') { sawEmpty = true; continue; }
+            if (sawEmpty && !gapAt) gapAt = i;
+            lanNames.push(v);
           }
+          // An empty port name before a filled one shifts every later port name up by one.
+          if (gapAt) warn('lan_port_gap', { port: gapAt });
           if (!foundAny) reportFile('column_missing', { column: fillPattern(lanPattern, { prefix, block: blockId, n: 1 }) });
         }
 
@@ -256,7 +271,7 @@ export function analyzeCsv(table, profile) {
         }
 
         if (!device.bays.some(Boolean) && device.issues.length === 0) {
-          warnings.push({ rowIndex, device: name, bay: null, code: 'device_no_modules' });
+          warn('device_no_modules');
         }
         devices.push(device);
       }

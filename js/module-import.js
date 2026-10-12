@@ -39,11 +39,11 @@ function moduleColor(name) {
   return `hsl(${h % 360} 55% 38%)`;
 }
 
-function issueText(issue) {
+function issueText(issue, kind = 'err') {
   const parts = [];
   if (issue.rowIndex) parts.push(t('mi_pv_row', { row: issue.rowIndex }));
   if (issue.bay) parts.push(t('mi_pv_bay', { bay: issue.bay }));
-  const msg = t('mi_err_' + issue.code, issue.params || {});
+  const msg = t((kind === 'warn' ? 'mi_warn_' : 'mi_err_') + issue.code, issue.params || {});
   return (parts.length ? parts.join(' · ') + ': ' : '') + msg;
 }
 
@@ -129,7 +129,7 @@ function runAnalysis() {
   }
   S.analysis = analyzeCsv(S.table, profile);
   S.rename = null;
-  $('mi-pv-errors-only').checked = false;
+  $('mi-pv-filter').value = 'all';
   renderPreview();
   showStep(2);
 }
@@ -371,12 +371,18 @@ function renderPreview() {
     devices: s.devices, bays: s.baysUsed, errors: s.errors, warnings: s.warnings,
   });
   $('mi-pv-summary').classList.toggle('mi-has-errors', s.errors > 0);
+  $('mi-pv-summary').classList.toggle('mi-has-warnings', s.errors === 0 && s.warnings > 0);
 
   const fileLevel = a.errors.filter(e => e.rowIndex === 0);
   const fl = $('mi-pv-file-issues');
-  fl.innerHTML = fileLevel.length
-    ? `<div class="message message-error"><strong>${esc(t('mi_pv_file_errors'))}</strong><br>${fileLevel.map(i => esc(issueText(i))).join('<br>')}</div>`
-    : '';
+  const fileWarn = a.warnings.filter(w => w.rowIndex === 0);
+  fl.innerHTML =
+    (fileLevel.length
+      ? `<div class="message message-error"><strong>${esc(t('mi_pv_file_errors'))}</strong><br>${fileLevel.map(i => esc(issueText(i))).join('<br>')}</div>`
+      : '') +
+    (fileWarn.length
+      ? `<div class="message message-warning"><strong>${esc(t('mi_pv_file_warnings'))}</strong><br>${fileWarn.map(i => esc(issueText(i, 'warn'))).join('<br>')}</div>`
+      : '');
 
   const rowErrors = a.errors.filter(e => e.rowIndex && !e.device);
   const rl = $('mi-pv-row-issues');
@@ -389,8 +395,15 @@ function renderPreview() {
   $('mi-pv-legend').innerHTML = [...types].map(n =>
     `<span class="mi-chip"><i style="background:${moduleColor(n)}"></i>${esc(n)}</span>`).join('');
 
-  const onlyErrors = $('mi-pv-errors-only').checked;
-  const list = a.devices.filter(d => !onlyErrors || d.issues.length);
+  const withErrors = a.devices.filter(d => d.issues.length).length;
+  const withWarnings = a.devices.filter(d => d.warnings.length).length;
+  const filterEl = $('mi-pv-filter');
+  const mode = filterEl.value;
+  filterEl.options[0].textContent = t('mi_pv_filter_all', { count: a.devices.length });
+  filterEl.options[1].textContent = t('mi_pv_filter_errors', { count: withErrors });
+  filterEl.options[2].textContent = t('mi_pv_filter_warnings', { count: withWarnings });
+  const list = a.devices.filter(d =>
+    mode === 'errors' ? d.issues.length > 0 : mode === 'warnings' ? d.warnings.length > 0 : true);
   $('mi-pv-cards').innerHTML = list.length ? list.map(d => {
     const cells = [];
     for (let n = 1; n <= slots; n++) {
@@ -403,12 +416,13 @@ function renderPreview() {
             : '<span class="slot-module slot-empty"></span>'}
       </div>`);
     }
-    return `<div class="mi-card${d.issues.length ? ' mi-card--error' : ''}">
+    return `<div class="mi-card${d.issues.length ? ' mi-card--error' : d.warnings.length ? ' mi-card--warning' : ''}">
       <div class="mi-card-head"><strong>${esc(d.name)}</strong><small>${esc(t('mi_pv_row', { row: d.rowIndex }))}</small></div>
       ${d.issues.length ? `<ul class="mi-card-issues">${d.issues.map(i => `<li>${esc(issueText({ ...i, rowIndex: 0 }))}</li>`).join('')}</ul>` : ''}
+      ${d.warnings.length ? `<ul class="mi-card-warnings">${d.warnings.map(i => `<li>${esc(issueText({ ...i, rowIndex: 0 }, 'warn'))}</li>`).join('')}</ul>` : ''}
       <div class="slot-preview">${cells.join('')}</div>
     </div>`;
-  }).join('') : `<p class="settings-section-desc">${esc(t(a.devices.length ? 'mi_pv_no_errors' : 'mi_pv_none'))}</p>`;
+  }).join('') : `<p class="settings-section-desc">${esc(t(a.devices.length ? 'mi_pv_filter_empty' : 'mi_pv_none'))}</p>`;
 
   $('mi-pv-continue').disabled = s.errors > 0 || s.devices === 0;
 }
@@ -567,7 +581,7 @@ export function initModuleImport() {
   $('mi-analyse-btn').addEventListener('click', runAnalysis);
 
   // Preview
-  $('mi-pv-errors-only').addEventListener('change', renderPreview);
+  $('mi-pv-filter').addEventListener('change', renderPreview);
   $('mi-pv-back').addEventListener('click', () => showStep(1));
   $('mi-pv-continue').addEventListener('click', () => { renderExport(); showStep(3); });
 

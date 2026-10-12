@@ -156,6 +156,56 @@ test('rule range beyond the slot count reports bay_out_of_range', () => {
   assert.ok(b.issues.some(i => i.code === 'bay_out_of_range'));
 });
 
+// ── warnings ──
+const warnHeaders = ['Anzahl Bodentanks', 'Bodentank A Steckdosen weiß', 'Bodentank A Steckdosen orange',
+  'Bodentank A Buchse 1', 'Bodentank A Buchse 2', 'Bodentank A Buchse 3', 'Bodentank A Buchse 4'];
+const warnRow = (count, white, orange, ports) => ({
+  'Anzahl Bodentanks': count, 'Bodentank A Steckdosen weiß': white, 'Bodentank A Steckdosen orange': orange,
+  'Bodentank A Buchse 1': ports[0] ?? '', 'Bodentank A Buchse 2': ports[1] ?? '',
+  'Bodentank A Buchse 3': ports[2] ?? '', 'Bodentank A Buchse 4': ports[3] ?? '',
+});
+
+test('device without any module need is a warning on that device, not an error', () => {
+  const r = analyzeCsv({ headers: warnHeaders, rows: [warnRow('1', '', '', [])] }, profile);
+  assert.equal(r.errors.length, 0);
+  assert.equal(r.warnings.length, 1);
+  assert.equal(r.warnings[0].code, 'device_no_modules');
+  assert.equal(r.devices[0].warnings.length, 1);
+  assert.equal(r.devices[0].warnings[0].code, 'device_no_modules');
+  assert.equal(r.summary.warnings, 1);
+});
+
+test('gap in LAN port names warns once, with the first port after the gap', () => {
+  const r = analyzeCsv({ headers: warnHeaders, rows: [warnRow('1', '', '', ['A', '', 'B', 'C'])] }, profile);
+  assert.deepEqual(r.errors, []);
+  const gap = r.devices[0].warnings.filter(w => w.code === 'lan_port_gap');
+  assert.equal(gap.length, 1);
+  assert.deepEqual(gap[0].params, { port: 3 });
+  assert.deepEqual(r.devices[0].bays[0].ports, ['A', 'B', 'C']); // names compact, hence the warning
+});
+
+test('trailing empty LAN ports do not warn', () => {
+  const r = analyzeCsv({ headers: warnHeaders, rows: [warnRow('1', '', '', ['A', 'B', '', ''])] }, profile);
+  assert.deepEqual(r.warnings, []);
+});
+
+test('ignored #NAME? columns are a file-level warning (row 0)', () => {
+  assert.ok(result.warnings.some(w => w.rowIndex === 0 && w.code === 'columns_ignored' && w.params.count === 1));
+  assert.ok(result.devices.every(d => Array.isArray(d.warnings)));
+});
+
+test('a device with errors keeps errors and warnings separate', () => {
+  const r = analyzeCsv({ headers: warnHeaders, rows: [warnRow('1', '', '', ['A', '', 'B'])] }, createSeedProfile());
+  // 3 LAN ports resolve fine; make LAN unresolvable by removing the 3-port rule and adding a gap
+  const p = createSeedProfile();
+  p.rules = p.rules.filter(x => x.netbox_module_type_id !== 'LAN-Modul 3-Port' && x.netbox_module_type_id !== 'LAN-Modul 2-Port');
+  const r2 = analyzeCsv({ headers: warnHeaders, rows: [warnRow('1', '', '', ['A', '', 'B'])] }, p);
+  assert.ok(r2.devices[0].issues.length > 0);
+  assert.ok(r2.devices[0].warnings.some(w => w.code === 'lan_port_gap'));
+  assert.ok(r2.devices[0].issues.every(i => i.code !== 'lan_port_gap'));
+  assert.equal(r.errors.length, 0);
+});
+
 // ── exports ──
 test('module-import.csv has one row per used bay with NetBox columns', () => {
   const only = { devices: [dev('Raum 1, EG Bodentank B')] };
@@ -227,13 +277,17 @@ test('every literal t() key in the wizard and every data-i18n key in the dialog 
 test('every engine error code and validator code has a translation', () => {
   const engine = readFileSync(join(dir, '../js/import-engine.js'), 'utf8');
   const prof = readFileSync(join(dir, '../js/import-profiles.js'), 'utf8');
+  const warnCodes = new Set([...engine.matchAll(/\b(?:warn|warnFile)\('(\w+)'/g)].map(m => m[1]));
   const engineCodes = new Set([
     ...[...engine.matchAll(/(?:fail|reportFile)\('(\w+)'/g)].map(m => m[1]),
     ...[...engine.matchAll(/code: '(\w+)'/g)].map(m => m[1]),
     ...[...engine.matchAll(/fail\(allOutside \? '(\w+)' : '(\w+)'/g)].flatMap(m => [m[1], m[2]]),
   ]);
+  assert.ok(warnCodes.size >= 3, [...warnCodes].join());
+  assert.deepEqual([...warnCodes].filter(c => !enKeys.has('mi_warn_' + c)), []);
+  assert.deepEqual([...warnCodes].filter(c => !deKeys.has('mi_warn_' + c)), []);
   const valCodes = new Set([...prof.matchAll(/\b(?:err|warn)\('(\w+)'/g)].map(m => m[1]));
-  assert.ok(engineCodes.size >= 8 && valCodes.size >= 20, `${engineCodes.size}/${valCodes.size}`);
+  assert.ok(engineCodes.size >= 7 && valCodes.size >= 20, `${engineCodes.size}/${valCodes.size}`);
   assert.deepEqual([...engineCodes].filter(c => !enKeys.has('mi_err_' + c)), []);
   assert.deepEqual([...valCodes].filter(c => !enKeys.has('mi_val_' + c)), []);
 });
