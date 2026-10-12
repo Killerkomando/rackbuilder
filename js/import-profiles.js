@@ -254,6 +254,9 @@ export function importProfileJson(text) {
     const data = JSON.parse(text);
     if (data?._format !== 'rackbuilder-import-profile' || !data.profile) return null;
     const p = { ...createEmptyProfile(data.profile.name || 'Imported'), ...normalizeProfile({ ...data.profile }) };
+    for (const k of ['rules', 'splitRules', 'blocks', 'columns']) {
+      if (!Array.isArray(p[k]) || !p[k].every(x => x && typeof x === 'object')) return null;
+    }
     p.id = generateId();
     p.is_default = false;
     for (const list of [p.rules, p.splitRules, p.blocks, p.columns]) {

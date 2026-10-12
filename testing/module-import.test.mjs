@@ -161,10 +161,10 @@ test('rule range beyond the slot count reports bay_out_of_range', () => {
 });
 
 // ── warnings ──
-const warnHeaders = ['Anzahl Bodentanks', 'Bodentank A Steckdosen weiß', 'Bodentank A Steckdosen orange',
+const warnHeaders = ['Raum', 'Anzahl Bodentanks', 'Bodentank A Steckdosen weiß', 'Bodentank A Steckdosen orange',
   'Bodentank A Buchse 1', 'Bodentank A Buchse 2', 'Bodentank A Buchse 3', 'Bodentank A Buchse 4'];
 const warnRow = (count, white, orange, ports) => ({
-  'Anzahl Bodentanks': count, 'Bodentank A Steckdosen weiß': white, 'Bodentank A Steckdosen orange': orange,
+  Raum: 'R1', 'Anzahl Bodentanks': count, 'Bodentank A Steckdosen weiß': white, 'Bodentank A Steckdosen orange': orange,
   'Bodentank A Buchse 1': ports[0] ?? '', 'Bodentank A Buchse 2': ports[1] ?? '',
   'Bodentank A Buchse 3': ports[2] ?? '', 'Bodentank A Buchse 4': ports[3] ?? '',
 });
@@ -394,3 +394,21 @@ test('every engine error code and validator code has a translation', () => {
 });
 
 console.log(`\n${passed} tests passed`);
+
+test('configured row name column that is absent is a file error, not silent duplicates', () => {
+  const headers = warnHeaders.filter(h => h !== 'Raum');
+  const r = analyzeCsv({ headers, rows: [warnRow('1', '', '', ['A', 'B'])] }, profile);
+  assert.ok(r.errors.some(e => e.code === 'column_missing' && e.params.column === 'Raum'));
+});
+
+test('negative or absurd socket counts are errors', () => {
+  for (const v of ['-3', '100000']) {
+    const r = analyzeCsv({ headers: warnHeaders, rows: [warnRow('1', v, '', [])] }, profile);
+    assert.ok(r.errors.some(e => e.code === 'column_value_invalid'), v);
+  }
+});
+
+test('imported profile with malformed structure is rejected', () => {
+  const bad = JSON.stringify({ _format: 'rackbuilder-import-profile', profile: { name: 'x', rules: 'invalid' } });
+  assert.equal(importProfileJson(bad), null);
+});

@@ -8,6 +8,7 @@ export const INTERFACE_RENAME_HEADERS = ['id', 'name'];
 
 const miNorm = s => String(s ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
 const MAX_LAN_PORTS = 99;
+const MAX_DEMAND = 999;
 
 // ─── Table cleaning & value parsing ──────────────────────────────────────────
 
@@ -158,6 +159,8 @@ export function analyzeCsv(table, profile) {
   for (const block of profile.blocks || []) {
     const countHeader = findHeader(block.count_column);
     if (!countHeader) { reportFile('column_missing', { column: block.count_column }); continue; }
+    const rowNameHeader = block.row_name_column ? findHeader(block.row_name_column) : null;
+    if (block.row_name_column && !rowNameHeader) { reportFile('column_missing', { column: block.row_name_column }); continue; }
     const seq = block.block_sequence || [];
 
     table.rows.forEach((row, rIdx) => {
@@ -172,7 +175,7 @@ export function analyzeCsv(table, profile) {
         errors.push({ rowIndex, device: null, bay: null, code: 'block_count_invalid', params: { value: n, max: seq.length } });
         return;
       }
-      const rowName = block.row_name_column ? (row[findHeader(block.row_name_column)] || '').trim() : '';
+      const rowName = rowNameHeader ? (row[rowNameHeader] || '').trim() : '';
 
       for (const blockId of seq.slice(0, n)) {
         const prefix = fillPattern(block.prefix_pattern, { block: blockId });
@@ -232,8 +235,8 @@ export function analyzeCsv(table, profile) {
         const occupied = new Set();
 
         for (const d of demands) {
-          if (!d.total || d.total <= 0) continue;
-          if (!Number.isInteger(d.total)) { fail('column_value_invalid', { column: d.category, value: d.total }); continue; }
+          if (!d.total) continue;
+          if (!Number.isInteger(d.total) || d.total < 0 || d.total > MAX_DEMAND) { fail('column_value_invalid', { column: d.category, value: d.total }); continue; }
 
           const chunks = splitDemand(profile, d, fail);
           if (!chunks) continue;
