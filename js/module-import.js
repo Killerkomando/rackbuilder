@@ -7,7 +7,7 @@ import { createZip } from './zip.js';
 import {
   loadProfiles, saveProfiles, createEmptyProfile, createSeedProfile, duplicateProfile,
   exportProfileJson, importProfileJson, validateProfile, expandSequence,
-  SPLIT_STRATEGIES, CONDITION_OPS, CONDITION_FIELDS, INTERNAL_FIELDS,
+  SPLIT_STRATEGIES, CONDITION_OPS, CONDITION_FIELDS, INTERNAL_FIELDS, LAN_LAYOUTS,
 } from './import-profiles.js';
 import {
   cleanTable, analyzeCsv, buildModuleImportRows, buildInterfaceRename, readInterfaceTable,
@@ -166,6 +166,13 @@ function renderGeneral(d) {
     <div class="form-group"><label>${esc(t('mi_ed_strategy'))}</label>
       ${selectHtml(SPLIT_STRATEGIES, d.default_split_strategy, 'data-k="default_split_strategy"', s => t('mi_strategy_' + s))}</div>
     <div class="form-row">
+      <div class="form-group"><label>${esc(t('mi_ed_lan_layout'))}</label>
+        ${selectHtml(LAN_LAYOUTS, d.lan_layout, 'data-k="lan_layout" data-rerender="1"', o => t('mi_lan_layout_' + o))}</div>
+      ${d.lan_layout !== 'custom' ? `<div class="form-group"><label>${esc(t('mi_ed_lan_fill'))}</label>
+        <input type="text" data-k="lan_fill_name" value="${esc(d.lan_fill_name)}"></div>` : ''}
+    </div>
+    ${d.lan_layout !== 'custom' ? `<p class="settings-section-desc">${esc(t('mi_ed_lan_layout_hint'))}</p>` : ''}
+    <div class="form-row">
       <div class="form-group"><label>${esc(t('mi_ed_bay_pattern'))}</label>
         <input type="text" data-k="bay_name_pattern" value="${esc(d.bay_name_pattern)}"></div>
       <div class="form-group"><label>${esc(t('mi_ed_iface_template'))}</label>
@@ -216,6 +223,7 @@ function renderRules(d) {
 function renderSplits(d) {
   return `
     <p class="settings-section-desc">${esc(t('mi_ed_splits_hint'))}</p>
+    ${d.lan_layout !== 'custom' ? `<p class="message message-info">${esc(t('mi_ed_splits_lan_note'))}</p>` : ''}
     ${d.splitRules.map((s, i) => `
       <div class="mi-item">
         <div class="mi-item-head">
@@ -290,7 +298,7 @@ function onEditorInput(e) {
   let val = el.value;
   if (el.type === 'number') val = val === '' ? '' : Number(val);
 
-  if (!el.dataset.list) { S.draft[k] = val; return; }
+  if (!el.dataset.list) { S.draft[k] = val; if (el.dataset.rerender) renderEditor(); return; }
   const item = S.draft[el.dataset.list][Number(el.dataset.i)];
   if (!item) return;
   if (el.dataset.ci !== undefined) {

@@ -11,7 +11,7 @@ import {
 } from '../js/import-engine.js';
 import {
   createSeedProfile, validateProfile, duplicateProfile, exportProfileJson, importProfileJson,
-  loadProfiles, saveProfiles, PROFILES_KEY, expandSequence,
+  loadProfiles, saveProfiles, PROFILES_KEY, expandSequence, normalizeProfile,
 } from '../js/import-profiles.js';
 
 const dir = dirname(fileURLToPath(import.meta.url));
@@ -85,6 +85,9 @@ test('profile persistence, duplicate and JSON round trip', () => {
 const table = cleanTable(parseCsvTable(readFileSync(join(dir, 'module-import-sample.csv'), 'utf8')));
 const result = analyzeCsv(table, profile);
 const dev = name => result.devices.find(d => d.name === name);
+const customProfile = { ...createSeedProfile(), lan_layout: 'custom' };
+const resultC = analyzeCsv(table, customProfile);
+const devC = name => resultC.devices.find(d => d.name === name);
 const bay = (d, n) => d.bays[n - 1];
 
 test('#NAME? column is ignored', () => {
@@ -98,8 +101,8 @@ test('one device per occupied block, none for count 0 / x', () => {
   ]);
 });
 
-test('port count 5 splits 3+2 and sockets follow the bay range (power from bay 6)', () => {
-  const a = dev('Raum 1, EG Bodentank A');
+test('custom layout: port count 5 splits 3+2 and sockets follow the bay range (power from bay 6)', () => {
+  const a = devC('Raum 1, EG Bodentank A');
   assert.equal(bay(a, 1).moduleType, 'LAN-Modul 3-Port');
   assert.deepEqual(bay(a, 1).ports, ['P1', 'P2', 'P3']);
   assert.equal(bay(a, 2).moduleType, 'LAN-Modul 2-Port');
@@ -138,8 +141,9 @@ test('missing count column is a file-level error', () => {
   assert.equal(r.devices.length, 0);
 });
 
-test('PortSplitRule overrides the default strategy', () => {
+test('custom layout: PortSplitRule overrides the default strategy', () => {
   const p = createSeedProfile();
+  p.lan_layout = 'custom';
   p.splitRules.push({ id: 's', category: 'LAN', total_count: 5, module_type_sequence: ['LAN-Modul 2-Port', 'LAN-Modul 3-Port'] });
   const a = analyzeCsv(table, p).devices.find(d => d.name === 'Raum 1, EG Bodentank A');
   assert.equal(a.bays[0].moduleType, 'LAN-Modul 2-Port');
@@ -181,7 +185,9 @@ test('gap in LAN port names warns once, with the first port after the gap', () =
   const gap = r.devices[0].warnings.filter(w => w.code === 'lan_port_gap');
   assert.equal(gap.length, 1);
   assert.deepEqual(gap[0].params, { port: 3 });
-  assert.deepEqual(r.devices[0].bays[0].ports, ['A', 'B', 'C']); // names compact, hence the warning
+  // names compact (hence the warning); 3 ports in 2-port modules, the last module is padded
+  assert.deepEqual(r.devices[0].bays[0].ports, ['A', 'B']);
+  assert.deepEqual(r.devices[0].bays[1].ports, ['C', 'unknown']);
 });
 
 test('trailing empty LAN ports do not warn', () => {
@@ -206,6 +212,101 @@ test('a device with errors keeps errors and warnings separate', () => {
   assert.equal(r.errors.length, 0);
 });
 
+// ── LAN module layout (default: 2-port modules) ──
+test('default profile uses 2-port LAN modules; an odd count pads the last module with "unknown"', () => {
+  assert.equal(profile.lan_layout, '2');
+  assert.equal(profile.lan_fill_name, 'unknown');
+  const a = dev('Raum 1, EG Bodentank A'); // 5 LAN ports P1..P5
+  assert.deepEqual([1, 2, 3].map(n => bay(a, n).moduleType), Array(3).fill('LAN-Modul 2-Port'));
+  assert.deepEqual([1, 2, 3].map(n => bay(a, n).ports), [['P1', 'P2'], ['P3', 'P4'], ['P5', 'unknown']]);
+  assert.equal(bay(a, 4), null);
+  const w = a.warnings.find(x => x.code === 'lan_port_padded');
+  assert.deepEqual(w.params, { count: 1, name: 'unknown' });
+  assert.equal(a.issues.length, 0);
+});
+
+test('an even LAN count needs no padding and no warning', () => {
+  const b = dev('Raum 1, EG Bodentank B'); // 2 LAN ports
+  assert.deepEqual(bay(b, 1).ports, ['Q1', 'Q2']);
+  assert.ok(!b.warnings.some(x => x.code === 'lan_port_padded'));
+});
+
+test('a single LAN port is padded to a full 2-port module', () => {
+  const r = analyzeCsv({ headers: warnHeaders, rows: [warnRow('1', '', '', ['Z'])] }, profile);
+  assert.deepEqual(r.devices[0].bays[0].ports, ['Z', 'unknown']);
+  assert.equal(r.devices[0].bays[0].size, 2);
+  assert.equal(r.errors.length, 0);
+});
+
+test('user-defined fill name is used', () => {
+  const p = createSeedProfile();
+  p.lan_fill_name = 'reserve';
+  const r = analyzeCsv({ headers: warnHeaders, rows: [warnRow('1', '', '', ['A', 'B', 'C'])] }, p);
+  assert.deepEqual(r.devices[0].bays[1].ports, ['C', 'reserve']);
+  assert.equal(r.devices[0].warnings.find(x => x.code === 'lan_port_padded').params.name, 'reserve');
+});
+
+test('3-port layout: 4 ports become 2 modules, padded to 6', () => {
+  const p = createSeedProfile();
+  p.lan_layout = '3';
+  const r = analyzeCsv({ headers: warnHeaders, rows: [warnRow('1', '', '', ['A', 'B', 'C', 'D'])] }, p);
+  const d = r.devices[0];
+  assert.deepEqual([d.bays[0].moduleType, d.bays[1].moduleType], ['LAN-Modul 3-Port', 'LAN-Modul 3-Port']);
+  assert.deepEqual(d.bays[1].ports, ['D', 'unknown', 'unknown']);
+  assert.equal(d.warnings.find(x => x.code === 'lan_port_padded').params.count, 2);
+});
+
+test('layout presets ignore LAN port splits, custom honours them; power is unaffected', () => {
+  const p = createSeedProfile();
+  p.splitRules.push({ id: 's', category: 'LAN', total_count: 5, module_type_sequence: ['LAN-Modul 3-Port', 'LAN-Modul 2-Port'] });
+  const preset = analyzeCsv(table, p).devices.find(d => d.name === 'Raum 1, EG Bodentank A');
+  assert.equal(preset.bays[0].moduleType, 'LAN-Modul 2-Port');
+  p.lan_layout = 'custom';
+  const custom = analyzeCsv(table, p).devices.find(d => d.name === 'Raum 1, EG Bodentank A');
+  assert.equal(custom.bays[0].moduleType, 'LAN-Modul 3-Port');
+  assert.equal(preset.bays[5].moduleType, custom.bays[5].moduleType); // sockets from bay 6 either way
+});
+
+test('missing LAN rule for the preset size is a no_rule error, not a guess', () => {
+  const p = createSeedProfile();
+  p.rules = p.rules.filter(r => r.netbox_module_type_id !== 'LAN-Modul 2-Port');
+  const r = analyzeCsv({ headers: warnHeaders, rows: [warnRow('1', '', '', ['A', 'B'])] }, p);
+  assert.ok(r.errors.some(e => e.code === 'no_rule'));
+});
+
+test('padded names flow into interface-rename.csv', () => {
+  const a = dev('Raum 1, EG Bodentank A');
+  const exp = expectedInterfaces([a], profile);
+  assert.deepEqual(exp.map(e => e.expected), ['Gi1/0/1', 'Gi1/0/2', 'Gi2/0/1', 'Gi2/0/2', 'Gi3/0/1', 'Gi3/0/2']);
+  assert.deepEqual(exp.map(e => e.newName), ['P1', 'P2', 'P3', 'P4', 'P5', 'unknown']);
+});
+
+test('layout validation and migration of saved profiles', () => {
+  const bad = createSeedProfile(); bad.lan_layout = '7';
+  assert.ok(validateProfile(bad).errors.some(e => e.code === 'lan_layout_invalid'));
+  const noFill = createSeedProfile(); noFill.lan_fill_name = '  ';
+  assert.ok(validateProfile(noFill).errors.some(e => e.code === 'lan_fill_required'));
+  const noRule = createSeedProfile(); noRule.lan_layout = '3';
+  noRule.rules = noRule.rules.filter(r => r.netbox_module_type_id !== 'LAN-Modul 3-Port');
+  assert.ok(validateProfile(noRule).warnings.some(w => w.code === 'lan_layout_no_rule'));
+  assert.deepEqual(validateProfile(createSeedProfile()).errors, []);
+  const custom = createSeedProfile(); custom.lan_layout = 'custom'; custom.lan_fill_name = '';
+  assert.deepEqual(validateProfile(custom).errors, []); // fill name only matters for presets
+
+  // profiles saved before the option existed
+  const legacy = createSeedProfile(); delete legacy.lan_layout; delete legacy.lan_fill_name;
+  assert.equal(normalizeProfile({ ...legacy }).lan_layout, '2');
+  const legacySplit = { ...legacy, splitRules: [{ id: 'x', category: 'LAN', total_count: 5, module_type_sequence: [] }] };
+  assert.equal(normalizeProfile(legacySplit).lan_layout, 'custom');
+  const mem = new Map();
+  const storage = { getItem: k => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v) };
+  mem.set(PROFILES_KEY, JSON.stringify({ version: 1, profiles: [legacy] }));
+  assert.equal(loadProfiles(storage)[0].lan_layout, '2');
+  assert.equal(loadProfiles(storage)[0].lan_fill_name, 'unknown');
+  const imported = importProfileJson(JSON.stringify({ _format: 'rackbuilder-import-profile', profile: legacySplit }));
+  assert.equal(imported.lan_layout, 'custom');
+});
+
 // ── exports ──
 test('module-import.csv has one row per used bay with NetBox columns', () => {
   const only = { devices: [dev('Raum 1, EG Bodentank B')] };
@@ -220,8 +321,8 @@ test('module-import.csv has one row per used bay with NetBox columns', () => {
 });
 
 test('interface-rename.csv maps NetBox interface ids to the source port names', () => {
-  const a = dev('Raum 1, EG Bodentank A');
-  const exp = expectedInterfaces([a], profile);
+  const a = devC('Raum 1, EG Bodentank A');
+  const exp = expectedInterfaces([a], customProfile);
   assert.deepEqual(exp.map(e => e.expected), ['Gi1/0/1', 'Gi1/0/2', 'Gi1/0/3', 'Gi2/0/1', 'Gi2/0/2']);
 
   const netbox = parseCsvTable([
@@ -234,7 +335,7 @@ test('interface-rename.csv maps NetBox interface ids to the source port names', 
   ].join('\n'));
   const { interfaces, missing } = readInterfaceTable(netbox);
   assert.deepEqual(missing, []);
-  const res = buildInterfaceRename([a], profile, interfaces);
+  const res = buildInterfaceRename([a], customProfile, interfaces);
   assert.deepEqual(res.rows, [
     { id: '101', name: 'P1' }, { id: '102', name: 'P2' }, { id: '103', name: 'P3' }, { id: '104', name: 'P4' },
   ]);

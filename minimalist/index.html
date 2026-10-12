@@ -2473,6 +2473,17 @@ const translations = {
     mi_warn_device_no_modules: 'No modules needed for this device.',
     mi_warn_columns_ignored: '{count} "#NAME?" column(s) ignored.',
     mi_warn_lan_port_gap: 'A LAN port name is empty before port {port}; the following names move up one port.',
+    mi_ed_lan_layout: 'LAN module layout',
+    mi_lan_layout_2: '2-port modules (default)',
+    mi_lan_layout_3: '3-port modules',
+    mi_lan_layout_custom: 'Custom (rules and port splits)',
+    mi_ed_lan_fill: 'Name for added ports',
+    mi_ed_lan_layout_hint: 'LAN ports are always split into modules of this size, rounded up. If the last module is short, the missing ports are added with the name above. The mapping rules still decide which module type is used for this size.',
+    mi_ed_splits_lan_note: 'LAN port splits are ignored while the LAN module layout is not "Custom".',
+    mi_val_lan_layout_invalid: 'Unknown LAN module layout.',
+    mi_val_lan_fill_required: 'The name for added LAN ports is required.',
+    mi_val_lan_layout_no_rule: 'No LAN rule for {size}-port modules; the selected LAN layout needs one.',
+    mi_warn_lan_port_padded: '{count} LAN port(s) added as "{name}" to fill the last module.',
     mi_pv_none: 'No devices found. Check the block mapping and the count column.',
     mi_ex_summary: '{devices} devices, {rows} module rows ready for export.',
     mi_ex_hint: 'Import module-import.csv in NetBox (Dcim → Modules → Import). Then continue to rename the LAN interfaces.',
@@ -2757,6 +2768,17 @@ const translations = {
     mi_warn_device_no_modules: 'Für dieses Gerät sind keine Module nötig.',
     mi_warn_columns_ignored: '{count} Spalte(n) „#NAME?" ignoriert.',
     mi_warn_lan_port_gap: 'Ein LAN-Portname ist vor Port {port} leer; die folgenden Namen rutschen um einen Port nach oben.',
+    mi_ed_lan_layout: 'LAN-Modul-Aufteilung',
+    mi_lan_layout_2: '2-Port-Module (Standard)',
+    mi_lan_layout_3: '3-Port-Module',
+    mi_lan_layout_custom: 'Benutzerdefiniert (Regeln und Port-Aufteilung)',
+    mi_ed_lan_fill: 'Name für ergänzte Ports',
+    mi_ed_lan_layout_hint: 'LAN-Ports werden immer in Module dieser Größe aufgeteilt, aufgerundet. Ist das letzte Modul zu kurz, werden die fehlenden Ports mit dem Namen oben ergänzt. Welcher Modultyp zu dieser Größe gehört, bestimmen weiterhin die Mapping-Regeln.',
+    mi_ed_splits_lan_note: 'LAN-Port-Aufteilungen werden ignoriert, solange die LAN-Modul-Aufteilung nicht „Benutzerdefiniert" ist.',
+    mi_val_lan_layout_invalid: 'Unbekannte LAN-Modul-Aufteilung.',
+    mi_val_lan_fill_required: 'Der Name für ergänzte LAN-Ports ist erforderlich.',
+    mi_val_lan_layout_no_rule: 'Keine LAN-Regel für {size}-Port-Module; die gewählte LAN-Aufteilung braucht eine.',
+    mi_warn_lan_port_padded: '{count} LAN-Port(s) als „{name}" ergänzt, um das letzte Modul zu füllen.',
     mi_pv_none: 'Keine Geräte gefunden. Prüfe Block-Mapping und Anzahl-Spalte.',
     mi_ex_summary: '{devices} Geräte, {rows} Modulzeilen bereit zum Export.',
     mi_ex_hint: 'Importiere module-import.csv in NetBox (Dcim → Modules → Import). Danach weiter zur Umbenennung der LAN-Interfaces.',
@@ -6039,6 +6061,8 @@ function createEmptyProfile(name = 'New profile') {
     slot_count: 12,
     bay_name_pattern: '{n}',
     interface_name_template: 'Gi{module}/0/{n}',
+    lan_layout: '2',
+    lan_fill_name: 'unknown',
     created_at: new Date().toISOString(),
     rules: [],
     splitRules: [],
@@ -6083,6 +6107,18 @@ function createSeedProfile() {
 }
 
 // ─── Helpers shared with the engine ──────────────────────────────────────────
+
+const LAN_LAYOUTS = ['2', '3', 'custom'];
+
+/**
+ * Fill in fields added after a profile was saved. Profiles without the LAN layout option keep
+ * working as before when they define explicit port splits ("custom"), otherwise they get the default.
+ */
+function normalizeProfile(p) {
+  if (p.lan_layout === undefined) p.lan_layout = (p.splitRules || []).length > 0 ? 'custom' : '2';
+  if (p.lan_fill_name === undefined) p.lan_fill_name = 'unknown';
+  return p;
+}
 
 /**
  * Port count of a module type, derived from the profile's rules ("port_count eq N").
@@ -6145,6 +6181,17 @@ function validateProfile(profile, knownModuleTypes = []) {
   const slots = Number(profile.slot_count);
   if (!Number.isInteger(slots) || slots < 1 || slots > 99) err('slot_count_invalid');
   if (!SPLIT_STRATEGIES.includes(profile.default_split_strategy)) err('strategy_invalid');
+  if (!LAN_LAYOUTS.includes(profile.lan_layout)) err('lan_layout_invalid');
+  else if (profile.lan_layout !== 'custom') {
+    if (!String(profile.lan_fill_name ?? '').trim()) err('lan_fill_required');
+    const size = Number(profile.lan_layout);
+    const hasLanRule = (profile.rules || []).some(r => {
+      const c = r.conditions || [];
+      return c.some(x => x.field === 'port_count' && x.op === 'eq' && Number(x.value) === size) &&
+        !c.some(x => x.field === 'category' && x.op === 'eq' && String(x.value).toLowerCase() !== 'lan');
+    });
+    if (!hasLanRule) warn('lan_layout_no_rule', { size });
+  }
 
   const known = new Set(knownModuleTypes);
   const prios = new Set();
@@ -6204,7 +6251,7 @@ function loadProfiles(storage = globalThis.localStorage) {
     const raw = storage?.getItem(PROFILES_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed.profiles)) profiles = parsed.profiles;
+      if (Array.isArray(parsed.profiles)) profiles = parsed.profiles.map(normalizeProfile);
     }
   } catch { /* corrupted → reseed */ }
   if (profiles.length === 0) {
@@ -6243,7 +6290,7 @@ function importProfileJson(text) {
   try {
     const data = JSON.parse(text);
     if (data?._format !== 'rackbuilder-import-profile' || !data.profile) return null;
-    const p = { ...createEmptyProfile(data.profile.name || 'Imported'), ...data.profile };
+    const p = { ...createEmptyProfile(data.profile.name || 'Imported'), ...normalizeProfile({ ...data.profile }) };
     p.id = generateId();
     p.is_default = false;
     for (const list of [p.rules, p.splitRules, p.blocks, p.columns]) {
@@ -6392,6 +6439,7 @@ function analyzeCsv(table, profile) {
   const warnings = [];
   const devices = [];
   const slots = Number(profile.slot_count) || 12;
+  const fillName = String(profile.lan_fill_name || 'unknown');
   const headerMap = new Map(table.headers.map(h => [miNorm(h), h]));
   const findHeader = name => headerMap.get(miNorm(name));
   const fileLevelReported = new Set();
@@ -6491,6 +6539,12 @@ function analyzeCsv(table, profile) {
 
           const chunks = splitDemand(profile, d, fail);
           if (!chunks) continue;
+          // Fixed LAN module sizes: the last module may be short, fill it up so NetBox gets complete modules.
+          const padded = chunks.reduce((sum, c) => sum + c.size, 0) - d.total;
+          if (padded > 0 && d.names) {
+            d.names = d.names.concat(new Array(padded).fill(fillName));
+            warn('lan_port_padded', { count: padded, name: fillName });
+          }
           let offset = 0;
           for (const ch of chunks) {
             const ports = d.names ? d.names.slice(offset, offset + ch.size) : null;
@@ -6548,6 +6602,13 @@ function analyzeCsv(table, profile) {
 /** Turn a demand into module chunks [{size, forcedModule?}] or null (after reporting via fail). */
 function splitDemand(profile, demand, fail) {
   const { category, color, total } = demand;
+
+  // Standard LAN layouts: always modules of one fixed size, rounded up (explicit port splits are ignored).
+  const lanLayout = profile.lan_layout || '2';
+  if (category === 'LAN' && lanLayout !== 'custom') {
+    const size = Number(lanLayout);
+    return new Array(Math.ceil(total / size)).fill(null).map(() => ({ size }));
+  }
 
   const split = (profile.splitRules || []).find(s =>
     s.category === category && Number(s.total_count) === total && (!s.color || miNorm(s.color) === miNorm(color)));
@@ -6803,6 +6864,13 @@ function renderGeneral(d) {
     <div class="form-group"><label>${esc(t('mi_ed_strategy'))}</label>
       ${selectHtml(SPLIT_STRATEGIES, d.default_split_strategy, 'data-k="default_split_strategy"', s => t('mi_strategy_' + s))}</div>
     <div class="form-row">
+      <div class="form-group"><label>${esc(t('mi_ed_lan_layout'))}</label>
+        ${selectHtml(LAN_LAYOUTS, d.lan_layout, 'data-k="lan_layout" data-rerender="1"', o => t('mi_lan_layout_' + o))}</div>
+      ${d.lan_layout !== 'custom' ? `<div class="form-group"><label>${esc(t('mi_ed_lan_fill'))}</label>
+        <input type="text" data-k="lan_fill_name" value="${esc(d.lan_fill_name)}"></div>` : ''}
+    </div>
+    ${d.lan_layout !== 'custom' ? `<p class="settings-section-desc">${esc(t('mi_ed_lan_layout_hint'))}</p>` : ''}
+    <div class="form-row">
       <div class="form-group"><label>${esc(t('mi_ed_bay_pattern'))}</label>
         <input type="text" data-k="bay_name_pattern" value="${esc(d.bay_name_pattern)}"></div>
       <div class="form-group"><label>${esc(t('mi_ed_iface_template'))}</label>
@@ -6853,6 +6921,7 @@ function renderRules(d) {
 function renderSplits(d) {
   return `
     <p class="settings-section-desc">${esc(t('mi_ed_splits_hint'))}</p>
+    ${d.lan_layout !== 'custom' ? `<p class="message message-info">${esc(t('mi_ed_splits_lan_note'))}</p>` : ''}
     ${d.splitRules.map((s, i) => `
       <div class="mi-item">
         <div class="mi-item-head">
@@ -6927,7 +6996,7 @@ function onEditorInput(e) {
   let val = el.value;
   if (el.type === 'number') val = val === '' ? '' : Number(val);
 
-  if (!el.dataset.list) { S.draft[k] = val; return; }
+  if (!el.dataset.list) { S.draft[k] = val; if (el.dataset.rerender) renderEditor(); return; }
   const item = S.draft[el.dataset.list][Number(el.dataset.i)];
   if (!item) return;
   if (el.dataset.ci !== undefined) {

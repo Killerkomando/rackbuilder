@@ -24,6 +24,8 @@ export function createEmptyProfile(name = 'New profile') {
     slot_count: 12,
     bay_name_pattern: '{n}',
     interface_name_template: 'Gi{module}/0/{n}',
+    lan_layout: '2',
+    lan_fill_name: 'unknown',
     created_at: new Date().toISOString(),
     rules: [],
     splitRules: [],
@@ -68,6 +70,18 @@ export function createSeedProfile() {
 }
 
 // ─── Helpers shared with the engine ──────────────────────────────────────────
+
+export const LAN_LAYOUTS = ['2', '3', 'custom'];
+
+/**
+ * Fill in fields added after a profile was saved. Profiles without the LAN layout option keep
+ * working as before when they define explicit port splits ("custom"), otherwise they get the default.
+ */
+export function normalizeProfile(p) {
+  if (p.lan_layout === undefined) p.lan_layout = (p.splitRules || []).length > 0 ? 'custom' : '2';
+  if (p.lan_fill_name === undefined) p.lan_fill_name = 'unknown';
+  return p;
+}
 
 /**
  * Port count of a module type, derived from the profile's rules ("port_count eq N").
@@ -130,6 +144,17 @@ export function validateProfile(profile, knownModuleTypes = []) {
   const slots = Number(profile.slot_count);
   if (!Number.isInteger(slots) || slots < 1 || slots > 99) err('slot_count_invalid');
   if (!SPLIT_STRATEGIES.includes(profile.default_split_strategy)) err('strategy_invalid');
+  if (!LAN_LAYOUTS.includes(profile.lan_layout)) err('lan_layout_invalid');
+  else if (profile.lan_layout !== 'custom') {
+    if (!String(profile.lan_fill_name ?? '').trim()) err('lan_fill_required');
+    const size = Number(profile.lan_layout);
+    const hasLanRule = (profile.rules || []).some(r => {
+      const c = r.conditions || [];
+      return c.some(x => x.field === 'port_count' && x.op === 'eq' && Number(x.value) === size) &&
+        !c.some(x => x.field === 'category' && x.op === 'eq' && String(x.value).toLowerCase() !== 'lan');
+    });
+    if (!hasLanRule) warn('lan_layout_no_rule', { size });
+  }
 
   const known = new Set(knownModuleTypes);
   const prios = new Set();
@@ -189,7 +214,7 @@ export function loadProfiles(storage = globalThis.localStorage) {
     const raw = storage?.getItem(PROFILES_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed.profiles)) profiles = parsed.profiles;
+      if (Array.isArray(parsed.profiles)) profiles = parsed.profiles.map(normalizeProfile);
     }
   } catch { /* corrupted → reseed */ }
   if (profiles.length === 0) {
@@ -228,7 +253,7 @@ export function importProfileJson(text) {
   try {
     const data = JSON.parse(text);
     if (data?._format !== 'rackbuilder-import-profile' || !data.profile) return null;
-    const p = { ...createEmptyProfile(data.profile.name || 'Imported'), ...data.profile };
+    const p = { ...createEmptyProfile(data.profile.name || 'Imported'), ...normalizeProfile({ ...data.profile }) };
     p.id = generateId();
     p.is_default = false;
     for (const list of [p.rules, p.splitRules, p.blocks, p.columns]) {

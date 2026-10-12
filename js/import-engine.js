@@ -137,6 +137,7 @@ export function analyzeCsv(table, profile) {
   const warnings = [];
   const devices = [];
   const slots = Number(profile.slot_count) || 12;
+  const fillName = String(profile.lan_fill_name || 'unknown');
   const headerMap = new Map(table.headers.map(h => [miNorm(h), h]));
   const findHeader = name => headerMap.get(miNorm(name));
   const fileLevelReported = new Set();
@@ -236,6 +237,12 @@ export function analyzeCsv(table, profile) {
 
           const chunks = splitDemand(profile, d, fail);
           if (!chunks) continue;
+          // Fixed LAN module sizes: the last module may be short, fill it up so NetBox gets complete modules.
+          const padded = chunks.reduce((sum, c) => sum + c.size, 0) - d.total;
+          if (padded > 0 && d.names) {
+            d.names = d.names.concat(new Array(padded).fill(fillName));
+            warn('lan_port_padded', { count: padded, name: fillName });
+          }
           let offset = 0;
           for (const ch of chunks) {
             const ports = d.names ? d.names.slice(offset, offset + ch.size) : null;
@@ -293,6 +300,13 @@ export function analyzeCsv(table, profile) {
 /** Turn a demand into module chunks [{size, forcedModule?}] or null (after reporting via fail). */
 function splitDemand(profile, demand, fail) {
   const { category, color, total } = demand;
+
+  // Standard LAN layouts: always modules of one fixed size, rounded up (explicit port splits are ignored).
+  const lanLayout = profile.lan_layout || '2';
+  if (category === 'LAN' && lanLayout !== 'custom') {
+    const size = Number(lanLayout);
+    return new Array(Math.ceil(total / size)).fill(null).map(() => ({ size }));
+  }
 
   const split = (profile.splitRules || []).find(s =>
     s.category === category && Number(s.total_count) === total && (!s.color || miNorm(s.color) === miNorm(color)));
