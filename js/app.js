@@ -1,14 +1,22 @@
 // Rack Builder — Main application bootstrap
 
 import { getState, subscribe, dispatch, undo, redo, canUndo, canRedo, getReservedUnits, setReservedUnits, clearReservedUnits, getActiveRackConfig, getActiveDevices } from './state.js';
-import { renderRack, setSearchFilter } from './rack-view.js';
-import { getLocalStorageUsage, parsePositionList, generateId } from './utils.js';
+import { renderRack, setSearchFilter, setPrintMode } from './rack-view.js';
+import { getLocalStorageUsage, parsePositionList, generateId, closeDialogAnimated, showToast, uiConfirm, uiAlert, setUiTranslator } from './utils.js';
 import { getRackUtilization, toNetBoxJSON } from './rack-model.js';
 import { initDeviceForm, populateFormForEdit } from './device-form.js';
 import { initDragDrop } from './drag-drop.js';
 import { initExport } from './export.js';
 import { t, getCurrentLang, setLang, applyTranslations } from './i18n.js';
 import { initNetboxAutocomplete } from './netbox-autocomplete.js';
+import { initModuleImport } from './module-import.js';
+import { initShell } from './shell.js';
+import { initCommandPalette } from './command-palette.js';
+import { initInspector } from './inspector.js';
+import { initEasterEggs } from './easter-eggs.js';
+setUiTranslator(t);
+window.addEventListener('beforeprint', () => { setPrintMode(true); renderRack(getState()); });
+window.addEventListener('afterprint', () => { setPrintMode(false); renderRack(getState()); });
 
 // Initialize the application
 function init() {
@@ -17,6 +25,7 @@ function init() {
 
   // Render initial state
   const state = getState();
+  renderRackTabs(state);
   renderRack(state);
   renderDeviceList(state);
 
@@ -45,10 +54,15 @@ function init() {
   initStorageIndicator();
   initBulkPositionHighlight();
   initNetboxAutocomplete();
+  initModuleImport();
   initAccordionAnimations();
   initDeviceSearch();
   initResponsiveSidebars();
   initShortcutsPanel();
+  initEasterEggs();
+  initShell();
+  initInspector();
+  initCommandPalette();
   updateStorageIndicator();
   updateStats(state);
 
@@ -73,10 +87,8 @@ function initTheme() {
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   localStorage.setItem('rackbuilder_theme', theme);
-  const btn = document.getElementById('theme-btn');
-  if (btn) {
-    btn.textContent = t(theme === 'dark' ? 'theme_dark' : 'theme_light');
-  }
+  document.querySelector('meta[name="theme-color"]')
+    ?.setAttribute('content', theme === 'dark' ? '#0c0f14' : '#eceff3');
 }
 
 // ─── Language ───────────────────────────────────────────────────────────────
@@ -87,16 +99,21 @@ function initLang() {
   document.getElementById('lang-btn').addEventListener('click', () => {
     const next = getCurrentLang() === 'en' ? 'de' : 'en';
     setLang(next);
-    // Also update theme button text (translated)
-    const theme = document.documentElement.dataset.theme || 'dark';
-    const btn = document.getElementById('theme-btn');
-    if (btn) btn.textContent = t(theme === 'dark' ? 'theme_dark' : 'theme_light');
   });
 }
 
 // ─── Device list ────────────────────────────────────────────────────────────
 
 let deviceSearchTerm = '';
+let deviceFaceFilter = 'all';
+
+document.addEventListener('click', (e) => {
+  const chip = e.target.closest?.('#device-filter .chip');
+  if (!chip) return;
+  deviceFaceFilter = chip.dataset.filter;
+  document.querySelectorAll('#device-filter .chip').forEach(c => c.classList.toggle('on', c === chip));
+  renderDeviceList(getState());
+});
 
 function renderDeviceList(state) {
   const container = document.getElementById('device-list');
@@ -107,21 +124,26 @@ function renderDeviceList(state) {
   countEl.textContent = devices.length;
 
   if (devices.length === 0) {
-    container.innerHTML = `<p style="color: var(--color-text-muted); font-size: 12px;">${t('no_devices')}</p>`;
+    container.innerHTML = `<div class="list-empty">
+      <p>${t('list_empty')}</p>
+      <button type="button" class="btn btn-primary" id="empty-add-btn">${t('list_empty_btn')}</button>
+    </div>`;
+    document.getElementById('empty-add-btn')?.addEventListener('click', () => document.getElementById('new-device-btn')?.click());
     return;
   }
 
   const sorted = [...devices].sort((a, b) => a.position - b.position);
   const q = deviceSearchTerm.toLowerCase();
+  const byFace = deviceFaceFilter === 'all' ? sorted : sorted.filter(d => d.face === deviceFaceFilter);
   const filtered = q
-    ? sorted.filter(d =>
+    ? byFace.filter(d =>
         (d.name || '').toLowerCase().includes(q) ||
         (d.deviceType || '').toLowerCase().includes(q) ||
         (d.role || '').toLowerCase().includes(q))
-    : sorted;
+    : byFace;
 
   if (filtered.length === 0) {
-    container.innerHTML = `<p style="color: var(--color-text-muted); font-size: 12px;">—</p>`;
+    container.innerHTML = `<p class="list-nomatch">${t('list_no_match')}</p>`;
     return;
   }
 
@@ -140,6 +162,7 @@ function renderDeviceList(state) {
       </div>
       <span class="device-pos">U${d.position}${d.height > 1 ? '-' + (d.position + d.height - 1) : ''} ${d.face}</span>
       ${rackSelect}
+      <span class="dev-led dev-led--${String(d.status || 'active').replace(/[^a-z-]/g, '')}" title="${d.status || 'active'}"></span>
       <button class="device-delete" data-device-id="${d.id}" title="Delete">&times;</button>
     </div>`;
   }).join('');
@@ -167,7 +190,7 @@ function renderDeviceList(state) {
       const result = dispatch('MOVE_TO_RACK', { id, targetRackId });
       if (!result.ok) {
         const rack = state.racks.find(r => r.id === targetRackId);
-        alert(t('move_rack_conflict', { rack: rack?.name || targetRackId }));
+        uiAlert(t('move_rack_conflict', { rack: rack?.name || targetRackId }));
         // Reset select back to current rack
         const device = state.devices.find(d => d.id === id);
         if (device) sel.value = device.rackId;
@@ -467,8 +490,8 @@ function initSettings() {
       // Single rack mode
       dispatch('SET_MULTI_RACK', { enabled: false, racks: [], site, location });
       dispatch('UPDATE_RACK_CONFIG', {
-        name: document.getElementById('setting-name').value.trim(),
-        totalUnits: parseInt(document.getElementById('setting-units').value) || 42,
+        name: document.getElementById('setting-name').value.trim() || getState().rackConfig?.name || 'Rack-01',
+        totalUnits: Math.max(1, Math.min(60, parseInt(document.getElementById('setting-units').value) || 42)),
         numberingDirection: document.getElementById('setting-direction').value,
         site,
         location,
@@ -478,24 +501,6 @@ function initSettings() {
     }
     closeDialogAnimated(modal);
   });
-}
-
-// ─── Dialog animation helper ─────────────────────────────────────────────────
-
-function closeDialogAnimated(dialog) {
-  if (!dialog.open) return;
-  dialog.classList.add('dialog-closing');
-  const done = () => {
-    dialog.classList.remove('dialog-closing');
-    if (dialog.open) dialog.close();
-  };
-  dialog.addEventListener('animationend', function handler() {
-    dialog.removeEventListener('animationend', handler);
-    clearTimeout(fallback);
-    done();
-  });
-  // Fallback in case animationend never fires
-  const fallback = setTimeout(done, 300);
 }
 
 // ─── Keyboard shortcuts ──────────────────────────────────────────────────────
@@ -648,14 +653,14 @@ function initShortcutsPanel() {
 // ─── Clear button ────────────────────────────────────────────────────────────
 
 function initClearButton() {
-  document.getElementById('clear-devices-btn').addEventListener('click', () => {
-    if (confirm(t('confirm_clear_devices'))) {
+  document.getElementById('clear-devices-btn').addEventListener('click', async () => {
+    if (await uiConfirm(t('confirm_clear_devices'), { confirmLabel: t('dlg_clear') })) {
       dispatch('CLEAR_DEVICES');
     }
   });
 
-  document.getElementById('reset-all-btn').addEventListener('click', () => {
-    if (confirm(t('confirm_reset_all'))) {
+  document.getElementById('reset-all-btn').addEventListener('click', async () => {
+    if (await uiConfirm(t('confirm_reset_all'), { confirmLabel: t('dlg_reset') })) {
       dispatch('CLEAR_STATE');
     }
   });
@@ -726,11 +731,15 @@ function updateJsonPreview(state) {
 // ─── Storage indicator ──────────────────────────────────────────────────────
 
 function initStorageIndicator() {
-  document.getElementById('clear-cache-btn').addEventListener('click', () => {
-    if (confirm(t('confirm_clear_cache'))) {
+  document.getElementById('clear-cache-btn').addEventListener('click', async () => {
+    if (await uiConfirm(t('confirm_clear_cache'), { confirmLabel: t('dlg_clear') })) {
       // Keep theme and language preferences
       const theme = localStorage.getItem('rackbuilder_theme');
       const lang = localStorage.getItem('rackbuilder_lang');
+
+      // Import profiles are configuration: keep them unless the user explicitly agrees to delete them
+      const profiles = localStorage.getItem('rackbuilder_import_profiles');
+      const keepProfiles = profiles && !(await uiConfirm(t('confirm_clear_profiles'), { confirmLabel: t('dlg_delete'), cancelLabel: t('dlg_keep') }));
 
       // Remove all rackbuilder keys
       const keysToRemove = [];
@@ -745,6 +754,7 @@ function initStorageIndicator() {
       // Restore preferences
       if (theme) localStorage.setItem('rackbuilder_theme', theme);
       if (lang) localStorage.setItem('rackbuilder_lang', lang);
+      if (keepProfiles) localStorage.setItem('rackbuilder_import_profiles', profiles);
 
       dispatch('CLEAR_STATE');
     }
@@ -832,9 +842,14 @@ function renderRackTabs(state) {
   const container = document.getElementById('rack-tabs');
   if (!container) return;
 
+  const addBtn = `<button type="button" class="rack-tab rack-tab-add" id="rack-add-btn" title="${t('rack_add')}" aria-label="${t('rack_add')}">+</button>`;
+
   if (!state.multiRackEnabled || state.racks.length === 0) {
-    container.innerHTML = '';
-    container.style.display = 'none';
+    // Single rack: one tab with the rack name plus the "+" to start a second rack
+    container.style.display = 'flex';
+    container.innerHTML = `<button type="button" class="rack-tab active" aria-current="true" id="rack-single-tab" title="${t('rack_edit_title')}"><span class="rack-tab-name">${state.rackConfig.name}</span></button>${addBtn}`;
+    container.querySelector('#rack-single-tab').addEventListener('click', () => openRackDialog('__single__'));
+    container.querySelector('#rack-add-btn').addEventListener('click', addRack);
     return;
   }
 
@@ -847,14 +862,132 @@ function renderRackTabs(state) {
       <span class="rack-tab-name">${rack.name}</span>
       <span class="rack-tab-info">${rack.totalUnits}U · ${stats.totalPercent}%</span>
     </button>`;
-  }).join('');
+  }).join('') + addBtn;
 
-  container.querySelectorAll('.rack-tab').forEach(tab => {
+  container.querySelectorAll('.rack-tab[data-rack-id]').forEach(tab => {
     tab.addEventListener('click', () => {
+      if (tab.classList.contains('active')) { openRackDialog(tab.dataset.rackId); return; }
       dispatch('SET_ACTIVE_RACK', tab.dataset.rackId);
     });
   });
+  container.querySelector('#rack-add-btn').addEventListener('click', addRack);
 }
+
+/**
+ * Add another rack (switches to multi-rack mode if needed) and make it the active one.
+ */
+function createRack(opts) {
+  const state = getState();
+  const base = getActiveRackConfig(state);
+  const existing = state.multiRackEnabled && state.racks.length > 0
+    ? state.racks
+    : [{ name: state.rackConfig.name, totalUnits: state.rackConfig.totalUnits, numberingDirection: state.rackConfig.numberingDirection,
+         frontColor: state.rackConfig.frontColor, rearColor: state.rackConfig.rearColor }];
+  if (existing.length >= 20) { showToast(t('rack_max')); return; }
+  const names = new Set(existing.map(r => r.name));
+  let n = existing.length + 1;
+  let name = `Rack-${String(n).padStart(2, '0')}`;
+  while (names.has(name)) { n++; name = `Rack-${String(n).padStart(2, '0')}`; }
+  if (opts && opts.name) {
+    name = opts.name;
+    let i = 2;
+    while (names.has(name)) name = `${opts.name} (${i++})`;
+  }
+  const racks = [...existing, {
+    name,
+    totalUnits: (opts && opts.totalUnits) || base.totalUnits,
+    numberingDirection: (opts && opts.numberingDirection) || base.numberingDirection,
+    frontColor: base.frontColor,
+    rearColor: base.rearColor,
+  }];
+  dispatch('SET_MULTI_RACK', { enabled: true, racks, site: base.site || state.rackConfig.site, location: base.location || state.rackConfig.location });
+  const after = getState();
+  const created = after.racks.find(r => r.name === name);
+  if (created) dispatch('SET_ACTIVE_RACK', created.id);
+}
+
+let rackNewInit = false;
+let rackDlgEditId = null;
+function openRackDialog(editId) {
+  const modal = document.getElementById('rack-new-modal');
+  const state = getState();
+  const multi = state.multiRackEnabled && state.racks.length > 0;
+  const count = multi ? state.racks.length : 1;
+  const editing = !!editId;
+  if (!editing && count >= 20) { showToast(t('rack_max')); return; }
+  rackDlgEditId = editing ? editId : null;
+  const cur = editing ? (multi ? state.racks.find(r => r.id === editId) : state.rackConfig) : null;
+  const base = cur || getActiveRackConfig(state);
+  const nameEl = document.getElementById('rn-name');
+  const unitsEl = document.getElementById('rn-units');
+  const dirEl = document.getElementById('rn-dir');
+  const delBtn = document.getElementById('rn-delete');
+  const setDir = (v) => dirEl.querySelectorAll('button').forEach(b => b.classList.toggle('active', b.dataset.val === v));
+  document.getElementById('rn-title').textContent = t(editing ? 'rack_edit_title' : 'rack_new_title');
+  document.getElementById('rn-desc').textContent = t(editing ? 'rack_edit_desc' : 'rack_new_desc');
+  document.getElementById('rn-submit').textContent = t(editing ? 'btn_save' : 'rack_create');
+  delBtn.hidden = !(editing && multi && count > 1);
+  if (editing) {
+    nameEl.value = base.name;
+  } else {
+    const used = new Set((multi ? state.racks : [state.rackConfig]).map(r => r.name));
+    let n = count + 1;
+    let name = `Rack-${String(n).padStart(2, '0')}`;
+    while (used.has(name)) { n++; name = `Rack-${String(n).padStart(2, '0')}`; }
+    nameEl.value = name;
+  }
+  unitsEl.value = base.totalUnits || 42;
+  setDir(base.numberingDirection || 'bottom-to-top');
+  if (!rackNewInit) {
+    rackNewInit = true;
+    const form = document.getElementById('rack-new-form');
+    dirEl.addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-val]');
+      if (b) setDir(b.dataset.val);
+    });
+    form.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-step]');
+      if (!b) return;
+      const c = parseInt(unitsEl.value, 10) || 42;
+      unitsEl.value = Math.max(1, Math.min(60, c + parseInt(b.dataset.step, 10)));
+    });
+    document.getElementById('rn-cancel').addEventListener('click', () => closeDialogAnimated(modal));
+    delBtn.addEventListener('click', async () => {
+      const st = getState();
+      const rack = st.racks.find(r => r.id === rackDlgEditId);
+      if (!rack) return;
+      const n = st.devices.filter(d => d.rackId === rack.id).length;
+      if (!(await uiConfirm(t('confirm_delete_rack', { name: rack.name, n }), { confirmLabel: t('dlg_delete') }))) return;
+      dispatch('REMOVE_RACK', rack.id);
+      closeDialogAnimated(modal);
+    });
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const dir = dirEl.querySelector('button.active')?.dataset.val || 'bottom-to-top';
+      const units = Math.max(1, Math.min(60, parseInt(unitsEl.value, 10) || 42));
+      const name = nameEl.value.trim();
+      if (rackDlgEditId) {
+        const st = getState();
+        const isMulti = st.multiRackEnabled && st.racks.length > 0;
+        const devs = isMulti ? st.devices.filter(d => d.rackId === rackDlgEditId) : st.devices;
+        const top = devs.reduce((m, d) => Math.max(m, d.position + d.height - 1), 0);
+        if (units < top) { showToast(t('rack_too_small', { n: top })); return; }
+        const finalName = name || (isMulti ? st.racks.find(r => r.id === rackDlgEditId)?.name : st.rackConfig.name);
+        if (isMulti && st.racks.some(r => r.id !== rackDlgEditId && r.name === finalName)) { showToast(t('rack_name_taken')); return; }
+        const changes = { name: finalName, totalUnits: units, numberingDirection: dir };
+        if (isMulti) dispatch('UPDATE_RACK', { rackId: rackDlgEditId, ...changes });
+        else dispatch('UPDATE_RACK_CONFIG', changes);
+      } else {
+        createRack({ name, totalUnits: units, numberingDirection: dir });
+      }
+      closeDialogAnimated(modal);
+    });
+  }
+  modal.showModal();
+  nameEl.focus();
+  nameEl.select();
+}
+function addRack() { openRackDialog(null); }
 
 // ─── Undo/Redo ──────────────────────────────────────────────────────────────
 

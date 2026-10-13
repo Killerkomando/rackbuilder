@@ -26,9 +26,18 @@ The `minimalist/index.html` is a single self-contained file (all CSS and JS inli
 - **`js/device-form.js`** — Add/edit form logic. Bulk creation with numeric/alpha auto-numbering. Clicking an empty rack cell auto-fills the position field.
 - **`js/drag-drop.js`** — HTML5 drag & drop with `requestAnimationFrame` throttle. Cross-face drag swaps colors. Snap guidelines rendered as DOM overlay. Collision feedback (green/red).
 - **`js/export.js`** — NetBox JSON, YAML, CSV export. Project save/load (full state JSON). NetBox JSON re-import.
-- **`js/netbox-autocomplete.js`** — Optional NetBox data upload (Device Types, Roles, Manufacturers). Accepts JSON, YAML, CSV. Custom two-column dropdown with fuzzy search and keyboard navigation.
+- **`js/netbox-autocomplete.js`** — Optional NetBox data upload/API fetch (Device Types, Roles, Manufacturers, Module Types). Accepts JSON, YAML, CSV. Custom two-column dropdown with fuzzy search and keyboard navigation. Exports `apiFetchPages`, `getApiCredentials`, `getModuleTypes`.
+- **`js/csv.js`**, **`js/zip.js`** — Dependency-free RFC 4180 CSV reader/writer and store-only ZIP writer (pure, no DOM).
+- **`js/import-profiles.js`** — Module import profiles (rules, port splits, blocks, column mappings), validation, persistence under `rackbuilder_import_profiles` (deliberately outside the undo state).
+- **`js/import-engine.js`** — Pure module-import logic: CSV table + profile → devices with bay assignments; builds `module-import.csv` / `interface-rename.csv`. Reports errors instead of guessing.
+- **`js/module-import.js`** — The module import wizard dialog (profile editor, 12-bay slot preview, exports, interface-ID step). Entry: `#module-import-btn`.
 - **`js/i18n.js`** — EN/DE translations (~80 keys). Applied to DOM via `data-i18n` attributes. Call `applyTranslations()` after dynamic DOM changes.
-- **`js/utils.js`** — UUID generation, naming sequences, localStorage helpers.
+- **`js/utils.js`** — UUID generation, naming sequences, localStorage helpers, `showToast`.
+- **`js/version.js`** — Single source of truth for `APP_VERSION`, `APP_CODENAME` and `EXPECTED_CACHE`; `getRuntimeInfo()` reads the real cache names and service-worker state.
+- **`js/shell.js`** — Header menus, version popover and status bar.
+- **`js/command-palette.js`** — Ctrl/Cmd+K palette; commands click existing buttons by ID.
+- **`js/inspector.js`** — Inspector detail card for the selected device (edit, move, flip, duplicate, delete) and the Front/Both/Rear rack view switch (`rackbuilder_face_view`).
+- **`js/easter-eggs.js`** — Hidden easter eggs, found state under `rackbuilder_eggs`.
 
 ### Layout
 
@@ -49,12 +58,22 @@ State is a single object persisted to localStorage. Key fields:
 
 ### Theming
 
-Dark/light mode via `data-theme` attribute on `<html>`. CSS custom properties defined for both in `css/style.css`. Default is dark (`#0f172a` navy background). Toggle updates `localStorage.theme`.
+Dark/light mode via `data-theme` attribute on `<html>`. CSS custom properties defined for both in `css/style.css`. Default is dark (`#0c0f14` background, mint accent). Toggle updates `localStorage.theme`.
 
 ### Service Worker
 
-`sw.js` uses cache-first strategy (`CACHE_NAME: 'rackbuilder-v4'`). When adding new assets, update the asset list in `sw.js` and bump the cache version to force cache invalidation.
+`sw.js` uses cache-first strategy (`CACHE_NAME: 'rackbuilder-v9'`). When adding new assets, update the asset list in `sw.js` and bump the cache version to force cache invalidation. Cross-origin requests (the NetBox API) bypass the cache.
+
+### Versioning
+
+On every release bump `APP_VERSION` in `js/version.js`, the `# Rack Builder vX` title in `README.md`, and — whenever assets change — `CACHE_NAME` in `sw.js` together with `EXPECTED_CACHE` in `version.js` (they must match; `testing/version.test.mjs` checks this). Never hard-code the version elsewhere. The minimalist edition declares `data-edition="minimalist"` and has no service worker.
 
 ### Minimalist Version
 
 `minimalist/index.html` is a standalone single-file version. After modifying the main app's JS or CSS files, the equivalent changes must also be applied inline in `minimalist/index.html`. The minimalist version has all CSS in a `<style>` block and all JS in `<script>` blocks at the bottom.
+
+### Tests
+
+No framework. Pure-logic tests run with plain Node (`node testing/csv-zip.test.mjs`, `node testing/module-import.test.mjs`, `node testing/version.test.mjs`); they import the ES modules from `js/` directly, so `csv.js`, `zip.js`, `import-profiles.js` and `import-engine.js` must stay free of DOM access at import time. The i18n test checks EN/DE key parity and that all wizard and error-code texts exist.
+
+When porting new modules into `minimalist/index.html`, strip `import`/`export` and make sure top-level names do not collide inside the single IIFE.

@@ -1,38 +1,182 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="dark" data-edition="main">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rack Builder</title>
   <link rel="stylesheet" href="css/style.css">
   <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#0c0f14">
 </head>
 <body>
 
 <header class="app-header">
-  <h1>
-    <span class="rack-icon">&#9638;</span>
-    <span data-i18n="app_title">Rack Builder</span>
-    <span class="app-version" data-i18n="version">v0.7.0</span>
-  </h1>
+  <div class="app-brand">
+    <button type="button" class="app-logo" id="app-logo-btn" aria-label="Rack Builder">
+      <svg class="app-logo-mark" width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect x="5" y="3" width="22" height="26" rx="3.5" stroke="currentColor" stroke-width="2"/><rect x="9" y="8" width="14" height="4" rx="1" fill="currentColor" opacity=".9"/><rect x="9" y="14" width="14" height="4" rx="1" fill="currentColor" opacity=".55"/><rect x="9" y="20" width="14" height="4" rx="1" fill="currentColor" opacity=".3"/><circle cx="20.5" cy="10" r="1.2" fill="var(--color-accent)"/></svg>
+      <span class="app-logo-text" data-i18n="app_title">Rack Builder</span>
+    </button>
+    <div class="menu-wrap">
+      <button type="button" class="app-version" id="version-btn" data-menu="version-menu" data-i18n-title="ver_chip_title" aria-haspopup="true" aria-expanded="false">
+        <span class="led led--ok"></span><span id="version-chip-text">v0.9.0</span>
+      </button>
+      <div class="menu menu--version" id="version-menu" hidden>
+        <div class="ver-title" data-i18n="ver_title">Loaded version</div>
+        <div class="ver-number mono" id="ver-number">v0.9.0</div>
+        <dl class="ver-grid">
+          <dt data-i18n="ver_source">Source</dt><dd id="ver-source"></dd>
+          <dt data-i18n="ver_cache">Cache</dt><dd class="mono" id="ver-cache"></dd>
+          <dt data-i18n="ver_offline">Offline</dt><dd id="ver-offline"></dd>
+          <dt data-i18n="ver_codename">Codename</dt><dd><button type="button" class="ver-codename mono" id="ver-codename"></button></dd>
+        </dl>
+        <div class="ver-new">
+          <div class="ver-new-title" data-i18n="ver_whatsnew">New in this version</div>
+          <ul>
+            <li data-i18n="ver_new_1"></li>
+            <li data-i18n="ver_new_2"></li>
+            <li data-i18n="ver_new_3"></li>
+          </ul>
+        </div>
+        <div class="ver-foot">
+          <span class="egg-counter"><span data-i18n="ver_eggs">Easter eggs</span> <span class="egg-dots" id="egg-dots"></span> <span id="egg-count">0/5</span></span>
+          <button type="button" class="btn btn-secondary btn-sm" id="ver-reload" data-i18n="ver_reload">Reload</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="header-actions">
-    <button class="btn btn-secondary btn-sm sidebar-toggle" id="sidebar-toggle-left" title="Form">&#9776;</button>
-    <button class="btn btn-secondary btn-sm sidebar-toggle" id="sidebar-toggle-right" title="Tools">&#9776;</button>
-    <button class="btn btn-secondary btn-sm" id="undo-btn" data-i18n-title="btn_undo" title="Undo" disabled>&#x21A9;</button>
-    <button class="btn btn-secondary btn-sm" id="redo-btn" data-i18n-title="btn_redo" title="Redo" disabled>&#x21AA;</button>
-    <button class="btn btn-secondary btn-sm" id="lang-btn" title="Switch language / Sprache wechseln">DE</button>
-    <button class="btn btn-secondary btn-sm" id="theme-btn">🌙 Dark</button>
-    <button class="btn btn-secondary btn-sm" id="settings-btn" data-i18n="btn_settings">Settings</button>
-    <button class="btn btn-secondary btn-sm" id="clear-devices-btn" data-i18n="btn_clear_devices">Clear Devices</button>
-    <button class="btn btn-secondary btn-sm" id="reset-all-btn" data-i18n="btn_reset_all">Reset All</button>
+    <button type="button" class="btn btn-secondary header-search" id="cmd-btn" data-i18n-aria="btn_commands" aria-label="Search or command">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+      <span class="header-search-text" data-i18n="btn_commands">Search or command</span><kbd>Ctrl K</kbd>
+    </button>
+    <button type="button" class="btn btn-secondary btn-icon sidebar-toggle" id="sidebar-toggle-left" title="Devices" aria-label="Devices">&#9776;</button>
+    <button type="button" class="btn btn-secondary btn-icon sidebar-toggle" id="sidebar-toggle-right" title="Inspector" aria-label="Inspector">&#9776;</button>
+    <button type="button" class="btn btn-secondary btn-icon" id="undo-btn" data-i18n-title="btn_undo" data-i18n-aria="btn_undo" title="Undo" aria-label="Undo" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></svg></button>
+    <button type="button" class="btn btn-secondary btn-icon" id="redo-btn" data-i18n-title="btn_redo" data-i18n-aria="btn_redo" title="Redo" aria-label="Redo" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 000 12h3"/></svg></button>
+
+    <div class="menu-wrap">
+      <button type="button" class="btn btn-secondary" id="import-menu-btn" data-menu="import-menu" aria-haspopup="true" aria-expanded="false"><span data-i18n="btn_import_menu">Import</span><svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="menu" id="import-menu" role="menu" hidden>
+        <button type="button" class="menu-item" role="menuitem" id="import-btn" data-i18n="btn_import">Import JSON</button>
+        <input type="file" id="import-file" accept=".json" style="display:none">
+        <button type="button" class="menu-item" role="menuitem" id="import-csv-btn" data-i18n="btn_import_csv">Import CSV</button>
+        <input type="file" id="import-csv-file" accept=".csv" style="display:none">
+        <p class="form-hint menu-hint" data-i18n="import_csv_hint"></p>
+        <button type="button" class="menu-item" role="menuitem" id="load-project-btn" data-i18n="btn_load_project">Load Project</button>
+        <input type="file" id="load-project-file" accept=".json" style="display:none">
+        <div class="menu-sep"></div>
+        <button type="button" class="menu-item" role="menuitem" id="module-import-btn" data-i18n="mi_open_btn">Module import (CSV)…</button>
+      </div>
+    </div>
+
+    <div class="menu-wrap">
+      <button type="button" class="btn btn-primary" id="export-menu-btn" data-menu="export-menu" aria-haspopup="true" aria-expanded="false">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg><span data-i18n="btn_export_menu">Export</span><svg class="chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="menu" id="export-menu" role="menu" hidden>
+        <div class="menu-group" data-i18n="menu_netbox">NetBox</div>
+        <button type="button" class="menu-item" role="menuitem" id="export-json-btn" data-i18n="btn_json">Download JSON</button>
+        <button type="button" class="menu-item" role="menuitem" id="export-yaml-btn" data-i18n="btn_yaml">Download YAML</button>
+        <button type="button" class="menu-item" role="menuitem" id="export-csv-btn" data-i18n="btn_csv">Download CSV</button>
+        <button type="button" class="menu-item" role="menuitem" id="copy-btn" data-i18n="btn_copy">Copy JSON</button>
+        <div class="menu-group" data-i18n="menu_image_print">Image and print</div>
+        <button type="button" class="menu-item" role="menuitem" id="export-png-btn" data-i18n="btn_export_png">Download PNG</button>
+        <button type="button" class="menu-item" role="menuitem" id="print-btn" data-i18n="btn_print">Print / PDF</button>
+        <div class="menu-group" data-i18n="menu_project">Project</div>
+        <button type="button" class="menu-item" role="menuitem" id="save-project-btn" data-i18n="btn_save_project">Save Project</button>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-secondary btn-icon" id="theme-btn" data-i18n-title="btn_theme_toggle" data-i18n-aria="btn_theme_toggle" title="Switch theme" aria-label="Switch theme">
+      <span class="theme-icon theme-icon--moon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg></span>
+      <span class="theme-icon theme-icon--sun"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></span>
+    </button>
+    <button type="button" class="btn btn-secondary" id="lang-btn" title="Switch language / Sprache wechseln">DE</button>
+    <button type="button" class="btn btn-secondary btn-icon" id="settings-btn" data-i18n-title="btn_settings" data-i18n-aria="btn_settings" title="Settings" aria-label="Settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg></button>
+
+    <div class="menu-wrap">
+      <button type="button" class="btn btn-secondary btn-icon" id="more-menu-btn" data-menu="more-menu" aria-haspopup="true" aria-expanded="false" data-i18n-title="btn_more" data-i18n-aria="btn_more" title="More actions" aria-label="More actions">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+      <div class="menu" id="more-menu" role="menu" hidden>
+        <a class="menu-item" role="menuitem" href="cablemanager/index.html" id="cablemanager-link" data-i18n="menu_cablemanager">Cable Manager</a>
+        <div class="menu-sep"></div>
+        <button type="button" class="menu-item menu-item--danger" role="menuitem" id="clear-devices-btn" data-i18n="btn_clear_devices">Clear Devices</button>
+        <button type="button" class="menu-item menu-item--danger" role="menuitem" id="reset-all-btn" data-i18n="btn_reset_all">Reset All</button>
+      </div>
+    </div>
   </div>
 </header>
 
 <main class="app-layout">
-  <!-- Left Sidebar: Device Form -->
+  <!-- Left Sidebar: Devices -->
   <aside class="sidebar">
+    <div class="panel-head">
+      <h2><span data-i18n="devices_title">Devices</span> <span class="count-pill" id="device-count">0</span></h2>
+      <button type="button" class="btn btn-secondary btn-sm" id="new-device-btn">+ <span data-i18n="btn_new_device">New</span></button>
+    </div>
+    <div class="device-search-wrap">
+          <input type="text" id="device-search" class="device-search-input" data-i18n-placeholder="device_search_ph" placeholder="Search devices…" autocomplete="off">
+        </div>
+        <div class="chips" id="device-filter" role="group" aria-label="Filter">
+          <button type="button" class="chip on" data-filter="all" data-i18n="filter_all">All</button>
+          <button type="button" class="chip" data-filter="front" data-i18n="face_front">Front</button>
+          <button type="button" class="chip" data-filter="rear" data-i18n="face_rear">Rear</button>
+        </div>
+        <div class="device-list" id="device-list">
+          <!-- Rendered by app.js -->
+        </div>
+  </aside>
+
+  <!-- Center: Rack Visualization -->
+  <section class="rack-container">
+    <div class="rack-toolbar">
+      <div class="seg" id="face-view" role="group" aria-label="Rack face">
+        <button type="button" data-view="front" data-i18n="view_front">Front</button>
+        <button type="button" class="on" data-view="both" data-i18n="view_both">Both</button>
+        <button type="button" data-view="rear" data-i18n="view_rear">Rear</button>
+      </div>
+      <div id="rack-tabs"></div>
+      <span class="rack-toolbar__spacer"></span>
+      <span class="stat mono" id="rack-info"></span>
+      <span class="stat"><i class="face-dot face-dot--front"></i><span data-i18n="face_front">Front</span> <b class="mono" id="stat-front">0 %</b></span>
+      <span class="stat"><i class="face-dot face-dot--rear"></i><span data-i18n="face_rear">Rear</span> <b class="mono" id="stat-rear">0 %</b></span>
+    </div>
+    <div id="rack-utilization" style="display:none">
+      <div class="util-bar-wrap">
+        <div class="util-bar-front" id="util-bar-front"></div>
+        <div class="util-bar-rear" id="util-bar-rear"></div>
+      </div>
+      <span id="util-label"></span>
+    </div>
+    <div class="rack-controls">
+      <span class="rack-name" id="rack-name-display">Rack-01</span>
+      <span class="rack-stats" id="rack-stats"></span>
+    </div>
+    <div class="rack-stage">
+      <div class="rack" id="rack-view">
+        <!-- Rendered by rack-view.js -->
+      </div>
+      <div class="rack-empty" id="rack-empty" hidden>
+        <div class="rack-empty__title" data-i18n="rack_empty_title">Empty rack</div>
+        <div class="rack-empty__text" data-i18n="rack_empty_text">Click a free unit or add a device on the right. Imports are in the menu above.</div>
+      </div>
+    </div>
+    <div class="rack-legend">
+      <span><i class="lg lg--hatch"></i><span data-i18n="leg_blocked">Blocked by a full-depth device</span></span>
+      <span><i class="lg lg--sel"></i><span data-i18n="leg_selected">Selected position</span></span>
+      <span data-i18n="leg_hint">Drag to move · Del removes · Esc deselects · Ctrl Z undoes</span>
+    </div>
+  </section>
+
+  <!-- Right Sidebar: Inspector (device form) -->
+  <aside class="sidebar-right">
+    <div class="seg inspector-tabs" role="group" aria-label="Inspector">
+      <button type="button" class="on" id="insp-tab-dev" data-i18n="insp_device">Device</button>
+      <button type="button" id="insp-tab-json" data-i18n="insp_json">JSON preview</button>
+    </div>
+    <div id="inspector-detail" class="inspector-detail"></div>
     <h2 id="form-title" data-i18n="add_device">Add Device</h2>
+    <div id="form-sub" class="form-sub"></div>
     <div id="form-message"></div>
     <form id="device-form" autocomplete="off">
       <div class="form-group">
@@ -56,10 +200,14 @@
         </div>
       </div>
 
-      <div class="form-row">
+      <div class="form-row form-row--end">
         <div class="form-group">
           <label for="dev-height" data-i18n="label_height">Height (U)</label>
-          <input type="number" id="dev-height" min="1" max="20" value="1">
+          <div class="stepper">
+            <button type="button" class="btn btn-secondary btn-icon" data-step="-1" data-target="dev-height" data-i18n-aria="aria_dec" aria-label="Decrease">&minus;</button>
+            <input type="number" id="dev-height" min="1" max="20" value="1">
+            <button type="button" class="btn btn-secondary btn-icon" data-step="1" data-target="dev-height" data-i18n-aria="aria_inc" aria-label="Increase">+</button>
+          </div>
         </div>
         <div class="form-group">
           <label for="dev-position" data-i18n="label_position">Position (U)</label>
@@ -75,10 +223,10 @@
         </div>
       </div>
 
-      <div class="form-group">
+      <div class="form-group form-group--toggle">
         <label class="form-checkbox-label">
           <input type="checkbox" id="dev-full-depth">
-          <span data-i18n="label_full_depth">Full Depth</span>
+          <span><span data-i18n="label_full_depth">Full Depth</span> <span class="form-hint" data-i18n="full_depth_hint">(blocks the opposite face)</span></span>
         </label>
       </div>
 
@@ -93,38 +241,45 @@
         </select>
       </div>
 
-      <div class="form-row">
-        <div class="form-group">
-          <label for="dev-serial" data-i18n="label_serial">Serial</label>
-          <input type="text" id="dev-serial" data-i18n-placeholder="ph_serial" placeholder="Optional">
+      <details class="form-more" id="form-more">
+        <summary class="form-fold"><span><span data-i18n="form_more">More details</span> <span class="form-hint" data-i18n="form_more_hint">Serial, asset tag, color, comments</span></span><i class="form-fold__mark" aria-hidden="true"></i></summary>
+        <div class="form-more__body">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="dev-serial" data-i18n="label_serial">Serial</label>
+              <input type="text" id="dev-serial" data-i18n-placeholder="ph_serial" placeholder="Optional">
+            </div>
+            <div class="form-group">
+              <label for="dev-asset" data-i18n="label_asset_tag">Asset Tag</label>
+              <input type="text" id="dev-asset" data-i18n-placeholder="ph_asset" placeholder="Optional">
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="dev-color" data-i18n="label_color">Color</label>
+            <input type="color" id="dev-color" value="#3b82f6">
+          </div>
+          <div class="form-group">
+            <label for="dev-comments" data-i18n="label_comments">Comments</label>
+            <textarea id="dev-comments"></textarea>
+          </div>
         </div>
-        <div class="form-group">
-          <label for="dev-asset" data-i18n="label_asset_tag">Asset Tag</label>
-          <input type="text" id="dev-asset" data-i18n-placeholder="ph_asset" placeholder="Optional">
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="dev-color" data-i18n="label_color">Color</label>
-        <input type="color" id="dev-color" value="#3b82f6">
-      </div>
-
-      <div class="form-group">
-        <label for="dev-comments" data-i18n="label_comments">Comments</label>
-        <textarea id="dev-comments"></textarea>
-      </div>
+      </details>
 
       <!-- Bulk Section -->
       <div class="bulk-section">
         <label class="form-checkbox-label bulk-toggle-label" id="bulk-toggle">
           <input type="checkbox" id="bulk-checkbox">
-          <span data-i18n="bulk_creation">Bulk Creation</span>
+          <span><span data-i18n="bulk_creation">Bulk Creation</span> <span class="form-hint" data-i18n="bulk_hint_short">several at once</span></span>
         </label>
         <div class="bulk-content" id="bulk-content">
-          <div class="form-row">
+          <div class="form-row form-row--end">
             <div class="form-group">
               <label for="bulk-qty" data-i18n="bulk_quantity">Quantity</label>
-              <input type="number" id="bulk-qty" min="2" max="100" value="2">
+              <div class="stepper">
+                <button type="button" class="btn btn-secondary btn-icon" data-step="-1" data-target="bulk-qty" data-i18n-aria="aria_dec" aria-label="Decrease">&minus;</button>
+                <input type="number" id="bulk-qty" min="2" max="100" value="2">
+                <button type="button" class="btn btn-secondary btn-icon" data-step="1" data-target="bulk-qty" data-i18n-aria="aria_inc" aria-label="Increase">+</button>
+              </div>
             </div>
             <div class="form-group">
               <label for="bulk-numbering" data-i18n="bulk_numbering">Numbering</label>
@@ -132,6 +287,7 @@
                 <option value="numeric" data-i18n="bulk_numeric">Numeric (1, 2, 3…)</option>
                 <option value="alpha" data-i18n="bulk_alpha">Alpha (A, B, C…)</option>
               </select>
+              <div class="seg seg--sel" id="bulk-numbering-seg" role="group"><button type="button" data-val="numeric">1 2 3</button><button type="button" data-val="alpha">A B C</button></div>
             </div>
           </div>
           <div class="form-group">
@@ -161,65 +317,6 @@
         <button type="button" class="btn btn-secondary btn-block" id="form-cancel-btn" data-i18n="btn_cancel_edit" style="display:none; margin-top:6px;">Cancel Edit</button>
       </div>
     </form>
-  </aside>
-
-  <!-- Center: Rack Visualization -->
-  <section class="rack-container">
-    <div id="rack-tabs"></div>
-    <div id="rack-utilization" style="display:none">
-      <div class="util-bar-wrap">
-        <div class="util-bar-front" id="util-bar-front"></div>
-        <div class="util-bar-rear" id="util-bar-rear"></div>
-      </div>
-      <span id="util-label"></span>
-    </div>
-    <div class="rack-controls">
-      <span class="rack-name" id="rack-name-display">Rack-01</span>
-      <span class="rack-info" id="rack-info"></span>
-      <span class="rack-stats" id="rack-stats"></span>
-    </div>
-    <div class="rack" id="rack-view">
-      <!-- Rendered by rack-view.js -->
-    </div>
-  </section>
-
-  <!-- Right Sidebar: Export + Device List -->
-  <aside class="sidebar-right">
-    <!-- Accordion: NetBox Export -->
-    <details class="sidebar-accordion" open>
-      <summary class="sidebar-accordion-header" data-i18n="export_netbox">NetBox Export</summary>
-      <div class="sidebar-accordion-body">
-        <button class="btn btn-success btn-block" id="export-json-btn" data-i18n="btn_json">Download JSON</button>
-        <button class="btn btn-secondary btn-block" id="export-yaml-btn" data-i18n="btn_yaml">Download YAML</button>
-        <button class="btn btn-secondary btn-block" id="export-csv-btn" data-i18n="btn_csv">Download CSV</button>
-        <button class="btn btn-secondary btn-block" id="copy-btn" data-i18n="btn_copy">Copy JSON</button>
-        <button class="btn btn-secondary btn-block" id="export-png-btn" data-i18n="btn_export_png">Download PNG</button>
-        <button class="btn btn-secondary btn-block" id="print-btn" data-i18n="btn_print">Print / PDF</button>
-      </div>
-    </details>
-
-    <!-- Accordion: Project Save / Load -->
-    <details class="sidebar-accordion">
-      <summary class="sidebar-accordion-header" data-i18n="export_project">Project Save / Load</summary>
-      <div class="sidebar-accordion-body">
-        <button class="btn btn-primary btn-block" id="save-project-btn" data-i18n="btn_save_project">Save Project</button>
-        <button class="btn btn-secondary btn-block" id="load-project-btn" data-i18n="btn_load_project">Load Project</button>
-        <input type="file" id="load-project-file" accept=".json" style="display:none">
-      </div>
-    </details>
-
-    <!-- Accordion: NetBox Import -->
-    <details class="sidebar-accordion">
-      <summary class="sidebar-accordion-header" data-i18n="import_title">NetBox Import</summary>
-      <div class="sidebar-accordion-body">
-        <button class="btn btn-secondary btn-block" id="import-btn" data-i18n="btn_import">Import JSON</button>
-        <input type="file" id="import-file" accept=".json" style="display:none">
-        <button class="btn btn-secondary btn-block" id="import-csv-btn" data-i18n="btn_import_csv" style="margin-top:6px">Import CSV</button>
-        <input type="file" id="import-csv-file" accept=".csv" style="display:none">
-        <p class="form-hint" data-i18n="import_csv_hint" style="margin-top:6px"></p>
-      </div>
-    </details>
-
     <!-- Accordion: JSON Preview -->
     <details class="sidebar-accordion">
       <summary class="sidebar-accordion-header" id="json-preview-toggle" data-i18n="btn_json_preview">Live JSON Preview</summary>
@@ -227,37 +324,24 @@
         <pre class="json-preview" id="json-preview"></pre>
       </div>
     </details>
-
-    <!-- Accordion: Device List -->
-    <details class="sidebar-accordion">
-      <summary class="sidebar-accordion-header">
-        <span data-i18n="devices_title">Devices</span> (<span id="device-count">0</span>)
-      </summary>
-      <div class="sidebar-accordion-body">
-        <div class="device-search-wrap">
-          <input type="text" id="device-search" class="device-search-input" data-i18n-placeholder="device_search_ph" placeholder="Search devices…" autocomplete="off">
-        </div>
-        <div class="device-list" id="device-list">
-          <!-- Rendered by app.js -->
-        </div>
-      </div>
-    </details>
-
-    <!-- Accordion: Storage -->
-    <details class="sidebar-accordion" open>
-      <summary class="sidebar-accordion-header" data-i18n="storage_usage">Storage</summary>
-      <div class="sidebar-accordion-body">
-        <div class="storage-indicator" id="storage-indicator">
-          <div class="storage-label">
-            <span data-i18n="storage_usage">Storage</span>: <span id="storage-usage-text">0 KB / 5 MB</span>
-          </div>
-          <div class="storage-bar"><div class="storage-bar-fill" id="storage-bar-fill"></div></div>
-          <button class="btn btn-secondary btn-sm" id="clear-cache-btn" data-i18n="btn_clear_cache">Clear Cache</button>
-        </div>
-      </div>
-    </details>
   </aside>
 </main>
+
+<footer class="app-status" id="app-status">
+  <span class="status-item status-version"><span class="led led--ok"></span><span class="mono" id="status-version-text">v0.9.0</span></span>
+  <span class="status-item mono" id="status-cache"></span>
+  <span class="status-item" id="status-offline"></span>
+  <span class="status-item" id="status-devices"></span>
+  <span class="status-spacer"></span>
+  <button type="button" class="status-credit" id="egg-cable-btn" data-i18n="foot_credit">Built with plenty of patch cables</button>
+  <div class="storage-indicator" id="storage-indicator">
+    <div class="storage-label">
+      <span data-i18n="storage_usage">Storage</span>: <span id="storage-usage-text">0 KB / 5 MB</span>
+    </div>
+    <div class="storage-bar"><div class="storage-bar-fill" id="storage-bar-fill"></div></div>
+    <button type="button" class="btn btn-secondary btn-sm" id="clear-cache-btn" data-i18n="btn_clear_cache">Clear Cache</button>
+  </div>
+</footer>
 
 <!-- Import Preview Dialog -->
 <dialog id="import-preview-dialog">
@@ -275,16 +359,126 @@
   </div>
 </dialog>
 
+<!-- Module Import Dialog (NetBox module types per bay from CSV) -->
+<dialog id="module-import-dialog" class="dialog-wide">
+  <div class="mi-header">
+    <h2 data-i18n="mi_title">NetBox Module Import</h2>
+    <button type="button" class="btn btn-secondary btn-sm" id="mi-close-btn" data-i18n="mi_btn_close">Close</button>
+  </div>
+  <ol class="mi-steps" id="mi-steps">
+    <li data-step="1" class="active"><span>1</span><em data-i18n="mi_step_profile">Profile &amp; file</em></li>
+    <li data-step="2"><span>2</span><em data-i18n="mi_step_preview">Preview</em></li>
+    <li data-step="3"><span>3</span><em data-i18n="mi_step_export">Export</em></li>
+    <li data-step="4"><span>4</span><em data-i18n="mi_step_interfaces">Interface IDs</em></li>
+  </ol>
+
+  <!-- Step 1: profile + file -->
+  <section class="mi-step active" data-step="1">
+    <div class="form-group">
+      <label for="mi-profile" data-i18n="mi_profile">Import profile</label>
+      <select id="mi-profile"></select>
+    </div>
+    <div class="mi-toolbar">
+      <button type="button" class="btn btn-secondary btn-sm" id="mi-profile-edit" data-i18n="mi_btn_edit">Edit</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="mi-profile-new" data-i18n="mi_btn_new">New</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="mi-profile-dup" data-i18n="mi_btn_duplicate">Duplicate</button>
+      <button type="button" class="btn btn-danger btn-sm" id="mi-profile-del" data-i18n="mi_btn_delete">Delete</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="mi-profile-import" data-i18n="mi_btn_import_profile">Import JSON</button>
+      <button type="button" class="btn btn-secondary btn-sm" id="mi-profile-export" data-i18n="mi_btn_export_profile">Export JSON</button>
+      <input type="file" id="mi-profile-file" accept=".json" style="display:none">
+    </div>
+
+    <div class="mi-editor" id="mi-editor" hidden>
+      <div class="mi-tabs">
+        <button type="button" data-mi-tab="general" data-i18n="mi_ed_tab_general">General</button>
+        <button type="button" data-mi-tab="rules" data-i18n="mi_ed_tab_rules">Mapping rules</button>
+        <button type="button" data-mi-tab="splits" data-i18n="mi_ed_tab_splits">Port splits</button>
+        <button type="button" data-mi-tab="blocks" data-i18n="mi_ed_tab_blocks">Blocks</button>
+        <button type="button" data-mi-tab="columns" data-i18n="mi_ed_tab_columns">Columns</button>
+      </div>
+      <div id="mi-editor-body" class="mi-editor-body"></div>
+      <div id="mi-editor-msg"></div>
+      <div class="mi-actions">
+        <button type="button" class="btn btn-secondary btn-sm" id="mi-editor-cancel" data-i18n="mi_ed_cancel">Close editor</button>
+        <button type="button" class="btn btn-primary btn-sm" id="mi-editor-save" data-i18n="mi_ed_save">Save profile</button>
+      </div>
+    </div>
+
+    <div class="mi-file-row">
+      <button type="button" class="btn btn-secondary" id="mi-csv-btn" data-i18n="mi_choose_file">Choose CSV file</button>
+      <input type="file" id="mi-csv-file" accept=".csv,.tsv,.txt" style="display:none">
+      <span id="mi-file-info" class="mi-file-info"></span>
+    </div>
+    <div class="mi-actions">
+      <button type="button" class="btn btn-primary" id="mi-analyse-btn" disabled data-i18n="mi_analyse">Analyse</button>
+    </div>
+  </section>
+
+  <!-- Step 2: preview -->
+  <section class="mi-step" data-step="2">
+    <p id="mi-pv-summary" class="mi-summary"></p>
+    <div id="mi-pv-file-issues"></div>
+    <div id="mi-pv-row-issues"></div>
+    <div class="mi-pv-controls">
+      <label class="mi-pv-filter"><span data-i18n="mi_pv_filter_label">Show</span>
+        <select id="mi-pv-filter"><option value="all">All</option><option value="errors">Errors</option><option value="warnings">Warnings</option></select></label>
+      <div id="mi-pv-legend" class="mi-legend"></div>
+    </div>
+    <div id="mi-pv-cards" class="mi-cards"></div>
+    <div class="mi-actions">
+      <button type="button" class="btn btn-secondary" id="mi-pv-back" data-i18n="mi_pv_back">Back to rules</button>
+      <button type="button" class="btn btn-primary" id="mi-pv-continue" data-i18n="mi_pv_continue">Continue</button>
+    </div>
+  </section>
+
+  <!-- Step 3: export -->
+  <section class="mi-step" data-step="3">
+    <p id="mi-ex-summary" class="mi-summary"></p>
+    <p class="settings-section-desc" data-i18n="mi_ex_hint">Import module-import.csv in NetBox (Dcim → Modules → Import). Then continue to rename the LAN interfaces.</p>
+    <div class="mi-toolbar">
+      <button type="button" class="btn btn-success" id="mi-ex-csv" data-i18n="mi_ex_download_csv">Download module-import.csv</button>
+      <button type="button" class="btn btn-secondary" id="mi-ex-zip" data-i18n="mi_ex_download_zip">Download as ZIP</button>
+    </div>
+    <div class="mi-actions">
+      <button type="button" class="btn btn-secondary" id="mi-ex-back" data-i18n="mi_ex_back">Back</button>
+      <button type="button" class="btn btn-primary" id="mi-ex-next" data-i18n="mi_ex_next">Next: interface IDs</button>
+    </div>
+  </section>
+
+  <!-- Step 4: interface IDs -->
+  <section class="mi-step" data-step="4">
+    <p class="settings-section-desc" data-i18n="mi_if_intro">After NetBox created the modules, the LAN interfaces need their real port names. Get the interface IDs from NetBox:</p>
+    <p id="mi-if-none" class="message message-info" hidden data-i18n="mi_if_no_lan">None of the devices has LAN modules, so there is nothing to rename.</p>
+    <div id="mi-if-actions">
+      <div class="mi-toolbar">
+        <button type="button" class="btn btn-secondary" id="mi-if-api-btn" data-i18n="mi_if_api_btn">Fetch from NetBox API</button>
+        <button type="button" class="btn btn-secondary" id="mi-if-file-btn" data-i18n="mi_if_file_btn">Upload interface export (CSV)</button>
+        <input type="file" id="mi-if-file" accept=".csv,.tsv,.txt" style="display:none">
+      </div>
+      <p class="settings-section-desc" data-i18n="mi_if_api_hint">The API option uses the URL and token from Settings → NetBox and needs CORS to be allowed. The file upload always works: export the interfaces (with the ID column) from NetBox.</p>
+    </div>
+    <div id="mi-if-result"></div>
+    <div class="mi-toolbar">
+      <button type="button" class="btn btn-success" id="mi-if-download" disabled data-i18n="mi_if_download">Download interface-rename.csv</button>
+      <button type="button" class="btn btn-secondary" id="mi-if-zip" disabled data-i18n="mi_if_zip">Download both as ZIP</button>
+    </div>
+    <div class="mi-actions">
+      <button type="button" class="btn btn-secondary" id="mi-if-back" data-i18n="mi_ex_back">Back</button>
+    </div>
+  </section>
+</dialog>
+
 <!-- Settings Modal -->
 <dialog id="settings-modal">
   <h2 data-i18n="settings_title">Rack Settings</h2>
-  <form id="settings-form">
+  <form id="settings-form" novalidate>
     <!-- Tab Navigation -->
     <div class="modal-tabs" role="tablist">
       <span class="modal-tab-indicator" aria-hidden="true"></span>
       <button type="button" class="modal-tab active" data-tab="rack" data-i18n="tab_rack">Rack</button>
       <button type="button" class="modal-tab" data-tab="netbox" data-i18n="tab_netbox">NetBox</button>
       <button type="button" class="modal-tab" data-tab="shortcuts" data-i18n="tab_shortcuts">Shortcuts</button>
+      <button type="button" class="modal-tab" data-tab="data" data-i18n="tab_data">Data &amp; version</button>
     </div>
 
     <!-- Panels wrapper (height animates) -->
@@ -292,12 +486,14 @@
 
     <!-- Tab: Rack -->
     <div class="modal-tab-panel active" id="tab-panel-rack">
+      <div class="set-head"><h3 data-i18n="tab_rack">Rack</h3><p data-i18n="set_rack_desc">Applies to export files and the workspace view.</p></div>
       <!-- Multi-Rack Toggle -->
       <div class="form-group">
         <label class="form-checkbox-label">
           <input type="checkbox" id="setting-multi-rack">
           <span data-i18n="setting_multi_rack">Multi-Rack Mode</span>
         </label>
+        <p class="settings-section-desc" data-i18n="set_multi_desc">Manage racks as tabs in the same project</p>
       </div>
 
       <!-- Shared fields (site, location) -->
@@ -351,6 +547,7 @@
 
     <!-- Tab: NetBox -->
     <div class="modal-tab-panel" id="tab-panel-netbox">
+      <div class="set-head"><h3>NetBox</h3></div>
 
       <!-- Mode selector -->
       <div class="netbox-mode-selector">
@@ -389,6 +586,15 @@
               <input type="file" id="netbox-mfr-file" accept=".json,.yaml,.yml,.csv,.tsv" style="display:none">
             </div>
             <span class="netbox-status empty" id="netbox-mfr-status" data-i18n="netbox_not_loaded">Not loaded</span>
+          </div>
+          <div class="netbox-upload-group">
+            <label data-i18n="netbox_module_types">Module Types</label>
+            <div class="netbox-upload-controls">
+              <button type="button" class="btn btn-secondary btn-sm" id="netbox-upload-modtypes-btn" data-i18n="netbox_btn_upload">Upload</button>
+              <button type="button" class="btn btn-danger btn-sm" id="netbox-clear-modtypes-btn" style="display:none" data-i18n="netbox_btn_clear">Clear</button>
+              <input type="file" id="netbox-modtypes-file" accept=".json,.yaml,.yml,.csv,.tsv" style="display:none">
+            </div>
+            <span class="netbox-status empty" id="netbox-modtypes-status" data-i18n="netbox_not_loaded">Not loaded</span>
           </div>
         </div>
       </div>
@@ -433,6 +639,11 @@
               <button type="button" class="btn btn-secondary btn-sm" id="netbox-api-fetch-mfr-btn" data-i18n="netbox_api_fetch">Fetch</button>
               <span class="netbox-status empty" id="netbox-api-mfr-status" data-i18n="netbox_not_loaded">Not loaded</span>
             </div>
+            <div class="netbox-upload-group">
+              <label data-i18n="netbox_module_types">Module Types</label>
+              <button type="button" class="btn btn-secondary btn-sm" id="netbox-api-fetch-modtypes-btn" data-i18n="netbox_api_fetch">Fetch</button>
+              <span class="netbox-status empty" id="netbox-api-modtypes-status" data-i18n="netbox_not_loaded">Not loaded</span>
+            </div>
           </div>
           <button type="button" class="btn btn-primary btn-sm" id="netbox-api-fetch-all-btn" style="width:100%;margin-top:10px" data-i18n="netbox_api_fetch_all">⬇ Fetch All</button>
         </div>
@@ -442,9 +653,29 @@
 
     <!-- Tab: Shortcuts -->
     <div class="modal-tab-panel" id="tab-panel-shortcuts">
+      <div class="set-head"><h3 data-i18n="tab_shortcuts">Shortcuts</h3><p data-i18n="set_keys_desc">Click a shortcut to record a new one. Conflicts are flagged.</p></div>
       <div class="shortcuts-section">
         <div id="shortcuts-list"></div>
         <button type="button" class="btn btn-secondary btn-sm" id="shortcuts-reset-btn" style="margin-top:8px" data-i18n="shortcut_reset">Reset defaults</button>
+      </div>
+    </div>
+
+    <!-- Tab: Data & version -->
+    <div class="modal-tab-panel" id="tab-panel-data">
+      <div class="set-head"><h3 data-i18n="tab_data">Data &amp; version</h3><p data-i18n="set_data_desc">What is stored locally in the browser and which version is running.</p></div>
+      <dl class="set-facts">
+        <dt data-i18n="set_data_version">Version</dt><dd id="set-ver-number">–</dd>
+        <dt data-i18n="set_data_cache">Cache</dt><dd id="set-ver-cache">–</dd>
+        <dt data-i18n="set_data_offline">Offline</dt><dd id="set-ver-offline">–</dd>
+      </dl>
+      <div class="set-storage">
+        <div class="set-storage-row"><strong data-i18n="storage_usage">Storage</strong><span id="set-storage-text">–</span></div>
+        <div class="storage-bar"><div class="storage-bar-fill" id="set-storage-fill"></div></div>
+      </div>
+      <div class="set-actions">
+        <button type="button" class="btn btn-secondary" id="set-clear-cache" data-i18n="btn_clear_cache">Clear Cache</button>
+        <button type="button" class="btn btn-secondary set-danger" id="set-clear-devices" data-i18n="btn_clear_devices">Clear Devices</button>
+        <button type="button" class="btn btn-secondary set-danger" id="set-reset-all" data-i18n="btn_reset_all">Reset All</button>
       </div>
     </div>
 
@@ -455,6 +686,44 @@
       <button type="submit" class="btn btn-primary" data-i18n="btn_save">Save</button>
     </div>
   </form>
+</dialog>
+
+<!-- New rack dialog -->
+<dialog id="rack-new-modal" class="rack-new">
+  <form id="rack-new-form" novalidate>
+    <h2 id="rn-title" data-i18n="rack_new_title">New rack</h2>
+    <p class="settings-section-desc" id="rn-desc" data-i18n="rack_new_desc">Name it, choose its height and which end counts as U1.</p>
+    <div class="form-group">
+      <label for="rn-name" data-i18n="setting_name">Rack Name</label>
+      <input type="text" id="rn-name" autocomplete="off" maxlength="40">
+    </div>
+    <div class="form-group">
+      <label for="rn-units" data-i18n="setting_units">Total Units (U)</label>
+      <div class="stepper">
+        <button type="button" class="btn btn-secondary btn-icon" data-step="-1" data-target="rn-units" data-i18n-aria="aria_dec" aria-label="Decrease">&minus;</button>
+        <input type="number" id="rn-units" min="1" max="60" value="42">
+        <button type="button" class="btn btn-secondary btn-icon" data-step="1" data-target="rn-units" data-i18n-aria="aria_inc" aria-label="Increase">+</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label data-i18n="setting_direction">Numbering Direction</label>
+      <div class="seg seg--sel" id="rn-dir" role="group">
+        <button type="button" data-val="bottom-to-top" data-i18n="dir_bottom">U1 at Bottom</button>
+        <button type="button" data-val="top-to-bottom" data-i18n="dir_top">U1 at Top</button>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="btn btn-secondary set-danger" id="rn-delete" hidden data-i18n="rack_delete">Delete rack</button>
+      <button type="button" class="btn btn-secondary" id="rn-cancel" data-i18n="btn_dialog_cancel">Cancel</button>
+      <button type="submit" class="btn btn-primary" id="rn-submit" data-i18n="rack_create">Create rack</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Command Palette -->
+<dialog id="command-palette" class="palette" aria-label="Command palette">
+  <input type="text" id="cmd-input" class="palette-input" data-i18n-placeholder="cmd_placeholder" placeholder="Search devices or type a command" autocomplete="off" role="combobox" aria-expanded="true" aria-controls="cmd-list">
+  <div id="cmd-list" class="palette-list" role="listbox"></div>
 </dialog>
 
 <div id="sidebar-backdrop"></div>
