@@ -412,6 +412,22 @@ export function dispatch(action, payload) {
       return { ok: true };
     }
 
+    case 'REMOVE_RACK': {
+      if (!state.multiRackEnabled || state.racks.length <= 1) return { ok: false, reason: 'Cannot remove the last rack.' };
+      pushHistory();
+      const rid = payload;
+      const racks = state.racks.filter(r => r.id !== rid);
+      state = {
+        ...state,
+        racks,
+        devices: state.devices.filter(d => d.rackId !== rid),
+        activeRackId: state.activeRackId === rid ? racks[0].id : state.activeRackId,
+        selectedDeviceId: null,
+      };
+      notify();
+      return { ok: true };
+    }
+
     case 'UPDATE_RACK': {
       pushHistory();
       const { rackId, ...changes } = payload;

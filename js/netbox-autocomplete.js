@@ -4,6 +4,7 @@
 
 import { t } from './i18n.js';
 import { parseCsvTable } from './csv.js';
+import { uiAlert } from './utils.js';
 
 const STORAGE_KEY_TYPES         = 'rackbuilder_netbox_device_types';
 const STORAGE_KEY_ROLES         = 'rackbuilder_netbox_roles';
@@ -265,13 +266,13 @@ function handleUpload(fileInput, storageKey, onDone) {
       const items = detectAndParse(ev.target.result, file.name);
       const entries = items ? extractNameSlug(items) : null;
       if (!entries || entries.length === 0) {
-        alert(t('netbox_upload_invalid'));
+        uiAlert(t('netbox_upload_invalid'));
         return;
       }
       saveEntries(storageKey, entries);
       if (onDone) onDone(entries);
     } catch {
-      alert(t('netbox_upload_invalid'));
+      uiAlert(t('netbox_upload_invalid'));
     }
   };
   reader.readAsText(file);
@@ -517,7 +518,7 @@ async function apiFetchAndStore(endpoint, storageKey, inputId, btnId) {
   const baseUrl    = localStorage.getItem(STORAGE_KEY_API_URL) || '';
   const tokenInput = document.getElementById('netbox-api-token-input');
   const token      = tokenInput?.value.trim() || '';
-  if (!baseUrl || !token) { alert(t('netbox_api_missing_creds')); return false; }
+  if (!baseUrl || !token) { uiAlert(t('netbox_api_missing_creds')); return false; }
 
   const btn = document.getElementById(btnId);
   const origText = btn?.textContent;
@@ -526,7 +527,7 @@ async function apiFetchAndStore(endpoint, storageKey, inputId, btnId) {
   try {
     const items   = await apiFetchPages(baseUrl, token, endpoint);
     const entries = extractNameSlug(items);
-    if (!entries || entries.length === 0) { alert(t('netbox_api_empty')); return false; }
+    if (!entries || entries.length === 0) { uiAlert(t('netbox_api_empty')); return false; }
     saveEntries(storageKey, entries);
     if (inputId) attachAutocomplete(inputId, entries);
     updateUploadStatus();
@@ -535,7 +536,7 @@ async function apiFetchAndStore(endpoint, storageKey, inputId, btnId) {
     const msg = (err instanceof TypeError)
       ? t('netbox_api_cors_error')
       : `${t('netbox_api_error')}: ${err.message}`;
-    alert(msg);
+    uiAlert(msg);
     return false;
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = origText; }

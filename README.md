@@ -1,4 +1,4 @@
-# Rack Builder v0.8.0
+# Rack Builder v0.9.0
 
 Visual rack planning tool for creating NetBox-compatible JSON imports. Plan your server rack layouts with drag & drop, collision detection, and bulk device creation — then export directly as JSON, YAML, CSV, or PNG.
 
@@ -118,6 +118,13 @@ Generates the NetBox module assignments for devices with several module bays (e.
 
 - **PNG Export** — Download the current rack view as a PNG image (respects dark/light theme)
 
+### Interface & Version (v0.9 "Patchkabel")
+
+- **Redesigned workspace** — Header with Import/Export/More menus, device list on the left, inspector on the right, status bar at the bottom
+- **Visible version** — Version chip in the header plus a status bar showing version, active cache and offline readiness; the popover lists edition, cache name and service-worker state and warns when the loaded cache differs from the expected one
+- **Command palette** — `Ctrl/Cmd+K` runs any action or jumps to a device across all racks
+- **Easter eggs** — A few hidden things to find; the popover counts how many you have discovered
+
 ### Offline & PWA
 
 - **Offline PWA** — Service worker caches all assets; installable on mobile and desktop
@@ -200,12 +207,18 @@ js/
   import-engine.js  — Module import logic: blocks, port splits, bay allocation, CSV output
   module-import.js  — Module import wizard UI (profile editor, slot preview, exports)
   i18n.js           — German/English translations
-  utils.js          — UUID generation, naming sequences, storage utilities
+  utils.js          — UUID generation, naming sequences, storage utilities, toasts
+  version.js        — Single source of truth for version, codename, expected cache; runtime info
+  shell.js          — Header menus, version popover, status bar
+  command-palette.js — Ctrl/Cmd+K command palette
+  easter-eggs.js    — Hidden surprises (persisted in localStorage)
+  inspector.js      — Device detail card (move, flip, duplicate) and rack face switch
 sw.js               — Service worker (cache-first offline)
 manifest.json       — PWA manifest
 testing/
   csv-zip.test.mjs  — Node tests for the CSV and ZIP libraries
   module-import.test.mjs — Node tests for profiles, engine, i18n completeness
+  version.test.mjs  — Version, cache name and edition consistency checks
   module-import-sample.csv — Sample source file for the module import
 minimalist/
   index.html        — Single-file version (all CSS + JS inlined, no dependencies)
@@ -218,6 +231,7 @@ The pure logic (CSV, ZIP, profiles, import engine) has dependency-free Node test
 ```
 node testing/csv-zip.test.mjs
 node testing/module-import.test.mjs
+node testing/version.test.mjs   # version / cache / edition consistency
 ```
 
 ## Tech Stack

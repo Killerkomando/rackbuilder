@@ -1,7 +1,7 @@
 // NetBox module import wizard: profile + CSV → preview (12-bay slot view) → export → interface IDs.
 
 import { t } from './i18n.js';
-import { triggerDownload, closeDialogAnimated, generateId } from './utils.js';
+import { triggerDownload, closeDialogAnimated, generateId, uiConfirm, uiAlert } from './utils.js';
 import { parseCsvTable, writeCsv } from './csv.js';
 import { createZip } from './zip.js';
 import {
@@ -120,11 +120,11 @@ async function onCsvChosen(file) {
 }
 
 function runAnalysis() {
-  if (!S.table) { alert(t('mi_no_file')); return; }
+  if (!S.table) { uiAlert(t('mi_no_file')); return; }
   const profile = activeProfile();
   const { errors } = validateProfile(profile, getModuleTypes().map(m => m.name));
   if (errors.length) {
-    alert(t('mi_profile_invalid') + '\n\n' + errors.map(validationText).join('\n'));
+    uiAlert(t('mi_profile_invalid') + '\n\n' + errors.map(validationText).join('\n'));
     return;
   }
   S.analysis = analyzeCsv(S.table, profile);
@@ -477,7 +477,7 @@ function renderInterfaceStep() {
 
 async function fetchInterfacesFromApi() {
   const { baseUrl, token } = await getApiCredentials();
-  if (!baseUrl || !token) { alert(t('netbox_api_missing_creds')); return; }
+  if (!baseUrl || !token) { uiAlert(t('netbox_api_missing_creds')); return; }
   const names = [...new Set(expectedInterfaces(S.analysis.devices, activeProfile()).map(e => e.device))];
   const btn = $('mi-if-api-btn');
   const orig = btn.textContent;
@@ -492,7 +492,7 @@ async function fetchInterfacesFromApi() {
     }
     applyInterfaces(all);
   } catch (err) {
-    alert(err instanceof TypeError ? t('netbox_api_cors_error') : `${t('netbox_api_error')}: ${err.message}`);
+    uiAlert(err instanceof TypeError ? t('netbox_api_cors_error') : `${t('netbox_api_error')}: ${err.message}`);
   } finally {
     btn.disabled = false;
     btn.textContent = orig;
@@ -503,7 +503,7 @@ async function onInterfaceFile(file) {
   if (!file) return;
   const table = parseCsvTable(await readTextFile(file));
   const { interfaces, missing } = readInterfaceTable(table);
-  if (missing.length) { alert(t('mi_if_missing_cols', { cols: missing.join(', ') })); return; }
+  if (missing.length) { uiAlert(t('mi_if_missing_cols', { cols: missing.join(', ') })); return; }
   applyInterfaces(interfaces);
 }
 
@@ -544,10 +544,10 @@ export function initModuleImport() {
     persistProfiles();
     setActive(copy.id);
   });
-  $('mi-profile-del').addEventListener('click', () => {
+  $('mi-profile-del').addEventListener('click', async () => {
     const p = activeProfile();
-    if (p.is_default) { alert(t('mi_cannot_delete_default')); return; }
-    if (!confirm(t('mi_confirm_delete_profile', { name: p.name }))) return;
+    if (p.is_default) { uiAlert(t('mi_cannot_delete_default')); return; }
+    if (!(await uiConfirm(t('mi_confirm_delete_profile', { name: p.name }), { confirmLabel: t('dlg_delete') }))) return;
     S.profiles = S.profiles.filter(x => x.id !== p.id);
     persistProfiles();
     closeEditor();
@@ -564,7 +564,7 @@ export function initModuleImport() {
     e.target.value = '';
     if (!file) return;
     const p = importProfileJson(await readTextFile(file));
-    if (!p) { alert(t('mi_profile_import_invalid')); return; }
+    if (!p) { uiAlert(t('mi_profile_import_invalid')); return; }
     S.profiles.push(p);
     persistProfiles();
     setActive(p.id);
