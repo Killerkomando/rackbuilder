@@ -14,7 +14,7 @@ import {
   expectedInterfaces, MODULE_IMPORT_HEADERS, INTERFACE_RENAME_HEADERS,
   buildDeviceImportRows, deviceImportHeaders, missingDeviceFields,
 } from './import-engine.js';
-import { getModuleTypes, getDeviceTypes, getRoles, getApiCredentials, apiFetchPages } from './netbox-autocomplete.js';
+import { getModuleTypes, getDeviceTypes, getRoles, getManufacturers, getApiCredentials, apiFetchPages } from './netbox-autocomplete.js';
 
 const S = {
   profiles: [],
@@ -147,6 +147,7 @@ function dataLists() {
     <datalist id="mi-dl-modtypes">${mods.map(m => `<option value="${esc(m.name)}">`).join('')}</datalist>
     <datalist id="mi-dl-devtypes">${types.map(m => `<option value="${esc(m.name)}">`).join('')}</datalist>
     <datalist id="mi-dl-roles">${getRoles().map(m => `<option value="${esc(m.name)}">`).join('')}</datalist>
+    <datalist id="mi-dl-mfrs">${getManufacturers().map(m => `<option value="${esc(m.name)}">`).join('')}</datalist>
     <datalist id="mi-dl-headers">${headers.map(h => `<option value="${esc(h)}">`).join('')}</datalist>`;
 }
 
@@ -168,12 +169,16 @@ function renderGeneral(d) {
     <div class="form-row">
       <div class="form-group"><label>${esc(t('mi_ed_role'))}</label>
         <input type="text" data-k="netbox_role" list="mi-dl-roles" value="${esc(d.netbox_role)}" autocomplete="off"></div>
-      <div class="form-group"><label>${esc(t('mi_ed_site'))}</label>
-        <input type="text" data-k="netbox_site" value="${esc(d.netbox_site)}" autocomplete="off"></div>
+      <div class="form-group"><label>${esc(t('mi_ed_manufacturer'))}</label>
+        <input type="text" data-k="netbox_manufacturer" list="mi-dl-mfrs" value="${esc(d.netbox_manufacturer)}" autocomplete="off"></div>
     </div>
     <div class="form-row">
+      <div class="form-group"><label>${esc(t('mi_ed_site'))}</label>
+        <input type="text" data-k="netbox_site" value="${esc(d.netbox_site)}" autocomplete="off"></div>
       <div class="form-group"><label>${esc(t('mi_ed_location'))}</label>
         <input type="text" data-k="netbox_location" value="${esc(d.netbox_location)}" autocomplete="off"></div>
+    </div>
+    <div class="form-row">
       <div class="form-group"><label>${esc(t('mi_ed_dev_status'))}</label>
         ${selectHtml(['active', 'planned', 'staged', 'offline', 'inventory', 'decommissioning'], d.device_status, 'data-k="device_status"')}</div>
     </div>

@@ -415,12 +415,12 @@ test('imported profile with malformed structure is rejected', () => {
 });
 
 test('device-import.csv carries the device fields NetBox needs, one row per device', () => {
-  const p = { ...profile, netbox_device_type_id: 'Bodentank 12-Bay', netbox_role: 'Bodentank', netbox_site: 'Werk 1', device_status: 'planned' };
-  assert.deepEqual(missingDeviceFields(profile), ['device_type', 'role', 'site']);
+  const p = { ...profile, netbox_device_type_id: 'Bodentank 12-Bay', netbox_role: 'Bodentank', netbox_manufacturer: 'Acme', netbox_site: 'Werk 1', device_status: 'planned' };
+  assert.deepEqual(missingDeviceFields(profile), ['role', 'manufacturer', 'device_type', 'site']);
   assert.deepEqual(missingDeviceFields(p), []);
   const rows = buildDeviceImportRows([dev('Raum 1, EG Bodentank B')], p);
-  assert.deepEqual(rows, [{ name: 'Raum 1, EG Bodentank B', role: 'Bodentank', device_type: 'Bodentank 12-Bay', site: 'Werk 1', status: 'planned' }]);
-  assert.equal(writeCsv(rows, deviceImportHeaders(p)).split('\n')[0], 'name,role,device_type,site,status');
+  assert.deepEqual(rows, [{ name: 'Raum 1, EG Bodentank B', role: 'Bodentank', manufacturer: 'Acme', device_type: 'Bodentank 12-Bay', site: 'Werk 1', status: 'planned' }]);
+  assert.equal(writeCsv(rows, deviceImportHeaders(p)).split('\n')[0], 'name,role,manufacturer,device_type,site,status');
   const withLoc = { ...p, netbox_location: 'EG' };
   assert.equal(deviceImportHeaders(withLoc).at(-1), 'location');
   assert.equal(buildDeviceImportRows([dev('Raum 1, EG Bodentank B')], withLoc)[0].location, 'EG');

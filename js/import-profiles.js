@@ -20,6 +20,7 @@ export function createEmptyProfile(name = 'New profile') {
     name,
     netbox_device_type_id: '',
     netbox_role: '',
+    netbox_manufacturer: '',
     netbox_site: '',
     netbox_location: '',
     device_status: 'active',
@@ -84,7 +85,7 @@ export const LAN_LAYOUTS = ['2', '3', 'custom'];
 export function normalizeProfile(p) {
   if (p.lan_layout === undefined) p.lan_layout = (p.splitRules || []).length > 0 ? 'custom' : '2';
   if (p.lan_fill_name === undefined) p.lan_fill_name = 'unknown';
-  for (const k of ['netbox_role', 'netbox_site', 'netbox_location']) if (p[k] === undefined) p[k] = '';
+  for (const k of ['netbox_role', 'netbox_manufacturer', 'netbox_site', 'netbox_location']) if (p[k] === undefined) p[k] = '';
   if (p.device_status === undefined) p.device_status = 'active';
   return p;
 }

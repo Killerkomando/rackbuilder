@@ -2428,10 +2428,11 @@ const translations = {
     mi_ed_device_type: 'NetBox device type',
     mi_ed_slots: 'Module bays',
     mi_ed_role: 'Device role',
+    mi_ed_manufacturer: 'Manufacturer',
     mi_ed_site: 'Site',
     mi_ed_location: 'Location (optional)',
     mi_ed_dev_status: 'Device status',
-    mi_ed_device_fields_hint: 'Device type, role and site are required for device-import.csv (NetBox cannot create devices without them).',
+    mi_ed_device_fields_hint: 'Device type, manufacturer, role and site are required for device-import.csv (NetBox cannot create devices without them).',
     mi_ex_download_devices: 'Download device-import.csv',
     mi_ex_missing: 'device-import.csv is unavailable: the profile has no value for {fields}. Set it in the profile editor (General).',
     mi_ed_strategy: 'Default split strategy',
@@ -2730,10 +2731,11 @@ const translations = {
     mi_ed_device_type: 'NetBox-Gerätetyp',
     mi_ed_slots: 'Modul-Bays',
     mi_ed_role: 'Geräterolle',
+    mi_ed_manufacturer: 'Hersteller',
     mi_ed_site: 'Standort (Site)',
     mi_ed_location: 'Location (optional)',
     mi_ed_dev_status: 'Gerätestatus',
-    mi_ed_device_fields_hint: 'Gerätetyp, Rolle und Site sind für device-import.csv erforderlich (NetBox legt Geräte sonst nicht an).',
+    mi_ed_device_fields_hint: 'Gerätetyp, Hersteller, Rolle und Site sind für device-import.csv erforderlich (NetBox legt Geräte sonst nicht an).',
     mi_ex_download_devices: 'device-import.csv herunterladen',
     mi_ex_missing: 'device-import.csv nicht verfügbar: Im Profil fehlt ein Wert für {fields}. Im Profil-Editor (Allgemein) ergänzen.',
     mi_ed_strategy: 'Standard-Aufteilung',
@@ -6073,6 +6075,7 @@ function createEmptyProfile(name = 'New profile') {
     name,
     netbox_device_type_id: '',
     netbox_role: '',
+    netbox_manufacturer: '',
     netbox_site: '',
     netbox_location: '',
     device_status: 'active',
@@ -6137,7 +6140,7 @@ const LAN_LAYOUTS = ['2', '3', 'custom'];
 function normalizeProfile(p) {
   if (p.lan_layout === undefined) p.lan_layout = (p.splitRules || []).length > 0 ? 'custom' : '2';
   if (p.lan_fill_name === undefined) p.lan_fill_name = 'unknown';
-  for (const k of ['netbox_role', 'netbox_site', 'netbox_location']) if (p[k] === undefined) p[k] = '';
+  for (const k of ['netbox_role', 'netbox_manufacturer', 'netbox_site', 'netbox_location']) if (p[k] === undefined) p[k] = '';
   if (p.device_status === undefined) p.device_status = 'active';
   return p;
 }
@@ -6331,7 +6334,7 @@ function importProfileJson(text) {
 
 
 const MODULE_IMPORT_HEADERS = ['device', 'module_bay', 'module_type', 'status', 'replicate_components'];
-const DEVICE_IMPORT_BASE_HEADERS = ['name', 'role', 'device_type', 'site', 'status'];
+const DEVICE_IMPORT_BASE_HEADERS = ['name', 'role', 'manufacturer', 'device_type', 'site', 'status'];
 const INTERFACE_RENAME_HEADERS = ['id', 'name'];
 
 const miNorm = s => String(s ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -6685,7 +6688,7 @@ function deviceImportHeaders(profile) {
 
 /** Required NetBox device columns the profile leaves empty (NetBox rejects the device import without them). */
 function missingDeviceFields(profile) {
-  return [['netbox_device_type_id', 'device_type'], ['netbox_role', 'role'], ['netbox_site', 'site']]
+  return [['netbox_role', 'role'], ['netbox_manufacturer', 'manufacturer'], ['netbox_device_type_id', 'device_type'], ['netbox_site', 'site']]
     .filter(([k]) => !String(profile[k] ?? '').trim()).map(([, col]) => col);
 }
 
@@ -6695,6 +6698,7 @@ function buildDeviceImportRows(devices, profile) {
     const row = {
       name: d.name,
       role: profile.netbox_role || '',
+      manufacturer: profile.netbox_manufacturer || '',
       device_type: profile.netbox_device_type_id || '',
       site: profile.netbox_site || '',
       status: profile.device_status || 'active',
@@ -6900,6 +6904,7 @@ function dataLists() {
     <datalist id="mi-dl-modtypes">${mods.map(m => `<option value="${esc(m.name)}">`).join('')}</datalist>
     <datalist id="mi-dl-devtypes">${types.map(m => `<option value="${esc(m.name)}">`).join('')}</datalist>
     <datalist id="mi-dl-roles">${loadNetboxEntries(STORAGE_KEY_ROLES).map(m => `<option value="${esc(m.name)}">`).join('')}</datalist>
+    <datalist id="mi-dl-mfrs">${loadNetboxEntries(STORAGE_KEY_MANUFACTURERS).map(m => `<option value="${esc(m.name)}">`).join('')}</datalist>
     <datalist id="mi-dl-headers">${headers.map(h => `<option value="${esc(h)}">`).join('')}</datalist>`;
 }
 
@@ -6921,12 +6926,16 @@ function renderGeneral(d) {
     <div class="form-row">
       <div class="form-group"><label>${esc(t('mi_ed_role'))}</label>
         <input type="text" data-k="netbox_role" list="mi-dl-roles" value="${esc(d.netbox_role)}" autocomplete="off"></div>
-      <div class="form-group"><label>${esc(t('mi_ed_site'))}</label>
-        <input type="text" data-k="netbox_site" value="${esc(d.netbox_site)}" autocomplete="off"></div>
+      <div class="form-group"><label>${esc(t('mi_ed_manufacturer'))}</label>
+        <input type="text" data-k="netbox_manufacturer" list="mi-dl-mfrs" value="${esc(d.netbox_manufacturer)}" autocomplete="off"></div>
     </div>
     <div class="form-row">
+      <div class="form-group"><label>${esc(t('mi_ed_site'))}</label>
+        <input type="text" data-k="netbox_site" value="${esc(d.netbox_site)}" autocomplete="off"></div>
       <div class="form-group"><label>${esc(t('mi_ed_location'))}</label>
         <input type="text" data-k="netbox_location" value="${esc(d.netbox_location)}" autocomplete="off"></div>
+    </div>
+    <div class="form-row">
       <div class="form-group"><label>${esc(t('mi_ed_dev_status'))}</label>
         ${selectHtml(['active', 'planned', 'staged', 'offline', 'inventory', 'decommissioning'], d.device_status, 'data-k="device_status"')}</div>
     </div>
