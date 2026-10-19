@@ -351,8 +351,10 @@
   <!-- Step 3: export -->
   <section class="mi-step" data-step="3">
     <p id="mi-ex-summary" class="mi-summary"></p>
-    <p class="settings-section-desc" data-i18n="mi_ex_hint">Import module-import.csv in NetBox (Dcim → Modules → Import). Then continue to rename the LAN interfaces.</p>
+    <p class="settings-section-desc" data-i18n="mi_ex_hint">First import device-import.csv in NetBox (Devices → Import), then module-import.csv (Modules → Import). Then continue to rename the LAN interfaces.</p>
+    <p id="mi-ex-missing" class="message message-warning" hidden></p>
     <div class="mi-toolbar">
+      <button type="button" class="btn btn-success" id="mi-ex-devices" data-i18n="mi_ex_download_devices">Download device-import.csv</button>
       <button type="button" class="btn btn-success" id="mi-ex-csv" data-i18n="mi_ex_download_csv">Download module-import.csv</button>
       <button type="button" class="btn btn-secondary" id="mi-ex-zip" data-i18n="mi_ex_download_zip">Download as ZIP</button>
     </div>

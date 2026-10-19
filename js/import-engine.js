@@ -3,7 +3,8 @@
 
 import { moduleSizeFor, fillPattern } from './import-profiles.js';
 
-export const MODULE_IMPORT_HEADERS = ['device', 'module_bay', 'module_type', 'status'];
+export const MODULE_IMPORT_HEADERS = ['device', 'module_bay', 'module_type', 'status', 'replicate_components'];
+export const DEVICE_IMPORT_BASE_HEADERS = ['name', 'role', 'device_type', 'site', 'status'];
 export const INTERFACE_RENAME_HEADERS = ['id', 'name'];
 
 const miNorm = s => String(s ?? '').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -343,10 +344,37 @@ export function buildModuleImportRows(devices, profile) {
         module_bay: fillPattern(profile.bay_name_pattern || '{n}', { n: b.bay }),
         module_type: b.moduleType,
         status: 'active',
+        replicate_components: 'true',
       });
     }
   }
   return rows;
+}
+
+/** Columns of `device-import.csv`; `location` only when the profile sets one. */
+export function deviceImportHeaders(profile) {
+  return profile.netbox_location ? [...DEVICE_IMPORT_BASE_HEADERS, 'location'] : [...DEVICE_IMPORT_BASE_HEADERS];
+}
+
+/** Required NetBox device columns the profile leaves empty (NetBox rejects the device import without them). */
+export function missingDeviceFields(profile) {
+  return [['netbox_device_type_id', 'device_type'], ['netbox_role', 'role'], ['netbox_site', 'site']]
+    .filter(([k]) => !String(profile[k] ?? '').trim()).map(([, col]) => col);
+}
+
+/** Rows for `device-import.csv`: one row per device that gets modules, to be imported before the modules. */
+export function buildDeviceImportRows(devices, profile) {
+  return devices.map(d => {
+    const row = {
+      name: d.name,
+      role: profile.netbox_role || '',
+      device_type: profile.netbox_device_type_id || '',
+      site: profile.netbox_site || '',
+      status: profile.device_status || 'active',
+    };
+    if (profile.netbox_location) row.location = profile.netbox_location;
+    return row;
+  });
 }
 
 /**

@@ -8,6 +8,7 @@ import {
   analyzeCsv, cleanTable, composeSizes, parseNumeric, buildModuleImportRows,
   buildInterfaceRename, readInterfaceTable, expectedInterfaces,
   MODULE_IMPORT_HEADERS, INTERFACE_RENAME_HEADERS,
+  buildDeviceImportRows, deviceImportHeaders, missingDeviceFields,
 } from '../js/import-engine.js';
 import {
   createSeedProfile, validateProfile, duplicateProfile, exportProfileJson, importProfileJson,
@@ -312,10 +313,10 @@ test('module-import.csv has one row per used bay with NetBox columns', () => {
   const only = { devices: [dev('Raum 1, EG Bodentank B')] };
   const rows = buildModuleImportRows(only.devices, profile);
   assert.deepEqual(rows, [
-    { device: 'Raum 1, EG Bodentank B', module_bay: '1', module_type: 'LAN-Modul 2-Port', status: 'active' },
-    { device: 'Raum 1, EG Bodentank B', module_bay: '6', module_type: 'Steckdosenmodul 3-fach Orange', status: 'active' },
+    { device: 'Raum 1, EG Bodentank B', module_bay: '1', module_type: 'LAN-Modul 2-Port', status: 'active', replicate_components: 'true' },
+    { device: 'Raum 1, EG Bodentank B', module_bay: '6', module_type: 'Steckdosenmodul 3-fach Orange', status: 'active', replicate_components: 'true' },
   ]);
-  assert.equal(writeCsv(rows, MODULE_IMPORT_HEADERS).split('\n')[0], 'device,module_bay,module_type,status');
+  assert.equal(writeCsv(rows, MODULE_IMPORT_HEADERS).split('\n')[0], 'device,module_bay,module_type,status,replicate_components');
   // the device name contains a comma, so it must be quoted for NetBox's CSV import
   assert.ok(writeCsv(rows, MODULE_IMPORT_HEADERS).split('\n')[1].startsWith('"Raum 1, EG Bodentank B",1,'));
 });
@@ -411,4 +412,22 @@ test('negative or absurd socket counts are errors', () => {
 test('imported profile with malformed structure is rejected', () => {
   const bad = JSON.stringify({ _format: 'rackbuilder-import-profile', profile: { name: 'x', rules: 'invalid' } });
   assert.equal(importProfileJson(bad), null);
+});
+
+test('device-import.csv carries the device fields NetBox needs, one row per device', () => {
+  const p = { ...profile, netbox_device_type_id: 'Bodentank 12-Bay', netbox_role: 'Bodentank', netbox_site: 'Werk 1', device_status: 'planned' };
+  assert.deepEqual(missingDeviceFields(profile), ['device_type', 'role', 'site']);
+  assert.deepEqual(missingDeviceFields(p), []);
+  const rows = buildDeviceImportRows([dev('Raum 1, EG Bodentank B')], p);
+  assert.deepEqual(rows, [{ name: 'Raum 1, EG Bodentank B', role: 'Bodentank', device_type: 'Bodentank 12-Bay', site: 'Werk 1', status: 'planned' }]);
+  assert.equal(writeCsv(rows, deviceImportHeaders(p)).split('\n')[0], 'name,role,device_type,site,status');
+  const withLoc = { ...p, netbox_location: 'EG' };
+  assert.equal(deviceImportHeaders(withLoc).at(-1), 'location');
+  assert.equal(buildDeviceImportRows([dev('Raum 1, EG Bodentank B')], withLoc)[0].location, 'EG');
+});
+
+test('profiles without device fields are normalized with defaults', () => {
+  const n = normalizeProfile({ splitRules: [] });
+  assert.equal(n.netbox_role, '');
+  assert.equal(n.device_status, 'active');
 });

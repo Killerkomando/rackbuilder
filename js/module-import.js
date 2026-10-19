@@ -12,8 +12,9 @@ import {
 import {
   cleanTable, analyzeCsv, buildModuleImportRows, buildInterfaceRename, readInterfaceTable,
   expectedInterfaces, MODULE_IMPORT_HEADERS, INTERFACE_RENAME_HEADERS,
+  buildDeviceImportRows, deviceImportHeaders, missingDeviceFields,
 } from './import-engine.js';
-import { getModuleTypes, getDeviceTypes, getApiCredentials, apiFetchPages } from './netbox-autocomplete.js';
+import { getModuleTypes, getDeviceTypes, getRoles, getApiCredentials, apiFetchPages } from './netbox-autocomplete.js';
 
 const S = {
   profiles: [],
@@ -145,6 +146,7 @@ function dataLists() {
   return `
     <datalist id="mi-dl-modtypes">${mods.map(m => `<option value="${esc(m.name)}">`).join('')}</datalist>
     <datalist id="mi-dl-devtypes">${types.map(m => `<option value="${esc(m.name)}">`).join('')}</datalist>
+    <datalist id="mi-dl-roles">${getRoles().map(m => `<option value="${esc(m.name)}">`).join('')}</datalist>
     <datalist id="mi-dl-headers">${headers.map(h => `<option value="${esc(h)}">`).join('')}</datalist>`;
 }
 
@@ -163,6 +165,19 @@ function renderGeneral(d) {
       <div class="form-group"><label>${esc(t('mi_ed_slots'))}</label>
         <input type="number" min="1" max="99" data-k="slot_count" value="${esc(d.slot_count)}"></div>
     </div>
+    <div class="form-row">
+      <div class="form-group"><label>${esc(t('mi_ed_role'))}</label>
+        <input type="text" data-k="netbox_role" list="mi-dl-roles" value="${esc(d.netbox_role)}" autocomplete="off"></div>
+      <div class="form-group"><label>${esc(t('mi_ed_site'))}</label>
+        <input type="text" data-k="netbox_site" value="${esc(d.netbox_site)}" autocomplete="off"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>${esc(t('mi_ed_location'))}</label>
+        <input type="text" data-k="netbox_location" value="${esc(d.netbox_location)}" autocomplete="off"></div>
+      <div class="form-group"><label>${esc(t('mi_ed_dev_status'))}</label>
+        ${selectHtml(['active', 'planned', 'staged', 'offline', 'inventory', 'decommissioning'], d.device_status, 'data-k="device_status"')}</div>
+    </div>
+    <p class="settings-section-desc">${esc(t('mi_ed_device_fields_hint'))}</p>
     <div class="form-group"><label>${esc(t('mi_ed_strategy'))}</label>
       ${selectHtml(SPLIT_STRATEGIES, d.default_split_strategy, 'data-k="default_split_strategy"', s => t('mi_strategy_' + s))}</div>
     <div class="form-row">
@@ -437,13 +452,31 @@ function renderPreview() {
 
 // ─── Step 3: export ──────────────────────────────────────────────────────────
 
+function deviceCsv() {
+  const p = activeProfile();
+  return writeCsv(buildDeviceImportRows(S.analysis.devices, p), deviceImportHeaders(p));
+}
+
 function moduleCsv() {
   return writeCsv(buildModuleImportRows(S.analysis.devices, activeProfile()), MODULE_IMPORT_HEADERS);
+}
+
+/** Files for NetBox: devices first (only when complete), then their modules. */
+function importFiles() {
+  const files = [];
+  if (!missingDeviceFields(activeProfile()).length) files.push({ name: 'device-import.csv', data: deviceCsv() });
+  files.push({ name: 'module-import.csv', data: moduleCsv() });
+  return files;
 }
 
 function renderExport() {
   const rows = buildModuleImportRows(S.analysis.devices, activeProfile()).length;
   $('mi-ex-summary').textContent = t('mi_ex_summary', { rows, devices: S.analysis.devices.length });
+  const missing = missingDeviceFields(activeProfile());
+  const note = $('mi-ex-missing');
+  note.textContent = missing.length ? t('mi_ex_missing', { fields: missing.join(', ') }) : '';
+  note.hidden = !missing.length;
+  $('mi-ex-devices').disabled = missing.length > 0;
 }
 
 // ─── Step 4: interface IDs ───────────────────────────────────────────────────
@@ -594,10 +627,12 @@ export function initModuleImport() {
   $('mi-pv-continue').addEventListener('click', () => { renderExport(); showStep(3); });
 
   // Export
+  $('mi-ex-devices').addEventListener('click', () =>
+    triggerDownload(deviceCsv(), 'device-import.csv', 'text/csv'));
   $('mi-ex-csv').addEventListener('click', () =>
     triggerDownload(moduleCsv(), 'module-import.csv', 'text/csv'));
   $('mi-ex-zip').addEventListener('click', () =>
-    triggerDownload(createZip([{ name: 'module-import.csv', data: moduleCsv() }]), 'module-import.zip', 'application/zip'));
+    triggerDownload(createZip(importFiles()), 'module-import.zip', 'application/zip'));
   $('mi-ex-back').addEventListener('click', () => showStep(2));
   $('mi-ex-next').addEventListener('click', () => { renderInterfaceStep(); showStep(4); });
 
@@ -612,7 +647,7 @@ export function initModuleImport() {
   $('mi-if-download').addEventListener('click', () =>
     triggerDownload(renameCsv(), 'interface-rename.csv', 'text/csv'));
   $('mi-if-zip').addEventListener('click', () => {
-    const files = [{ name: 'module-import.csv', data: moduleCsv() }];
+    const files = importFiles();
     if (S.rename && S.rename.rows.length) files.push({ name: 'interface-rename.csv', data: renameCsv() });
     triggerDownload(createZip(files), 'module-import-bundle.zip', 'application/zip');
   });

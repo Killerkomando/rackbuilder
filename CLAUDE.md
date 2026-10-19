@@ -57,7 +57,7 @@ Dark/light mode via `data-theme` attribute on `<html>`. CSS custom properties de
 
 ### Service Worker
 
-`sw.js` uses cache-first strategy (`CACHE_NAME: 'rackbuilder-v7'`). When adding new assets, update the asset list in `sw.js` and bump the cache version to force cache invalidation. Cross-origin requests (the NetBox API) bypass the cache.
+`sw.js` uses cache-first strategy (`CACHE_NAME: 'rackbuilder-v8'`). When adding new assets, update the asset list in `sw.js` and bump the cache version to force cache invalidation. Cross-origin requests (the NetBox API) bypass the cache.
 
 ### Minimalist Version
 
